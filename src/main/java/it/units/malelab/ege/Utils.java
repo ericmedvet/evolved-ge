@@ -53,19 +53,11 @@ public class Utils {
   }
   
   public static Genotype randomGenotype(int size, Random random) {
-    Genotype g = new Genotype(size);
-    for (int i = 0; i<g.size(); i++) {
-      g.set(i, random.nextBoolean());
+    BitSet bitSet = new BitSet(size);
+    for (int i = 0; i<size; i++) {
+      bitSet.set(i, random.nextBoolean());
     }
-    return g;
-  }
-  
-  public static String bitSetToString(BitSet bs, int size) {
-    StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < size; i++) {
-      sb.append(bs.get(i) ? '1' : '0');
-    }
-    return sb.toString();
+    return new Genotype(size, bitSet);
   }
   
 }

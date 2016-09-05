@@ -43,7 +43,7 @@ public class StandardGEMapper extends AbstractMapper {
       if (toReplaceSymbolIndex==-1) {
         break;
       }
-      //get codon
+      //get codon index and option
       if ((currentCodonIndex+1)*codonLenght>genotype.size()) {
         wraps = wraps+1;
         currentCodonIndex = 0;
@@ -51,10 +51,8 @@ public class StandardGEMapper extends AbstractMapper {
           throw new MappingException(String.format("Too many wraps (%d>%d)", wraps, maxWraps));
         }
       }
-      BitSet codon = genotype.get(currentCodonIndex*codonLenght, (currentCodonIndex+1)*codonLenght);
-      //get option
       List<List<String>> options = grammar.getRules().get(program.get(toReplaceSymbolIndex));
-      int optionIndex = codonToInt(codon)%options.size();
+      int optionIndex = genotype.slice(currentCodonIndex*codonLenght, (currentCodonIndex+1)*codonLenght).toInt()%options.size();
       //replace
       List<String> tailProgram = new ArrayList<>();
       if (toReplaceSymbolIndex<program.size()-1) {
@@ -67,13 +65,5 @@ public class StandardGEMapper extends AbstractMapper {
     }
     return program;
   }
-  
-  private int codonToInt(BitSet bs) {
-    if (bs.length()==0) {
-      return 0;
-    } else {
-      return (int)bs.toLongArray()[0];
-    }
-  }
-    
+     
 }

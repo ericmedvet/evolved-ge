@@ -6,7 +6,6 @@
 package it.units.malelab.ege.mapper;
 
 import it.units.malelab.ege.Genotype;
-import it.units.malelab.ege.Utils;
 import it.units.malelab.ege.grammar.Grammar;
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -17,7 +16,7 @@ import java.util.List;
  * @author eric
  */
 public class BreathFirstMapper extends AbstractMapper {
-  
+
   private final int codonLenght;
   private final int maxWraps;
 
@@ -25,66 +24,74 @@ public class BreathFirstMapper extends AbstractMapper {
     super(grammar);
     this.codonLenght = codonLenght;
     this.maxWraps = maxWraps;
-  }    
+  }
+
+  private class EnhancedSymbol {
+
+    private final String symbol;
+    private final int depth;
+
+    public EnhancedSymbol(String symbol, int depth) {
+      this.symbol = symbol;
+      this.depth = depth;
+    }
+
+    public String getSymbol() {
+      return symbol;
+    }
+
+    public int getDepth() {
+      return depth;
+    }
+
+  }
 
   @Override
   public List<String> map(Genotype genotype) throws MappingException {
-    List<String> program = new ArrayList<>();
-    List<Integer> dephts = new ArrayList<>();
-    program.add(grammar.getStartingSymbol());
-    dephts.add(0);
+    List<EnhancedSymbol> enhancedSymbols = new ArrayList<>();
+    enhancedSymbols.add(new EnhancedSymbol(grammar.getStartingSymbol(), 0));
     int currentCodonIndex = 0;
     int wraps = 0;
     while (true) {
       int toReplaceSymbolIndex = -1;
       int minDepth = Integer.MAX_VALUE;
-      for (int i = 0; i<program.size(); i++) {
-        if (grammar.getRules().keySet().contains(program.get(i))&&(dephts.get(i)<minDepth)) {
+      for (int i = 0; i < enhancedSymbols.size(); i++) {
+        if (grammar.getRules().keySet().contains(enhancedSymbols.get(i).getSymbol()) && (enhancedSymbols.get(i).getDepth() < minDepth)) {
           toReplaceSymbolIndex = i;
-          minDepth = dephts.get(i);
+          minDepth = enhancedSymbols.get(i).getDepth();
         }
       }
-      if (toReplaceSymbolIndex==-1) {
+      if (toReplaceSymbolIndex == -1) {
         break;
       }
-      //get codon
-      if ((currentCodonIndex+1)*codonLenght>genotype.size()) {
-        wraps = wraps+1;
+      //get codon index and option
+      if ((currentCodonIndex + 1) * codonLenght > genotype.size()) {
+        wraps = wraps + 1;
         currentCodonIndex = 0;
-        if (wraps>maxWraps) {
+        if (wraps > maxWraps) {
           throw new MappingException(String.format("Too many wraps (%d>%d)", wraps, maxWraps));
         }
       }
-      BitSet codon = genotype.get(currentCodonIndex*codonLenght, (currentCodonIndex+1)*codonLenght);
-      //get option
-      List<List<String>> options = grammar.getRules().get(program.get(toReplaceSymbolIndex));
-      int optionIndex = codonToInt(codon)%options.size();
+      List<List<String>> options = grammar.getRules().get(enhancedSymbols.get(toReplaceSymbolIndex).getSymbol());
+      int optionIndex = genotype.slice(currentCodonIndex * codonLenght, (currentCodonIndex + 1) * codonLenght).toInt() % options.size();
       //replace
-      List<String> tailProgram = new ArrayList<>();
-      List<Integer> tailDepths = new ArrayList<>();
-      if (toReplaceSymbolIndex<program.size()-1) {
-        tailProgram.addAll(program.subList(toReplaceSymbolIndex+1, program.size()));
-        tailDepths.addAll(dephts.subList(toReplaceSymbolIndex+1, program.size()));
+      List<EnhancedSymbol> tailEnhancedSymbols = new ArrayList<>();
+      if (toReplaceSymbolIndex < enhancedSymbols.size() - 1) {
+        tailEnhancedSymbols.addAll(enhancedSymbols.subList(toReplaceSymbolIndex + 1, enhancedSymbols.size()));
       }
-      program = program.subList(0, toReplaceSymbolIndex);
-      program.addAll(options.get(optionIndex));
-      program.addAll(tailProgram);
-      dephts = dephts.subList(0, toReplaceSymbolIndex);
-      for (String symbol : options.get(optionIndex)) {
-        dephts.add(minDepth+1);
+      enhancedSymbols = enhancedSymbols.subList(0, toReplaceSymbolIndex);
+      for (String string : options.get(optionIndex)) {
+        enhancedSymbols.add(new EnhancedSymbol(string, minDepth+1));
       }
-      dephts.addAll(tailDepths);
-      currentCodonIndex = currentCodonIndex+1;
+      enhancedSymbols.addAll(tailEnhancedSymbols);
+      currentCodonIndex = currentCodonIndex + 1;
+    }
+    //convert
+    List<String> program = new ArrayList<>(enhancedSymbols.size());
+    for (EnhancedSymbol enhancedSymbol : enhancedSymbols) {
+      program.add(enhancedSymbol.getSymbol());
     }
     return program;
   }
-  
-  private int codonToInt(BitSet bs) {
-    if (bs.length()==0) {
-      return 0;
-    } else {
-      return (int)bs.toLongArray()[0];
-    }
-  }
-    
+
 }
