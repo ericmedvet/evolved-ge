@@ -33,23 +33,21 @@ public class Main {
       Genotype g = Utils.randomGenotype(128, random);
       System.out.println(g.toString());
       try {
-        System.out.printf("GE: %s\n", geMapper.map(g));
+        System.out.printf("GE:\n\t%s\n\t%s\n", geMapper.map(g), geMapper.map(g).flat());
       } catch (MappingException ex) {
         System.err.printf("GE exception: %s\n", ex);
       }
       try {
-        System.out.printf("BF: %s\n", bfMapper.map(g));
+        System.out.printf("BF:\n\t%s\n\t%s\n", bfMapper.map(g), bfMapper.map(g).flat());
       } catch (MappingException ex) {
         System.err.printf("BF exception: %s\n", ex);
       }
       try {
-        System.out.printf("F: %s\n", fMapper.map(g));
+        System.out.printf("F:\n\t%s\n\t%s\n", fMapper.map(g), fMapper.map(g).flat());
       } catch (MappingException ex) {
         System.err.printf("F exception: %s\n", ex);
       }
     }
   }
-  
-  
 
 }

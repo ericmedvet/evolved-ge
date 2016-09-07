@@ -13,13 +13,13 @@ import java.util.Map;
  *
  * @author eric
  */
-public class Grammar {
+public class Grammar<T> {
   
   public static final String RULE_ASSIGNMENT_STRING = "::=";
   public static final String RULE_OPTION_SEPARATOR_STRING = "|";
   
-  private String startingSymbol;
-  private Map<String, List<List<String>>> rules;
+  private T startingSymbol;
+  private Map<T, List<List<T>>> rules;
 
   public Grammar() {
     rules = new LinkedHashMap<>();
@@ -28,13 +28,13 @@ public class Grammar {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    for (Map.Entry<String, List<List<String>>> rule : rules.entrySet()) {
+    for (Map.Entry<T, List<List<T>>> rule : rules.entrySet()) {
       sb.append(rule.getKey())
               .append(" ")
               .append(rule.getKey().equals(startingSymbol)?"*":"")
               .append(RULE_ASSIGNMENT_STRING+" ");
-      for (List<String> option : rule.getValue()) {
-        for (String symbol : option) {
+      for (List<T> option : rule.getValue()) {
+        for (T symbol : option) {
           sb.append(symbol)
                   .append(" ");
         }
@@ -46,15 +46,15 @@ public class Grammar {
     return sb.toString();
   }
 
-  public String getStartingSymbol() {
+  public T getStartingSymbol() {
     return startingSymbol;
   }
 
-  public void setStartingSymbol(String startingSymbol) {
+  public void setStartingSymbol(T startingSymbol) {
     this.startingSymbol = startingSymbol;
   }
 
-  public Map<String, List<List<String>>> getRules() {
+  public Map<T, List<List<T>>> getRules() {
     return rules;
   }
   

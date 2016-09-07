@@ -6,14 +6,15 @@
 package it.units.malelab.ege.mapper;
 
 import it.units.malelab.ege.Genotype;
+import it.units.malelab.ege.Node;
 import java.util.List;
 
 /**
  *
  * @author eric
  */
-public interface Mapper {
+public interface Mapper<T> {
   
-  public List<String> map(Genotype genotype) throws MappingException;
+  public Node<T> map(Genotype genotype) throws MappingException;
   
 }

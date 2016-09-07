@@ -6,6 +6,7 @@
 package it.units.malelab.ege.mapper;
 
 import it.units.malelab.ege.Genotype;
+import it.units.malelab.ege.Node;
 import it.units.malelab.ege.grammar.Grammar;
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -15,28 +16,28 @@ import java.util.List;
  *
  * @author eric
  */
-public class FractalMapper extends AbstractMapper {
+public class FractalMapper<T> extends AbstractMapper<T> {
 
   private final int maxZooms;
 
-  public FractalMapper(int maxZooms, Grammar grammar) {
+  public FractalMapper(int maxZooms, Grammar<T> grammar) {
     super(grammar);
     this.maxZooms = maxZooms;
   }
 
-  private class EnhancedSymbol {
+  private class EnhancedSymbol<T> {
 
-    private final String symbol;
+    private final T symbol;
     private final Genotype genotype;
     private int zooms;
 
-    public EnhancedSymbol(String symbol, Genotype genotype, int zooms) {
+    public EnhancedSymbol(T symbol, Genotype genotype, int zooms) {
       this.symbol = symbol;
       this.genotype = genotype;
       this.zooms = zooms;
     }
 
-    public String getSymbol() {
+    public T getSymbol() {
       return symbol;
     }
 
@@ -47,37 +48,30 @@ public class FractalMapper extends AbstractMapper {
     public int getZooms() {
       return zooms;
     }
-
-    @Override
-    public String toString() {
-      return "EnhancedSymbol{" + "symbol=" + symbol + ", genotype=" + genotype + ", zooms=" + zooms + '}';
-    }
-
   }
 
   @Override
-  public List<String> map(Genotype genotype) throws MappingException {
-    List<EnhancedSymbol> enhancedSymbols = new ArrayList<>();
-    enhancedSymbols.add(new EnhancedSymbol(grammar.getStartingSymbol(), genotype, 0));
+  public Node<T> map(Genotype genotype) throws MappingException {
+    Node<EnhancedSymbol<T>> enhancedTree = new Node<>(new EnhancedSymbol<>(grammar.getStartingSymbol(), genotype, 0));
     while (true) {
-      int toReplaceSymbolIndex = -1;
-      for (int i = 0; i < enhancedSymbols.size(); i++) {
-        if (grammar.getRules().keySet().contains(enhancedSymbols.get(i).getSymbol())) {
-          toReplaceSymbolIndex = i;
+      Node<EnhancedSymbol<T>> nodeToBeReplaced = null;
+      for (Node<EnhancedSymbol<T>> node : enhancedTree.flat()) {
+        if (grammar.getRules().keySet().contains(node.getContent().getSymbol())) {
+          nodeToBeReplaced = node;
           break;
         }
       }
-      if (toReplaceSymbolIndex == -1) {
+      if (nodeToBeReplaced==null) {
         break;
       }
       //get genotype
-      String symbol = enhancedSymbols.get(toReplaceSymbolIndex).getSymbol();
-      int zooms = enhancedSymbols.get(toReplaceSymbolIndex).getZooms();
-      Genotype symbolGenotype = enhancedSymbols.get(toReplaceSymbolIndex).getGenotype();
+      T symbol = nodeToBeReplaced.getContent().getSymbol();
+      int zooms = nodeToBeReplaced.getContent().getZooms();
+      Genotype symbolGenotype = nodeToBeReplaced.getContent().getGenotype();
       if (zooms > maxZooms) {
         throw new MappingException(String.format("Too many zooms (%d>%d)", zooms, maxZooms));
       }
-      List<List<String>> options = grammar.getRules().get(symbol);
+      List<List<T>> options = grammar.getRules().get(symbol);
       if (options.size() > symbolGenotype.size()) {
         int oldAvg = Math.round(symbolGenotype.count() / symbolGenotype.size());
         symbolGenotype = genotype.slice(0, genotype.size());
@@ -99,23 +93,18 @@ public class FractalMapper extends AbstractMapper {
           maxValue = value;
         }
       }
-      //replace
-      List<EnhancedSymbol> tailEnhancedSymbols = new ArrayList<>();
-      if (toReplaceSymbolIndex < enhancedSymbols.size() - 1) {
-        tailEnhancedSymbols.addAll(enhancedSymbols.subList(toReplaceSymbolIndex + 1, enhancedSymbols.size()));
-      }
-      enhancedSymbols = enhancedSymbols.subList(0, toReplaceSymbolIndex);
+      //add children
       for (int i = 0; i < options.get(optionIndex).size(); i++) {
-        enhancedSymbols.add(new EnhancedSymbol(options.get(optionIndex).get(i), getSlice(symbolGenotype, options.get(optionIndex).size(), i), zooms));
+        Node<EnhancedSymbol<T>> newChild = new Node<>(new EnhancedSymbol<>(
+                options.get(optionIndex).get(i),
+                getSlice(symbolGenotype, options.get(optionIndex).size(), i),
+                zooms
+        ));
+        nodeToBeReplaced.getChildren().add(newChild);
       }
-      enhancedSymbols.addAll(tailEnhancedSymbols);
     }
     //convert
-    List<String> program = new ArrayList<>(enhancedSymbols.size());
-    for (EnhancedSymbol enhancedSymbol : enhancedSymbols) {
-      program.add(enhancedSymbol.getSymbol());
-    }
-    return program;
+    return extractFromEnhanced(enhancedTree);
   }
 
   private Genotype getSlice(Genotype genotype, int pieces, int index) {
@@ -127,5 +116,14 @@ public class FractalMapper extends AbstractMapper {
     }
     return genotype.slice(fromIndex, toIndex);
   }
+  
+    private Node<T> extractFromEnhanced(Node<EnhancedSymbol<T>> enhancedNode) {
+    Node<T> node = new Node<>(enhancedNode.getContent().getSymbol());
+    for (Node<EnhancedSymbol<T>> enhancedChild : enhancedNode.getChildren()) {
+      node.getChildren().add(extractFromEnhanced(enhancedChild));
+    }
+    return node;
+  }
+
 
 }

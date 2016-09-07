@@ -11,15 +11,15 @@ import it.units.malelab.ege.grammar.Grammar;
  *
  * @author eric
  */
-public abstract class AbstractMapper implements Mapper {
+public abstract class AbstractMapper<T> implements Mapper<T> {
 
-  protected final Grammar grammar;
+  protected final Grammar<T> grammar;
 
-  public AbstractMapper(Grammar grammar) {
+  public AbstractMapper(Grammar<T> grammar) {
     this.grammar = grammar;
   }
 
-  public Grammar getGrammar() {
+  public Grammar<T> getGrammar() {
     return grammar;
   }
   

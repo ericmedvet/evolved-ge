@@ -6,6 +6,7 @@
 package it.units.malelab.ege.mapper;
 
 import it.units.malelab.ege.Genotype;
+import it.units.malelab.ege.Node;
 import it.units.malelab.ege.grammar.Grammar;
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -15,28 +16,28 @@ import java.util.List;
  *
  * @author eric
  */
-public class BreathFirstMapper extends AbstractMapper {
+public class BreathFirstMapper<T> extends AbstractMapper<T> {
 
   private final int codonLenght;
   private final int maxWraps;
 
-  public BreathFirstMapper(int codonLenght, int maxWraps, Grammar grammar) {
+  public BreathFirstMapper(int codonLenght, int maxWraps, Grammar<T> grammar) {
     super(grammar);
     this.codonLenght = codonLenght;
     this.maxWraps = maxWraps;
   }
 
-  private class EnhancedSymbol {
+  private class EnhancedSymbol<T> {
 
-    private final String symbol;
+    private final T symbol;
     private final int depth;
 
-    public EnhancedSymbol(String symbol, int depth) {
+    public EnhancedSymbol(T symbol, int depth) {
       this.symbol = symbol;
       this.depth = depth;
     }
 
-    public String getSymbol() {
+    public T getSymbol() {
       return symbol;
     }
 
@@ -47,21 +48,20 @@ public class BreathFirstMapper extends AbstractMapper {
   }
 
   @Override
-  public List<String> map(Genotype genotype) throws MappingException {
-    List<EnhancedSymbol> enhancedSymbols = new ArrayList<>();
-    enhancedSymbols.add(new EnhancedSymbol(grammar.getStartingSymbol(), 0));
+  public Node<T> map(Genotype genotype) throws MappingException {
+    Node<EnhancedSymbol<T>> enhancedTree = new Node<>(new EnhancedSymbol<>(grammar.getStartingSymbol(), 0));
     int currentCodonIndex = 0;
     int wraps = 0;
     while (true) {
-      int toReplaceSymbolIndex = -1;
       int minDepth = Integer.MAX_VALUE;
-      for (int i = 0; i < enhancedSymbols.size(); i++) {
-        if (grammar.getRules().keySet().contains(enhancedSymbols.get(i).getSymbol()) && (enhancedSymbols.get(i).getDepth() < minDepth)) {
-          toReplaceSymbolIndex = i;
-          minDepth = enhancedSymbols.get(i).getDepth();
+      Node<EnhancedSymbol<T>> nodeToBeReplaced = null;
+      for (Node<EnhancedSymbol<T>> node : enhancedTree.flat()) {
+        if (grammar.getRules().keySet().contains(node.getContent().getSymbol())&&(node.getContent().getDepth()<minDepth)) {
+          nodeToBeReplaced = node;
+          minDepth = node.getContent().getDepth();
         }
       }
-      if (toReplaceSymbolIndex == -1) {
+      if (nodeToBeReplaced==null) {
         break;
       }
       //get codon index and option
@@ -72,26 +72,25 @@ public class BreathFirstMapper extends AbstractMapper {
           throw new MappingException(String.format("Too many wraps (%d>%d)", wraps, maxWraps));
         }
       }
-      List<List<String>> options = grammar.getRules().get(enhancedSymbols.get(toReplaceSymbolIndex).getSymbol());
+      List<List<T>> options = grammar.getRules().get(nodeToBeReplaced.getContent().getSymbol());
       int optionIndex = genotype.slice(currentCodonIndex * codonLenght, (currentCodonIndex + 1) * codonLenght).toInt() % options.size();
-      //replace
-      List<EnhancedSymbol> tailEnhancedSymbols = new ArrayList<>();
-      if (toReplaceSymbolIndex < enhancedSymbols.size() - 1) {
-        tailEnhancedSymbols.addAll(enhancedSymbols.subList(toReplaceSymbolIndex + 1, enhancedSymbols.size()));
+      //add children
+      for (T t : options.get(optionIndex)) {
+        Node<EnhancedSymbol<T>> newChild = new Node<>(new EnhancedSymbol<>(t, nodeToBeReplaced.getContent().getDepth()));
+        nodeToBeReplaced.getChildren().add(newChild);
       }
-      enhancedSymbols = enhancedSymbols.subList(0, toReplaceSymbolIndex);
-      for (String string : options.get(optionIndex)) {
-        enhancedSymbols.add(new EnhancedSymbol(string, minDepth+1));
-      }
-      enhancedSymbols.addAll(tailEnhancedSymbols);
-      currentCodonIndex = currentCodonIndex + 1;
+      currentCodonIndex = currentCodonIndex+1;
     }
     //convert
-    List<String> program = new ArrayList<>(enhancedSymbols.size());
-    for (EnhancedSymbol enhancedSymbol : enhancedSymbols) {
-      program.add(enhancedSymbol.getSymbol());
+    return extractFromEnhanced(enhancedTree);
+  }
+  
+  private Node<T> extractFromEnhanced(Node<EnhancedSymbol<T>> enhancedNode) {
+    Node<T> node = new Node<>(enhancedNode.getContent().getSymbol());
+    for (Node<EnhancedSymbol<T>> enhancedChild : enhancedNode.getChildren()) {
+      node.getChildren().add(extractFromEnhanced(enhancedChild));
     }
-    return program;
+    return node;
   }
 
 }

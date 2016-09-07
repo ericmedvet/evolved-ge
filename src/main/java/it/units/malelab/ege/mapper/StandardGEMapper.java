@@ -6,6 +6,7 @@
 package it.units.malelab.ege.mapper;
 
 import it.units.malelab.ege.Genotype;
+import it.units.malelab.ege.Node;
 import it.units.malelab.ege.grammar.Grammar;
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -15,7 +16,7 @@ import java.util.List;
  *
  * @author eric
  */
-public class StandardGEMapper extends AbstractMapper {
+public class StandardGEMapper<T> extends AbstractMapper<T> {
   
   private final int codonLenght;
   private final int maxWraps;
@@ -27,20 +28,19 @@ public class StandardGEMapper extends AbstractMapper {
   }    
 
   @Override
-  public List<String> map(Genotype genotype) throws MappingException {
-    List<String> program = new ArrayList<>();
-    program.add(grammar.getStartingSymbol());
+  public Node<T> map(Genotype genotype) throws MappingException {
+    Node<T> tree = new Node<>(grammar.getStartingSymbol());
     int currentCodonIndex = 0;
     int wraps = 0;
     while (true) {
-      int toReplaceSymbolIndex = -1;
-      for (int i = 0; i<program.size(); i++) {
-        if (grammar.getRules().keySet().contains(program.get(i))) {
-          toReplaceSymbolIndex = i;
+      Node<T> nodeToBeReplaced = null;
+      for (Node<T> node : tree.flat()) {
+        if (grammar.getRules().keySet().contains(node.getContent())) {
+          nodeToBeReplaced = node;
           break;
         }
       }
-      if (toReplaceSymbolIndex==-1) {
+      if (nodeToBeReplaced==null) {
         break;
       }
       //get codon index and option
@@ -51,19 +51,16 @@ public class StandardGEMapper extends AbstractMapper {
           throw new MappingException(String.format("Too many wraps (%d>%d)", wraps, maxWraps));
         }
       }
-      List<List<String>> options = grammar.getRules().get(program.get(toReplaceSymbolIndex));
+      List<List<T>> options = grammar.getRules().get(nodeToBeReplaced.getContent());
       int optionIndex = genotype.slice(currentCodonIndex*codonLenght, (currentCodonIndex+1)*codonLenght).toInt()%options.size();
-      //replace
-      List<String> tailProgram = new ArrayList<>();
-      if (toReplaceSymbolIndex<program.size()-1) {
-        tailProgram.addAll(program.subList(toReplaceSymbolIndex+1, program.size()));
+      //add children
+      for (T t : options.get(optionIndex)) {
+        Node<T> newChild = new Node<>(t);
+        nodeToBeReplaced.getChildren().add(newChild);
       }
-      program = program.subList(0, toReplaceSymbolIndex);
-      program.addAll(options.get(optionIndex));
-      program.addAll(tailProgram);
       currentCodonIndex = currentCodonIndex+1;
     }
-    return program;
+    return tree;
   }
      
 }
