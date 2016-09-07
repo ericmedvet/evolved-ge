@@ -55,7 +55,7 @@ public class FractalMapper<T> extends AbstractMapper<T> {
     Node<EnhancedSymbol<T>> enhancedTree = new Node<>(new EnhancedSymbol<>(grammar.getStartingSymbol(), genotype, 0));
     while (true) {
       Node<EnhancedSymbol<T>> nodeToBeReplaced = null;
-      for (Node<EnhancedSymbol<T>> node : enhancedTree.flat()) {
+      for (Node<EnhancedSymbol<T>> node : enhancedTree.flatNodes()) {
         if (grammar.getRules().keySet().contains(node.getContent().getSymbol())) {
           nodeToBeReplaced = node;
           break;
