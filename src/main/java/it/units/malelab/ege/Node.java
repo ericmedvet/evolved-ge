@@ -30,19 +30,19 @@ public class Node<T> {
     return children;
   }
   
-  public List<Node<T>> flatNodes() {
+  public List<Node<T>> flatLeaves() {
     if (children.isEmpty()) {
       return Collections.singletonList(this);
     }
     List<Node<T>> childContents = new ArrayList<>();
     for (Node<T> child : children) {
-      childContents.addAll(child.flatNodes());
+      childContents.addAll(child.flatLeaves());
     }
     return childContents;
   }
 
   public List<T> flatContents() {
-    List<Node<T>> nodes = flatNodes();
+    List<Node<T>> nodes = flatLeaves();
     List<T> contents = new ArrayList<>(nodes.size());
     for (Node<T> node : nodes) {
       contents.add(node.getContent());

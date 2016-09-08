@@ -31,15 +31,7 @@ public class Genotype {
   }
   
   public Genotype slice(int fromIndex, int toIndex) {
-    if (fromIndex>=toIndex) {
-      throw new ArrayIndexOutOfBoundsException(String.format("from=%d >= to=%d", fromIndex, toIndex));
-    }
-    if (fromIndex<0) {
-      throw new ArrayIndexOutOfBoundsException(String.format("to=%d < 0", fromIndex));
-    }
-    if (toIndex>size) {
-      throw new ArrayIndexOutOfBoundsException(String.format("from=%d > size=%d", toIndex, size));
-    }
+    checkIndexes(fromIndex, toIndex);
     return new Genotype(toIndex-fromIndex, bitSet.get(fromIndex, toIndex));
   }
   
@@ -56,6 +48,7 @@ public class Genotype {
   }
   
   public void set(int fromIndex, Genotype other) {
+    checkIndexes(fromIndex, fromIndex+1);
     for (int i = 0; i<other.size(); i++) {
       bitSet.set(fromIndex+i, other.bitSet.get(i));
     }
@@ -73,6 +66,34 @@ public class Genotype {
   
   public void flip() {
     bitSet.flip(0, size);
+  }
+  
+  public void flip(int index) {
+    checkIndexes(index, index+1);
+    bitSet.flip(index);
+  }
+  
+  public void flip(int fromIndex, int toIndex) {
+    checkIndexes(fromIndex, toIndex);
+    bitSet.flip(fromIndex, toIndex);
+  }
+  
+  private void checkIndexes(int fromIndex, int toIndex) {
+    if (fromIndex>=toIndex) {
+      throw new ArrayIndexOutOfBoundsException(String.format("from=%d >= to=%d", fromIndex, toIndex));
+    }
+    if (fromIndex<0) {
+      throw new ArrayIndexOutOfBoundsException(String.format("to=%d < 0", fromIndex));
+    }
+    if (toIndex>size) {
+      throw new ArrayIndexOutOfBoundsException(String.format("from=%d > size=%d", toIndex, size));
+    }
+  }
+  
+  public BitSet asBitSet() {
+    BitSet copy = new BitSet(size);
+    copy.or(bitSet);
+    return copy;
   }
     
 }

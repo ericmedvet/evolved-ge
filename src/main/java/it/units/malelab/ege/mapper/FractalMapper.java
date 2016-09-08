@@ -8,8 +8,6 @@ package it.units.malelab.ege.mapper;
 import it.units.malelab.ege.Genotype;
 import it.units.malelab.ege.Node;
 import it.units.malelab.ege.grammar.Grammar;
-import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.List;
 
 /**
@@ -29,7 +27,7 @@ public class FractalMapper<T> extends AbstractMapper<T> {
 
     private final T symbol;
     private final Genotype genotype;
-    private int zooms;
+    private final int zooms;
 
     public EnhancedSymbol(T symbol, Genotype genotype, int zooms) {
       this.symbol = symbol;
@@ -55,13 +53,13 @@ public class FractalMapper<T> extends AbstractMapper<T> {
     Node<EnhancedSymbol<T>> enhancedTree = new Node<>(new EnhancedSymbol<>(grammar.getStartingSymbol(), genotype, 0));
     while (true) {
       Node<EnhancedSymbol<T>> nodeToBeReplaced = null;
-      for (Node<EnhancedSymbol<T>> node : enhancedTree.flatNodes()) {
+      for (Node<EnhancedSymbol<T>> node : enhancedTree.flatLeaves()) {
         if (grammar.getRules().keySet().contains(node.getContent().getSymbol())) {
           nodeToBeReplaced = node;
           break;
         }
       }
-      if (nodeToBeReplaced==null) {
+      if (nodeToBeReplaced == null) {
         break;
       }
       //get genotype
@@ -72,32 +70,17 @@ public class FractalMapper<T> extends AbstractMapper<T> {
         throw new MappingException(String.format("Too many zooms (%d>%d)", zooms, maxZooms));
       }
       List<List<T>> options = grammar.getRules().get(symbol);
-      if (options.size() > symbolGenotype.size()) {
-        int oldAvg = Math.round(symbolGenotype.count() / symbolGenotype.size());
-        symbolGenotype = genotype.slice(0, genotype.size());
-        int avg = Math.round(symbolGenotype.count() / symbolGenotype.size());
-        if (oldAvg != avg) {
-          symbolGenotype.flip();
-        }
-        zooms = zooms + 1;
-      }
-      //get option index
-      //TODO replace with coarse binaryToIndex instead of max of portion (which allows for tie, and hence favors one options)
-      float maxValue = 0;
-      int optionIndex = 0;
-      for (int i = 0; i < options.size(); i++) {
-        Genotype sliceGenotype = getSlice(symbolGenotype, options.size(), i);
-        float value = (float) sliceGenotype.count() / (float) (sliceGenotype.size());
-        if (value >= maxValue) {
-          optionIndex = i;
-          maxValue = value;
-        }
-      }
+      //get option
+      List<T> symbols = chooseOption(symbolGenotype, options);
       //add children
-      for (int i = 0; i < options.get(optionIndex).size(); i++) {
+      if (symbolGenotype.size()<symbols.size()) {
+        symbolGenotype = zoomGenotype(symbolGenotype, genotype);
+        zooms = zooms+1;
+      }
+      for (int i = 0; i < symbols.size(); i++) {
         Node<EnhancedSymbol<T>> newChild = new Node<>(new EnhancedSymbol<>(
-                options.get(optionIndex).get(i),
-                getSlice(symbolGenotype, options.get(optionIndex).size(), i),
+                symbols.get(i),
+                getSlice(symbolGenotype, symbols.size(), i),
                 zooms
         ));
         nodeToBeReplaced.getChildren().add(newChild);
@@ -116,8 +99,8 @@ public class FractalMapper<T> extends AbstractMapper<T> {
     }
     return genotype.slice(fromIndex, toIndex);
   }
-  
-    private Node<T> extractFromEnhanced(Node<EnhancedSymbol<T>> enhancedNode) {
+
+  private Node<T> extractFromEnhanced(Node<EnhancedSymbol<T>> enhancedNode) {
     Node<T> node = new Node<>(enhancedNode.getContent().getSymbol());
     for (Node<EnhancedSymbol<T>> enhancedChild : enhancedNode.getChildren()) {
       node.getChildren().add(extractFromEnhanced(enhancedChild));
@@ -125,5 +108,31 @@ public class FractalMapper<T> extends AbstractMapper<T> {
     return node;
   }
 
+  private <K> K chooseOption(Genotype genotype, List<K> options) {
+    if (options.size() == 1) {
+      return options.get(0);
+    }
+    int numberOfSlices = (int) Math.ceil(Math.log10(options.size()) / Math.log10(2d));
+    if (numberOfSlices > genotype.size()) {
+      return options.get(genotype.toInt() % options.size());
+    }
+    int value = 0;
+    for (int i = 0; i < numberOfSlices; i++) {
+      Genotype sliceGenotype = getSlice(genotype, numberOfSlices, i);
+      int bit = (int) Math.round((float) sliceGenotype.count() / (float) (sliceGenotype.size()));
+      value = value + bit * (int) Math.pow(2, i);
+    }
+    return options.get(value % options.size());
+  }
+
+  private Genotype zoomGenotype(Genotype genotype, Genotype referenceGenotype) {
+    int oldAvg = Math.round(genotype.count() / genotype.size());
+    genotype = referenceGenotype.slice(0, referenceGenotype.size());
+    int avg = Math.round(genotype.count() / genotype.size());
+    if (oldAvg != avg) {
+      genotype.flip();
+    }
+    return genotype;
+  }
 
 }

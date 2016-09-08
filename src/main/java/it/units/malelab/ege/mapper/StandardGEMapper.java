@@ -8,8 +8,6 @@ package it.units.malelab.ege.mapper;
 import it.units.malelab.ege.Genotype;
 import it.units.malelab.ege.Node;
 import it.units.malelab.ege.grammar.Grammar;
-import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.List;
 
 /**
@@ -34,7 +32,7 @@ public class StandardGEMapper<T> extends AbstractMapper<T> {
     int wraps = 0;
     while (true) {
       Node<T> nodeToBeReplaced = null;
-      for (Node<T> node : tree.flatNodes()) {
+      for (Node<T> node : tree.flatLeaves()) {
         if (grammar.getRules().keySet().contains(node.getContent())) {
           nodeToBeReplaced = node;
           break;

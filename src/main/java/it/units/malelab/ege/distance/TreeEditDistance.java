@@ -17,8 +17,6 @@ public class TreeEditDistance<T> implements Distance<Node<T>>{
   @Override
   public double d(Node<T> t1, Node<T> t2) {
     throw new UnsupportedOperationException("Not supported yet.");
-  }
-  
-  
+  }  
   
 }

@@ -23,8 +23,8 @@ import java.util.regex.Pattern;
  */
 public class Utils {
   
-  public static Grammar parseFromFile(File file) throws FileNotFoundException, IOException {
-    Grammar grammar = new Grammar();
+  public static Grammar<String> parseFromFile(File file) throws FileNotFoundException, IOException {
+    Grammar<String> grammar = new Grammar<>();
     BufferedReader br = new BufferedReader(new FileReader(file));
     String line;
     while ((line = br.readLine())!=null) {
@@ -58,6 +58,17 @@ public class Utils {
       bitSet.set(i, random.nextBoolean());
     }
     return new Genotype(size, bitSet);
+  }
+  
+  public static double mean(double[] values) {
+    if (values.length==0) {
+      return Double.NaN;
+    }
+    double mean = 0;
+    for (double value : values) {
+      mean = mean+value;
+    }
+    return mean/(double)values.length;
   }
   
 }
