@@ -8,8 +8,6 @@ package it.units.malelab.ege.mapper;
 import it.units.malelab.ege.Genotype;
 import it.units.malelab.ege.Node;
 import it.units.malelab.ege.grammar.Grammar;
-import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.List;
 
 /**
@@ -55,7 +53,7 @@ public class BreathFirstMapper<T> extends AbstractMapper<T> {
     while (true) {
       int minDepth = Integer.MAX_VALUE;
       Node<EnhancedSymbol<T>> nodeToBeReplaced = null;
-      for (Node<EnhancedSymbol<T>> node : enhancedTree.flatNodes()) {
+      for (Node<EnhancedSymbol<T>> node : enhancedTree.leaves()) {
         if (grammar.getRules().keySet().contains(node.getContent().getSymbol())&&(node.getContent().getDepth()<minDepth)) {
           nodeToBeReplaced = node;
           minDepth = node.getContent().getDepth();

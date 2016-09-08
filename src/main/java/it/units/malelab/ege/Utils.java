@@ -23,8 +23,8 @@ import java.util.regex.Pattern;
  */
 public class Utils {
   
-  public static Grammar parseFromFile(File file) throws FileNotFoundException, IOException {
-    Grammar grammar = new Grammar();
+  public static Grammar<String> parseFromFile(File file) throws FileNotFoundException, IOException {
+    Grammar<String> grammar = new Grammar();
     BufferedReader br = new BufferedReader(new FileReader(file));
     String line;
     while ((line = br.readLine())!=null) {
