@@ -8,18 +8,19 @@ package it.units.malelab.ege.mapper;
 import it.units.malelab.ege.Genotype;
 import it.units.malelab.ege.Node;
 import it.units.malelab.ege.grammar.Grammar;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  *
  * @author eric
  */
-public class StandardGEMapper<T> extends AbstractMapper<T> {
+public class PiGEMapper<T> extends AbstractMapper<T> {
   
   private final int codonLenght;
   private final int maxWraps;
 
-  public StandardGEMapper(int codonLenght, int maxWraps, Grammar<T> grammar) {
+  public PiGEMapper(int codonLenght, int maxWraps, Grammar<T> grammar) {
     super(grammar);
     this.codonLenght = codonLenght;
     this.maxWraps = maxWraps;
@@ -34,14 +35,13 @@ public class StandardGEMapper<T> extends AbstractMapper<T> {
     int currentCodonIndex = 0;
     int wraps = 0;
     while (true) {
-      Node<T> nodeToBeReplaced = null;
-      for (Node<T> node : tree.flatLeaves()) {
-        if (grammar.getRules().keySet().contains(node.getContent())) {
-          nodeToBeReplaced = node;
-          break;
+      List<Node<T>> nodesToBeReplaced = new ArrayList<>();
+      for (Node<T> leaf : tree.flatLeaves()) {
+        if (grammar.getRules().keySet().contains(leaf.getContent())) {
+          nodesToBeReplaced.add(leaf);
         }
       }
-      if (nodeToBeReplaced==null) {
+      if (nodesToBeReplaced.isEmpty()) {
         break;
       }
       //get codon index and option
@@ -52,8 +52,10 @@ public class StandardGEMapper<T> extends AbstractMapper<T> {
           throw new MappingException(String.format("Too many wraps (%d>%d)", wraps, maxWraps));
         }
       }
+      int nodeIndexCodon = genotype.slice(currentCodonIndex*codonLenght, currentCodonIndex*codonLenght+codonLenght/2).toInt()%nodesToBeReplaced.size();
+      Node<T> nodeToBeReplaced = nodesToBeReplaced.get(nodeIndexCodon);
       List<List<T>> options = grammar.getRules().get(nodeToBeReplaced.getContent());
-      int optionIndex = genotype.slice(currentCodonIndex*codonLenght, (currentCodonIndex+1)*codonLenght).toInt()%options.size();
+      int optionIndex = genotype.slice(currentCodonIndex*codonLenght+codonLenght/2, (currentCodonIndex+1)*codonLenght).toInt()%options.size();
       //add children
       for (T t : options.get(optionIndex)) {
         Node<T> newChild = new Node<>(t);

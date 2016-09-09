@@ -52,6 +52,9 @@ public class BreathFirstMapper<T> extends AbstractMapper<T> {
 
   @Override
   public Node<T> map(Genotype genotype) throws MappingException {
+    if (genotype.size()<codonLenght) {
+      throw new MappingException(String.format("Short genotype (%d<%d)", genotype.size(), codonLenght));
+    }
     Node<EnhancedSymbol<T>> enhancedTree = new Node<>(new EnhancedSymbol<>(grammar.getStartingSymbol(), 0));
     int currentCodonIndex = 0;
     int wraps = 0;

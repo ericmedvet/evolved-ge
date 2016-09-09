@@ -17,10 +17,17 @@ import java.util.List;
 public class FractalMapper<T> extends AbstractMapper<T> {
 
   private final int maxZooms;
+  private int longestExpansion;
 
   public FractalMapper(int maxZooms, Grammar<T> grammar) {
     super(grammar);
     this.maxZooms = maxZooms;
+    longestExpansion = 0;
+    for (List<List<T>> rule : grammar.getRules().values()) {
+      for (List<T> expansion : rule) {
+        longestExpansion = Math.max(longestExpansion, expansion.size());
+      }
+    }
   }
 
   private class EnhancedSymbol<T> {
@@ -50,6 +57,9 @@ public class FractalMapper<T> extends AbstractMapper<T> {
 
   @Override
   public Node<T> map(Genotype genotype) throws MappingException {
+    if (genotype.size()<longestExpansion) {
+      throw new MappingException(String.format("Short genotype (%d<%d)", genotype.size(), longestExpansion));
+    }
     Node<EnhancedSymbol<T>> enhancedTree = new Node<>(new EnhancedSymbol<>(grammar.getStartingSymbol(), genotype, 0));
     while (true) {
       Node<EnhancedSymbol<T>> nodeToBeReplaced = null;

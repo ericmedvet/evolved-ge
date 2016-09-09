@@ -17,6 +17,8 @@ import it.units.malelab.ege.operators.SparseFlipMutation;
 import it.units.malelab.ege.distance.Distance;
 import it.units.malelab.ege.distance.EditDistance;
 import it.units.malelab.ege.distance.GenotypeHammingDistance;
+import it.units.malelab.ege.mapper.PiGEMapper;
+import it.units.malelab.ege.operators.OnePointCrossover;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -47,15 +49,17 @@ public class Main {
     Distance<Genotype> genotypeDistance = new GenotypeHammingDistance();
     Distance<List<String>> phenotypeDistance = new EditDistance<String>();
     List<GeneticOperator> operators = new ArrayList<>();
-    operators.add(new SparseFlipMutation(random));
-    operators.add(new CompactFlipMutation(random));
+    //operators.add(new SparseFlipMutation(random));
+    //operators.add(new CompactFlipMutation(random));
+    operators.add(new OnePointCrossover(random));
     List<Genotype> population = new ArrayList<>();
     for (String grammarName : grammarNames) {
       Grammar<String> grammar = Utils.parseFromFile(new File("grammars/"+grammarName+".bnf"));
       List<Mapper<String>> mappers = new ArrayList<>();
       mappers.add(new StandardGEMapper(8, 10, grammar));
-      mappers.add(new BreathFirstMapper(8, 10, grammar));
-      mappers.add(new FractalMapper(10, grammar));
+      //mappers.add(new BreathFirstMapper(8, 10, grammar));
+      //mappers.add(new PiGEMapper<>(16, 10, grammar));
+      //mappers.add(new FractalMapper(10, grammar));
       for (int genotypeSize : genotypeSizes) {
         for (int i = 0; i < numberOfIndividuals; i++) {
           population.add(Utils.randomGenotype(genotypeSize, random));
@@ -104,7 +108,5 @@ public class Main {
       }
     }
   }
-  
-  
 
 }

@@ -48,7 +48,7 @@ public class Genotype {
   }
   
   public void set(int fromIndex, Genotype other) {
-    checkIndexes(fromIndex, fromIndex+1);
+    checkIndexes(fromIndex, fromIndex+other.size());
     for (int i = 0; i<other.size(); i++) {
       bitSet.set(fromIndex+i, other.bitSet.get(i));
     }
