@@ -57,7 +57,7 @@ public class FractalMapper<T> extends AbstractMapper<T> {
 
   @Override
   public Node<T> map(Genotype genotype) throws MappingException {
-    if (genotype.size()<longestExpansion) {
+    if (genotype.size() < longestExpansion) {
       throw new MappingException(String.format("Short genotype (%d<%d)", genotype.size(), longestExpansion));
     }
     Node<EnhancedSymbol<T>> enhancedTree = new Node<>(new EnhancedSymbol<>(grammar.getStartingSymbol(), genotype, 0));
@@ -83,14 +83,14 @@ public class FractalMapper<T> extends AbstractMapper<T> {
       //get option
       List<T> symbols = chooseOption(symbolGenotype, options);
       //add children
-      if (symbolGenotype.size()<symbols.size()) {
+      if (symbolGenotype.size() < symbols.size()) {
         symbolGenotype = zoomGenotype(symbolGenotype, genotype);
-        zooms = zooms+1;
+        zooms = zooms + 1;
       }
       for (int i = 0; i < symbols.size(); i++) {
         Node<EnhancedSymbol<T>> newChild = new Node<>(new EnhancedSymbol<>(
                 symbols.get(i),
-                getSlice(symbolGenotype, symbols.size(), i),
+                getSlice(symbolGenotype, symbols, i),
                 zooms
         ));
         nodeToBeReplaced.getChildren().add(newChild);
@@ -100,8 +100,12 @@ public class FractalMapper<T> extends AbstractMapper<T> {
     return extractFromEnhanced(enhancedTree);
   }
 
-  private Genotype getSlice(Genotype genotype, int pieces, int index) {
-    int pieceSize = (int) Math.floor(genotype.size() / pieces);
+  protected Genotype getSlice(Genotype genotype, List<T> symbols, int index) {
+    return getEqualSlice(genotype, symbols.size(), index);
+  }
+
+  private Genotype getEqualSlice(Genotype genotype, int pieces, int index) {
+    int pieceSize = (int) Math.floor((double) genotype.size() / (double) pieces);
     int fromIndex = pieceSize * index;
     int toIndex = pieceSize * (index + 1);
     if (index == pieces - 1) {
@@ -128,7 +132,7 @@ public class FractalMapper<T> extends AbstractMapper<T> {
     }
     int value = 0;
     for (int i = 0; i < numberOfSlices; i++) {
-      Genotype sliceGenotype = getSlice(genotype, numberOfSlices, i);
+      Genotype sliceGenotype = getEqualSlice(genotype, numberOfSlices, i);
       int bit = (int) Math.round((float) sliceGenotype.count() / (float) (sliceGenotype.size()));
       value = value + bit * (int) Math.pow(2, i);
     }
