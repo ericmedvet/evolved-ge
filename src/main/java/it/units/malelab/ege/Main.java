@@ -27,15 +27,12 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -46,21 +43,16 @@ public class Main {
   public static void main(String[] args) throws IOException {
     Main main = new Main();
     //main.localityAnalysis();
-    Grammar<String> grammar = Utils.parseFromFile(new File("grammars/max-grammar.bnf"));
-    Mapper<String> m1 = new FractalMapper<>(10, grammar);
-    Mapper<String> m2 = new WeightedFractalMapper<>(10, grammar);
+    Grammar<String> grammar = Utils.parseFromFile(new File("grammars/simple-recursive.bnf"));
+    //Mapper<String> m1 = new StandardGEMapper<>(8, 10, grammar);
+    Mapper<String> m1 = new WeightedFractalMapper<>(1, grammar);
     Random r = new Random(1);
-    for (int i = 0; i<1000; i++) {
-      Genotype g = Utils.randomGenotype(1024, new Random(i));
+    for (int i = 0; i<10; i++) {
+      Genotype g = Utils.randomGenotype(128, new Random(i));
       try {
-        System.out.println(m1.map(g).flatContents());
+        System.out.println(Utils.contents(m1.map(g).leaves())+"\n");
       } catch (MappingException ex) {
         System.out.println("ex m1");;
-      }
-      try {
-        System.out.println(m2.map(g).flatContents());
-      } catch (MappingException ex) {
-        System.out.println("ex m2");;
       }
     }
   }
@@ -118,12 +110,12 @@ public class Main {
               boolean oneArity = childGenotypes.get(i).size()==1;
               for (int j = 0; j < childGenotypes.get(i).size(); j++) {
                 try {
-                  parents.add(mapper.map(parentGenotypes.get(i).get(j)).flatContents());
+                  parents.add(Utils.contents(mapper.map(parentGenotypes.get(i).get(j)).leaves()));
                 } catch (MappingException ex) {
                   parents.add(Collections.EMPTY_LIST);
                 }
                 try {
-                  children.add(mapper.map(childGenotypes.get(i).get(j)).flatContents());
+                  children.add(Utils.contents(mapper.map(childGenotypes.get(i).get(j)).leaves()));
                 } catch (MappingException ex) {
                   children.add(Collections.EMPTY_LIST);
                 }

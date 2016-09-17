@@ -63,7 +63,7 @@ public class FractalMapper<T> extends AbstractMapper<T> {
     Node<EnhancedSymbol<T>> enhancedTree = new Node<>(new EnhancedSymbol<>(grammar.getStartingSymbol(), genotype, 0));
     while (true) {
       Node<EnhancedSymbol<T>> nodeToBeReplaced = null;
-      for (Node<EnhancedSymbol<T>> node : enhancedTree.flatLeaves()) {
+      for (Node<EnhancedSymbol<T>> node : enhancedTree.leaves()) {
         if (grammar.getRules().keySet().contains(node.getContent().getSymbol())) {
           nodeToBeReplaced = node;
           break;
@@ -126,14 +126,15 @@ public class FractalMapper<T> extends AbstractMapper<T> {
     if (options.size() == 1) {
       return options.get(0);
     }
-    int numberOfSlices = (int) Math.ceil(Math.log10(options.size()) / Math.log10(2d));
+    int numberOfSlices = Math.max((int) Math.ceil(Math.log10(options.size()) / Math.log10(2d)), 2);
     if (numberOfSlices > genotype.size()) {
       return options.get(genotype.toInt() % options.size());
     }
     int value = 0;
+    float threshold = (float)genotype.count()/(float)genotype.size();
     for (int i = 0; i < numberOfSlices; i++) {
       Genotype sliceGenotype = getEqualSlice(genotype, numberOfSlices, i);
-      int bit = (int) Math.round((float) sliceGenotype.count() / (float) (sliceGenotype.size()));
+      int bit = (((float) sliceGenotype.count() / (float) (sliceGenotype.size()))>=threshold)?1:0;
       value = value + bit * (int) Math.pow(2, i);
     }
     return options.get(value % options.size());

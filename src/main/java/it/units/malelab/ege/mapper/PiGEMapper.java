@@ -36,7 +36,7 @@ public class PiGEMapper<T> extends AbstractMapper<T> {
     int wraps = 0;
     while (true) {
       List<Node<T>> nodesToBeReplaced = new ArrayList<>();
-      for (Node<T> leaf : tree.flatLeaves()) {
+      for (Node<T> leaf : tree.leaves()) {
         if (grammar.getRules().keySet().contains(leaf.getContent())) {
           nodesToBeReplaced.add(leaf);
         }

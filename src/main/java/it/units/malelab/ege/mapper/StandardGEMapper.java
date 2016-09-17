@@ -35,7 +35,7 @@ public class StandardGEMapper<T> extends AbstractMapper<T> {
     int wraps = 0;
     while (true) {
       Node<T> nodeToBeReplaced = null;
-      for (Node<T> node : tree.flatLeaves()) {
+      for (Node<T> node : tree.leaves()) {
         if (grammar.getRules().keySet().contains(node.getContent())) {
           nodeToBeReplaced = node;
           break;

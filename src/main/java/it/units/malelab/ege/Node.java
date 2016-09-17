@@ -17,6 +17,7 @@ public class Node<T> {
   
   private final T content;
   private final List<Node<T>> children = new ArrayList<>();
+  private Node<T> parent;
 
   public Node(T content) {
     this.content = content;
@@ -30,24 +31,15 @@ public class Node<T> {
     return children;
   }
   
-  public List<Node<T>> flatLeaves() {
+  public List<Node<T>> leaves() {
     if (children.isEmpty()) {
       return Collections.singletonList(this);
     }
     List<Node<T>> childContents = new ArrayList<>();
     for (Node<T> child : children) {
-      childContents.addAll(child.flatLeaves());
+      childContents.addAll(child.leaves());
     }
     return childContents;
-  }
-
-  public List<T> flatContents() {
-    List<Node<T>> nodes = flatLeaves();
-    List<T> contents = new ArrayList<>(nodes.size());
-    for (Node<T> node : nodes) {
-      contents.add(node.getContent());
-    }
-    return contents;
   }
 
   @Override
@@ -65,6 +57,25 @@ public class Node<T> {
     return sb.toString();
   }
   
+  public List<Node<T>> getAncestors() {
+    if (parent==null) {
+      return Collections.EMPTY_LIST;
+    }
+    List<Node<T>> ancestors = new ArrayList<>();
+    ancestors.add(parent);
+    ancestors.addAll(parent.getAncestors());
+    return Collections.unmodifiableList(ancestors);
+  }
+
+  public Node<T> getParent() {
+    return parent;
+  }
   
+  public void propagateParentship() {
+    for (Node<T> child : children) {
+      child.parent = this;
+      child.propagateParentship();
+    }
+  }
   
 }
