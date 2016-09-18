@@ -5,7 +5,11 @@
  */
 package it.units.malelab.ege.mapper;
 
+import it.units.malelab.ege.Genotype;
+import it.units.malelab.ege.Utils;
 import it.units.malelab.ege.grammar.Grammar;
+import java.util.Collections;
+import java.util.List;
 
 /**
  *

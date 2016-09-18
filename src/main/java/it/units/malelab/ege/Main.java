@@ -43,17 +43,32 @@ public class Main {
   public static void main(String[] args) throws IOException {
     Main main = new Main();
     //main.localityAnalysis();
-    Grammar<String> grammar = Utils.parseFromFile(new File("grammars/simple-recursive.bnf"));
-    //Mapper<String> m1 = new StandardGEMapper<>(8, 10, grammar);
-    Mapper<String> m1 = new WeightedFractalMapper<>(1, grammar);
+    Grammar<String> g1 = Utils.parseFromFile(new File("grammars/max-grammar-easy.bnf"));
+    Grammar<String> g2 = Utils.parseFromFile(new File("grammars/text.bnf"));
+    Grammar<String> g3 = Utils.parseFromFile(new File("grammars/simple-recursive.bnf"));
+    Mapper<String> wf1 = new WeightedFractalMapper<>(5, g1);
+    Mapper<String> wf2 = new WeightedFractalMapper<>(5, g2);
+    Mapper<String> wf3 = new WeightedFractalMapper<>(5, g3);
+    Mapper<String> f1 = new FractalMapper<>(g1);
+    Mapper<String> f2 = new FractalMapper<>(g2);
+    Mapper<String> f3 = new FractalMapper<>(g3);
+    Mapper<String> ge1 = new StandardGEMapper<>(8, 10, g1);
+    Mapper<String> ge2 = new StandardGEMapper<>(8, 10, g2);
+    Mapper<String> ge3 = new StandardGEMapper<>(8, 10, g3);
     Random r = new Random(1);
-    for (int i = 0; i<10; i++) {
+    for (int i = 0; i<100; i++) {
       Genotype g = Utils.randomGenotype(128, new Random(i));
-      try {
-        System.out.println(Utils.contents(m1.map(g).leaves())+"\n");
-      } catch (MappingException ex) {
-        System.out.println("ex m1");;
-      }
+      System.out.printf("%3d %3d %3d | %3d %3d %3d | %3d %3d %3d%n",
+              Utils.safelyMapAndFlat(ge1, g).size(),
+              Utils.safelyMapAndFlat(ge2, g).size(),
+              Utils.safelyMapAndFlat(ge3, g).size(),
+              Utils.safelyMapAndFlat(f1, g).size(),
+              Utils.safelyMapAndFlat(f2, g).size(),
+              Utils.safelyMapAndFlat(f3, g).size(),
+              Utils.safelyMapAndFlat(wf1, g).size(),
+              Utils.safelyMapAndFlat(wf2, g).size(),
+              Utils.safelyMapAndFlat(wf3, g).size()
+              );
     }
   }
 
@@ -101,7 +116,7 @@ public class Main {
           mappers.add(new StandardGEMapper(8, 10, grammar));
           mappers.add(new BreathFirstMapper(8, 10, grammar));
           mappers.add(new PiGEMapper<>(16, 10, grammar));
-          mappers.add(new FractalMapper(10, grammar));
+          mappers.add(new FractalMapper(grammar));
           for (Mapper<String> mapper : mappers) {
             for (int i = 0; i < parentGenotypes.size(); i++) {
               List<List<String>> parents = new ArrayList<>();

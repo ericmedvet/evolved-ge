@@ -7,8 +7,15 @@ package it.units.malelab.ege.mapper;
 
 import it.units.malelab.ege.Genotype;
 import it.units.malelab.ege.Node;
+import it.units.malelab.ege.Utils;
 import it.units.malelab.ege.grammar.Grammar;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -16,17 +23,64 @@ import java.util.List;
  */
 public class FractalMapper<T> extends AbstractMapper<T> {
 
-  private final int maxZooms;
-  private int longestExpansion;
+  private final Map<T, Integer> shortestOptionIndexMap;
 
-  public FractalMapper(int maxZooms, Grammar<T> grammar) {
+  public FractalMapper(Grammar<T> grammar) {
     super(grammar);
-    this.maxZooms = maxZooms;
-    longestExpansion = 0;
-    for (List<List<T>> rule : grammar.getRules().values()) {
-      for (List<T> expansion : rule) {
-        longestExpansion = Math.max(longestExpansion, expansion.size());
+    Map<T, List<Integer>> optionJumpsToTerminalMap = new LinkedHashMap<>();
+    for (Map.Entry<T, List<List<T>>> rule : grammar.getRules().entrySet()) {
+      List<Integer> optionsJumps = new ArrayList<>();
+      for (List<T> option : rule.getValue()) {
+        optionsJumps.add(Integer.MAX_VALUE);
       }
+      optionJumpsToTerminalMap.put(rule.getKey(), optionsJumps);
+    }
+    while (true) {
+      boolean completed = true;
+      for (Map.Entry<T, List<Integer>> entry : optionJumpsToTerminalMap.entrySet()) {
+        for (int i = 0; i < entry.getValue().size(); i++) {
+          List<T> option = grammar.getRules().get(entry.getKey()).get(i);
+          if (Collections.disjoint(option, grammar.getRules().keySet())) {
+            entry.getValue().set(i, 1);
+          } else {
+            int maxJumps = Integer.MIN_VALUE;
+            for (T optionSymbol : option) {
+              List<Integer> optionSymbolJumps = optionJumpsToTerminalMap.get(optionSymbol);
+              if (optionSymbolJumps == null) {
+                maxJumps = Math.max(0, maxJumps);
+              } else {
+                int minJumps = Integer.MAX_VALUE;
+                for (int jumps : optionSymbolJumps) {
+                  minJumps = Math.min(minJumps, jumps);
+                }
+                minJumps = (minJumps==Integer.MAX_VALUE)?minJumps:(minJumps+1);
+                maxJumps = Math.max(minJumps, maxJumps);
+              }
+            }
+            entry.getValue().set(i, maxJumps);
+            if (maxJumps == Integer.MAX_VALUE) {
+              completed = false;
+            }
+          }
+        }
+      }
+      if (completed) {
+        break;
+      }
+    }
+    //build shortestOptionIndexMap
+    shortestOptionIndexMap = new LinkedHashMap<>();
+    for (Map.Entry<T, List<List<T>>> rule : grammar.getRules().entrySet()) {
+      int minJumpsOptionIndex = 0;
+      int minJumps = Integer.MAX_VALUE;
+      for (int i = 0; i < optionJumpsToTerminalMap.get(rule.getKey()).size(); i++) {
+        int jumps = optionJumpsToTerminalMap.get(rule.getKey()).get(i);
+        if (jumps<minJumps) {
+          minJumps = jumps;
+          minJumpsOptionIndex = i;
+        }
+      }
+      shortestOptionIndexMap.put(rule.getKey(), minJumpsOptionIndex);
     }
   }
 
@@ -34,12 +88,10 @@ public class FractalMapper<T> extends AbstractMapper<T> {
 
     private final T symbol;
     private final Genotype genotype;
-    private final int zooms;
 
-    public EnhancedSymbol(T symbol, Genotype genotype, int zooms) {
+    public EnhancedSymbol(T symbol, Genotype genotype) {
       this.symbol = symbol;
       this.genotype = genotype;
-      this.zooms = zooms;
     }
 
     public T getSymbol() {
@@ -50,17 +102,11 @@ public class FractalMapper<T> extends AbstractMapper<T> {
       return genotype;
     }
 
-    public int getZooms() {
-      return zooms;
-    }
   }
 
   @Override
   public Node<T> map(Genotype genotype) throws MappingException {
-    if (genotype.size() < longestExpansion) {
-      throw new MappingException(String.format("Short genotype (%d<%d)", genotype.size(), longestExpansion));
-    }
-    Node<EnhancedSymbol<T>> enhancedTree = new Node<>(new EnhancedSymbol<>(grammar.getStartingSymbol(), genotype, 0));
+    Node<EnhancedSymbol<T>> enhancedTree = new Node<>(new EnhancedSymbol<>(grammar.getStartingSymbol(), genotype));
     while (true) {
       Node<EnhancedSymbol<T>> nodeToBeReplaced = null;
       for (Node<EnhancedSymbol<T>> node : enhancedTree.leaves()) {
@@ -74,24 +120,20 @@ public class FractalMapper<T> extends AbstractMapper<T> {
       }
       //get genotype
       T symbol = nodeToBeReplaced.getContent().getSymbol();
-      int zooms = nodeToBeReplaced.getContent().getZooms();
       Genotype symbolGenotype = nodeToBeReplaced.getContent().getGenotype();
-      if (zooms > maxZooms) {
-        throw new MappingException(String.format("Too many zooms (%d>%d)", zooms, maxZooms));
-      }
       List<List<T>> options = grammar.getRules().get(symbol);
       //get option
-      List<T> symbols = chooseOption(symbolGenotype, options);
-      //add children
-      if (symbolGenotype.size() < symbols.size()) {
-        symbolGenotype = zoomGenotype(symbolGenotype, genotype);
-        zooms = zooms + 1;
+      List<T> symbols;
+      if (symbolGenotype.size() < options.size()) {
+        symbols = options.get(shortestOptionIndexMap.get(symbol));
+      } else {
+        symbols = chooseOption(symbolGenotype, options);
       }
+      //add children
       for (int i = 0; i < symbols.size(); i++) {
         Node<EnhancedSymbol<T>> newChild = new Node<>(new EnhancedSymbol<>(
                 symbols.get(i),
-                getSlice(symbolGenotype, symbols, i),
-                zooms
+                getSlice(symbolGenotype, symbols, i)
         ));
         nodeToBeReplaced.getChildren().add(newChild);
       }
@@ -105,13 +147,17 @@ public class FractalMapper<T> extends AbstractMapper<T> {
   }
 
   private Genotype getEqualSlice(Genotype genotype, int pieces, int index) {
-    int pieceSize = (int) Math.floor((double) genotype.size() / (double) pieces);
+    int pieceSize = (int) Math.round((double) genotype.size() / (double) pieces);
     int fromIndex = pieceSize * index;
     int toIndex = pieceSize * (index + 1);
     if (index == pieces - 1) {
       toIndex = genotype.size();
     }
-    return genotype.slice(fromIndex, toIndex);
+    if ((fromIndex < toIndex) && (toIndex <= genotype.size())) {
+      return genotype.slice(fromIndex, toIndex);
+    } else {
+      return new Genotype(0);
+    }
   }
 
   private Node<T> extractFromEnhanced(Node<EnhancedSymbol<T>> enhancedNode) {
@@ -126,28 +172,17 @@ public class FractalMapper<T> extends AbstractMapper<T> {
     if (options.size() == 1) {
       return options.get(0);
     }
-    int numberOfSlices = Math.max((int) Math.ceil(Math.log10(options.size()) / Math.log10(2d)), 2);
-    if (numberOfSlices > genotype.size()) {
-      return options.get(genotype.toInt() % options.size());
+    int index = 0;
+    double max = Double.MIN_VALUE;
+    for (int i = 0; i < options.size(); i++) {
+      Genotype sliceGenotype = getEqualSlice(genotype, options.size(), i);
+      double value = (double) sliceGenotype.count() / (double) sliceGenotype.size();
+      if (value > max) {
+        max = value;
+        index = i;
+      }
     }
-    int value = 0;
-    float threshold = (float)genotype.count()/(float)genotype.size();
-    for (int i = 0; i < numberOfSlices; i++) {
-      Genotype sliceGenotype = getEqualSlice(genotype, numberOfSlices, i);
-      int bit = (((float) sliceGenotype.count() / (float) (sliceGenotype.size()))>=threshold)?1:0;
-      value = value + bit * (int) Math.pow(2, i);
-    }
-    return options.get(value % options.size());
-  }
-
-  private Genotype zoomGenotype(Genotype genotype, Genotype referenceGenotype) {
-    int oldAvg = Math.round(genotype.count() / genotype.size());
-    genotype = referenceGenotype.slice(0, referenceGenotype.size());
-    int avg = Math.round(genotype.count() / genotype.size());
-    if (oldAvg != avg) {
-      genotype.flip();
-    }
-    return genotype;
+    return options.get(index);
   }
 
 }

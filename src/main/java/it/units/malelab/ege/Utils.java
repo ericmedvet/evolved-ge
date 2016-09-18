@@ -6,6 +6,8 @@
 package it.units.malelab.ege;
 
 import it.units.malelab.ege.grammar.Grammar;
+import it.units.malelab.ege.mapper.Mapper;
+import it.units.malelab.ege.mapper.MappingException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -15,6 +17,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -191,6 +194,14 @@ public class Utils {
     ps.printf("%"+(1+node.getAncestors().size()*2)+"s-%s%n", "", node.getContent());
     for (Node<T> child : node.getChildren()) {
       prettyPrintTree(child, ps);
+    }
+  }
+  
+  public static <T> List<T> safelyMapAndFlat(Mapper<T> mapper, Genotype genotype) {
+    try {
+      return contents(mapper.map(genotype).leaves());
+    } catch (MappingException ex) {
+      return Collections.EMPTY_LIST;
     }
   }
   

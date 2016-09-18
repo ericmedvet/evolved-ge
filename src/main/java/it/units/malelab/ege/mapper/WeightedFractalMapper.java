@@ -19,14 +19,14 @@ public class WeightedFractalMapper<T> extends FractalMapper<T> {
 
   private final Map<T, Integer> weightsMap;
 
-  public WeightedFractalMapper(int maxZooms, Grammar<T> grammar) {
-    super(maxZooms, grammar);
+  public WeightedFractalMapper(int maxDepth, Grammar<T> grammar) {
+    super(grammar);
     weightsMap = new HashMap<>();
     for (List<List<T>> options : grammar.getRules().values()) {
       for (List<T> option : options) {
         for (T symbol : option) {
           if (!weightsMap.keySet().contains(symbol)) {
-            weightsMap.put(symbol, countOptions(symbol, 0, maxZooms));
+            weightsMap.put(symbol, countOptions(symbol, 0, maxDepth));
           }
         }
       }
@@ -82,8 +82,8 @@ public class WeightedFractalMapper<T> extends FractalMapper<T> {
       toIndex = toIndex+sizes[i];      
     }
     int fromIndex = (index==0)?0:(toIndex-sizes[index]);
-    if (fromIndex==toIndex) {
-      return null;
+    if ((fromIndex>=toIndex)||(fromIndex<0)||(toIndex>genotype.size())) {
+      return new Genotype(0);
     }
     return genotype.slice(fromIndex, toIndex);
   }
