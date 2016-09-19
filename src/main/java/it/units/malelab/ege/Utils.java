@@ -114,6 +114,7 @@ public class Utils {
     decoratedTree.propagateParentship();
     //rewrite grammar
     resolvedGrammar.getRules().put(new Pair<>(grammar.getStartingSymbol(), 0), new ArrayList<List<Pair<T, Integer>>>());
+    resolvedGrammar.setStartingSymbol(new Pair<>(grammar.getStartingSymbol(), 0));
     while (true) {
       Pair<T, Integer> toFillDecoratedNonTerminal = null;
       for (Pair<T, Integer> decoratedNonTerminal : resolvedGrammar.getRules().keySet()) {

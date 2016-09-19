@@ -15,11 +15,11 @@ import java.util.Map;
  *
  * @author eric
  */
-public class WeightedFractalMapper<T> extends FractalMapper<T> {
+public class WeightedHierarchicalMapper<T> extends HierarchicalMapper<T> {
 
   private final Map<T, Integer> weightsMap;
 
-  public WeightedFractalMapper(int maxDepth, Grammar<T> grammar) {
+  public WeightedHierarchicalMapper(int maxDepth, Grammar<T> grammar) {
     super(grammar);
     weightsMap = new HashMap<>();
     for (List<List<T>> options : grammar.getRules().values()) {

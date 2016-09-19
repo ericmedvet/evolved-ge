@@ -7,7 +7,7 @@ package it.units.malelab.ege;
 
 import it.units.malelab.ege.grammar.Grammar;
 import it.units.malelab.ege.mapper.BreathFirstMapper;
-import it.units.malelab.ege.mapper.FractalMapper;
+import it.units.malelab.ege.mapper.HierarchicalMapper;
 import it.units.malelab.ege.mapper.Mapper;
 import it.units.malelab.ege.mapper.MappingException;
 import it.units.malelab.ege.mapper.StandardGEMapper;
@@ -18,7 +18,8 @@ import it.units.malelab.ege.distance.Distance;
 import it.units.malelab.ege.distance.EditDistance;
 import it.units.malelab.ege.distance.GenotypeHammingDistance;
 import it.units.malelab.ege.mapper.PiGEMapper;
-import it.units.malelab.ege.mapper.WeightedFractalMapper;
+import it.units.malelab.ege.mapper.StructuralGEMapper;
+import it.units.malelab.ege.mapper.WeightedHierarchicalMapper;
 import it.units.malelab.ege.operators.OnePointCrossover;
 import it.units.malelab.ege.operators.ProbabilisticMutation;
 import it.units.malelab.ege.operators.TwoPointsCrossover;
@@ -46,19 +47,22 @@ public class Main {
     Grammar<String> g1 = Utils.parseFromFile(new File("grammars/max-grammar-easy.bnf"));
     Grammar<String> g2 = Utils.parseFromFile(new File("grammars/text.bnf"));
     Grammar<String> g3 = Utils.parseFromFile(new File("grammars/simple-recursive.bnf"));
-    Mapper<String> wf1 = new WeightedFractalMapper<>(5, g1);
-    Mapper<String> wf2 = new WeightedFractalMapper<>(5, g2);
-    Mapper<String> wf3 = new WeightedFractalMapper<>(5, g3);
-    Mapper<String> f1 = new FractalMapper<>(g1);
-    Mapper<String> f2 = new FractalMapper<>(g2);
-    Mapper<String> f3 = new FractalMapper<>(g3);
+    Mapper<String> wf1 = new WeightedHierarchicalMapper<>(5, g1);
+    Mapper<String> wf2 = new WeightedHierarchicalMapper<>(5, g2);
+    Mapper<String> wf3 = new WeightedHierarchicalMapper<>(5, g3);
+    Mapper<String> f1 = new HierarchicalMapper<>(g1);
+    Mapper<String> f2 = new HierarchicalMapper<>(g2);
+    Mapper<String> f3 = new HierarchicalMapper<>(g3);
     Mapper<String> ge1 = new StandardGEMapper<>(8, 10, g1);
     Mapper<String> ge2 = new StandardGEMapper<>(8, 10, g2);
     Mapper<String> ge3 = new StandardGEMapper<>(8, 10, g3);
+    Mapper<String> sge1 = new StructuralGEMapper<>(5, g1);
+    Mapper<String> sge2 = new StructuralGEMapper<>(5, g2);
+    Mapper<String> sge3 = new StructuralGEMapper<>(5, g3);
     Random r = new Random(1);
     for (int i = 0; i<100; i++) {
-      Genotype g = Utils.randomGenotype(128, new Random(i));
-      System.out.printf("%3d %3d %3d | %3d %3d %3d | %3d %3d %3d%n",
+      Genotype g = Utils.randomGenotype(1024, new Random(i));
+      System.out.printf("%3d %3d %3d | %3d %3d %3d | %3d %3d %3d | %3d %3d %3d%n",
               Utils.safelyMapAndFlat(ge1, g).size(),
               Utils.safelyMapAndFlat(ge2, g).size(),
               Utils.safelyMapAndFlat(ge3, g).size(),
@@ -67,7 +71,10 @@ public class Main {
               Utils.safelyMapAndFlat(f3, g).size(),
               Utils.safelyMapAndFlat(wf1, g).size(),
               Utils.safelyMapAndFlat(wf2, g).size(),
-              Utils.safelyMapAndFlat(wf3, g).size()
+              Utils.safelyMapAndFlat(wf3, g).size(),
+              Utils.safelyMapAndFlat(sge1, g).size(),
+              Utils.safelyMapAndFlat(sge2, g).size(),
+              Utils.safelyMapAndFlat(sge3, g).size()
               );
     }
   }
@@ -116,7 +123,7 @@ public class Main {
           mappers.add(new StandardGEMapper(8, 10, grammar));
           mappers.add(new BreathFirstMapper(8, 10, grammar));
           mappers.add(new PiGEMapper<>(16, 10, grammar));
-          mappers.add(new FractalMapper(grammar));
+          mappers.add(new HierarchicalMapper(grammar));
           for (Mapper<String> mapper : mappers) {
             for (int i = 0; i < parentGenotypes.size(); i++) {
               List<List<String>> parents = new ArrayList<>();

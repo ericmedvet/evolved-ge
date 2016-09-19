@@ -7,25 +7,22 @@ package it.units.malelab.ege.mapper;
 
 import it.units.malelab.ege.Genotype;
 import it.units.malelab.ege.Node;
-import it.units.malelab.ege.Utils;
 import it.units.malelab.ege.grammar.Grammar;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  *
  * @author eric
  */
-public class FractalMapper<T> extends AbstractMapper<T> {
+public class HierarchicalMapper<T> extends AbstractMapper<T> {
 
   private final Map<T, Integer> shortestOptionIndexMap;
 
-  public FractalMapper(Grammar<T> grammar) {
+  public HierarchicalMapper(Grammar<T> grammar) {
     super(grammar);
     Map<T, List<Integer>> optionJumpsToTerminalMap = new LinkedHashMap<>();
     for (Map.Entry<T, List<List<T>>> rule : grammar.getRules().entrySet()) {

@@ -22,6 +22,13 @@ public class Node<T> {
   public Node(T content) {
     this.content = content;
   }
+  
+  public Node(Node<T> toClone) {
+    content = toClone.content;
+    for (Node<T> childToClone : toClone.getChildren()) {
+      children.add(new Node<>(childToClone));
+    }
+  }
 
   public T getContent() {
     return content;
@@ -77,5 +84,5 @@ public class Node<T> {
       child.propagateParentship();
     }
   }
-  
+    
 }
