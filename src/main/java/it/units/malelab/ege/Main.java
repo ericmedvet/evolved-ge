@@ -60,8 +60,8 @@ public class Main {
     Mapper<String> sge2 = new StructuralGEMapper<>(5, g2);
     Mapper<String> sge3 = new StructuralGEMapper<>(5, g3);
     Random r = new Random(1);
-    for (int i = 0; i<100; i++) {
-      Genotype g = Utils.randomGenotype(1024, new Random(i));
+    for (int i = 0; i<5; i++) {
+      Genotype g = Utils.randomGenotype(2048, new Random(i));
       System.out.printf("%3d %3d %3d | %3d %3d %3d | %3d %3d %3d | %3d %3d %3d%n",
               Utils.safelyMapAndFlat(ge1, g).size(),
               Utils.safelyMapAndFlat(ge2, g).size(),

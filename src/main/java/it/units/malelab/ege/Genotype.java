@@ -13,8 +13,8 @@ import java.util.BitSet;
  */
 public class Genotype {
   
-  private int size;
-  private BitSet bitSet;
+  private final int size;
+  private final BitSet bitSet;
 
   public Genotype(int nBits) {
     this.size = nBits;
@@ -40,11 +40,20 @@ public class Genotype {
   }
   
   public int toInt() {
-    int sum = 0;
-    for (long l : bitSet.toLongArray()) {
-      sum = sum+(int)l;
+    if (size<=Integer.SIZE/2) {
+      if (bitSet.toLongArray().length<=0) {
+        return 0;
+      }
+      return (int)bitSet.toLongArray()[0];
     }
-    return sum;
+    Genotype compressed = new Genotype(Integer.SIZE/2);
+    for (int i = 0; i<compressed.size; i++) {
+      Genotype slice = getEqualSlice(i, compressed.size);
+      if (slice.count()>slice.size/2) {
+        compressed.bitSet.set(i);
+      }
+    }
+    return compressed.toInt();
   }
   
   public void set(int fromIndex, Genotype other) {
@@ -95,5 +104,20 @@ public class Genotype {
     copy.or(bitSet);
     return copy;
   }
+  
+  public Genotype getEqualSlice(int index, int pieces) {
+    int pieceSize = (int) Math.round((double) size / (double) pieces);
+    int fromIndex = pieceSize * index;
+    int toIndex = pieceSize * (index + 1);
+    if (index == pieces - 1) {
+      toIndex = size;
+    }
+    if ((fromIndex < toIndex) && (toIndex <= size)) {
+      return slice(fromIndex, toIndex);
+    } else {
+      return new Genotype(0);
+    }
+  }
+
     
 }

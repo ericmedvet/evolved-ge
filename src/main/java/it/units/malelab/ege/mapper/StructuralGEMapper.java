@@ -84,12 +84,9 @@ public class StructuralGEMapper<T> extends AbstractMapper<T> {
       }
       //get codon
       int codonIndex = codonsRangesMap.get(nodeToBeReplaced.getContent()).lowerEndpoint() + expandedSymbols.count(nodeToBeReplaced.getContent());
-      int codonValue = getEqualSlice(genotype, numberOfCodons, codonIndex).toInt();
+      int codonValue = genotype.getEqualSlice(codonIndex, numberOfCodons).toInt();
       List<List<Pair<T, Integer>>> options = nonRecursiveGrammar.getRules().get(nodeToBeReplaced.getContent());
       int optionIndex = codonValue%options.size();
-      if (optionIndex<0) {
-        System.out.println(getEqualSlice(genotype, numberOfCodons, codonIndex));
-      }
       //add children
       for (Pair<T, Integer> p : options.get(optionIndex)) {
         Node<Pair<T, Integer>> newChild = new Node<>(p);
@@ -107,20 +104,6 @@ public class StructuralGEMapper<T> extends AbstractMapper<T> {
       node.getChildren().add(transform(pairChild));
     }
     return node;
-  }
-
-  private Genotype getEqualSlice(Genotype genotype, int pieces, int index) {
-    int pieceSize = (int) Math.round((double) genotype.size() / (double) pieces);
-    int fromIndex = pieceSize * index;
-    int toIndex = pieceSize * (index + 1);
-    if (index == pieces - 1) {
-      toIndex = genotype.size();
-    }
-    if ((fromIndex < toIndex) && (toIndex <= genotype.size())) {
-      return genotype.slice(fromIndex, toIndex);
-    } else {
-      return new Genotype(0);
-    }
   }
 
 }

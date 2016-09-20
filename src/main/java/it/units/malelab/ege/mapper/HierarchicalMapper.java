@@ -140,21 +140,7 @@ public class HierarchicalMapper<T> extends AbstractMapper<T> {
   }
 
   protected Genotype getSlice(Genotype genotype, List<T> symbols, int index) {
-    return getEqualSlice(genotype, symbols.size(), index);
-  }
-
-  private Genotype getEqualSlice(Genotype genotype, int pieces, int index) {
-    int pieceSize = (int) Math.round((double) genotype.size() / (double) pieces);
-    int fromIndex = pieceSize * index;
-    int toIndex = pieceSize * (index + 1);
-    if (index == pieces - 1) {
-      toIndex = genotype.size();
-    }
-    if ((fromIndex < toIndex) && (toIndex <= genotype.size())) {
-      return genotype.slice(fromIndex, toIndex);
-    } else {
-      return new Genotype(0);
-    }
+    return genotype.getEqualSlice(index, symbols.size());
   }
 
   private Node<T> extractFromEnhanced(Node<EnhancedSymbol<T>> enhancedNode) {
@@ -172,7 +158,7 @@ public class HierarchicalMapper<T> extends AbstractMapper<T> {
     int index = 0;
     double max = Double.MIN_VALUE;
     for (int i = 0; i < options.size(); i++) {
-      Genotype sliceGenotype = getEqualSlice(genotype, options.size(), i);
+      Genotype sliceGenotype = genotype.getEqualSlice(i, options.size());
       double value = (double) sliceGenotype.count() / (double) sliceGenotype.size();
       if (value > max) {
         max = value;
