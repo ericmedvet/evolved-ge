@@ -84,5 +84,21 @@ public class Node<T> {
       child.propagateParentship();
     }
   }
+  
+  public int depth() {
+    int max = 0;
+    for (Node<T> child : children) {
+      max = Math.max(max, child.depth());
+    }
+    return max+1;
+  }
+  
+  public int size() {
+    int size = 0;
+    for (Node<T> child : children) {
+      size = size+child.size();
+    }
+    return size+1;
+  }
     
 }

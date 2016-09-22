@@ -19,9 +19,11 @@ import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -81,34 +83,7 @@ public class Utils {
   public static <T> Grammar<Pair<T, Integer>> resolveRecursiveGrammar(Grammar<T> grammar, int maxDepth) {
     Grammar<Pair<T, Integer>> resolvedGrammar = new Grammar<>();
     //build tree from recursive
-    Node<T> tree = new Node<>(grammar.getStartingSymbol());
-    while (true) {
-      tree.propagateParentship();
-      Node<T> toExpandNode = null;
-      for (Node<T> node : tree.leaves()) {
-        if (grammar.getRules().keySet().contains(node.getContent())) {
-          toExpandNode = node;
-          break;
-        }
-      }
-      if (toExpandNode==null) {
-        break;
-      }
-      List<T> symbols = new ArrayList<>();
-      for (List<T> optionSymbols : grammar.getRules().get(toExpandNode.getContent())) {
-        for (T optionSymbol : optionSymbols) {
-          if (!symbols.contains(optionSymbol)) {
-            symbols.add(optionSymbol);
-          }
-        }
-      }
-      for (T symbol : symbols) {
-        int countOfEqualAncestors = count(contents(toExpandNode.getAncestors()), symbol);
-        if (countOfEqualAncestors<maxDepth) {
-          toExpandNode.getChildren().add(new Node<>(symbol));
-        }
-      }
-    }
+    Node<T> tree = expand(grammar.getStartingSymbol(), grammar, 0, maxDepth);
     //decorate tree with depth
     Node<Pair<T, Integer>> decoratedTree = decorateTreeWithDepth(tree);
     decoratedTree.propagateParentship();
@@ -147,8 +122,46 @@ public class Utils {
           resolvedGrammar.getRules().get(toFillDecoratedNonTerminal).add(decoratedOption);
         }
       }
+      if (resolvedGrammar.getRules().get(toFillDecoratedNonTerminal).isEmpty()) {
+        throw new IllegalArgumentException(String.format("Cannot expand this grammar with this maxDepth, due to rule for %s.", toFillDecoratedNonTerminal));
+      }
     }
     return resolvedGrammar;
+  }
+  
+  public static <T> Node<T> expand(T symbol, Grammar<T> grammar, int depth, int maxDepth) {
+    if (depth>maxDepth) {
+      return null;
+    }
+    Node<T> node = new Node<>(symbol);
+    List<List<T>> options = grammar.getRules().get(symbol);
+    if (options==null) {
+      return node;
+    }
+    Set<Node<T>> children = new LinkedHashSet<>();
+    for (List<T> option : options) {
+      Set<Node<T>> optionChildren = new LinkedHashSet<>();
+      boolean nullNode = false;
+      for (T optionSymbol : option) {
+        Node<T> child = expand(optionSymbol, grammar, depth+1, maxDepth);
+        if (child==null) {
+          nullNode = true;
+          break;
+        }
+        optionChildren.add(child);
+      }
+      if (!nullNode) {
+        children.addAll(optionChildren);
+      }
+    }
+    if (children.isEmpty()) {
+      return null;
+    }
+    for (Node<T> child : children) {
+      node.getChildren().add(child);
+    }
+    node.propagateParentship();
+    return node;
   }
   
   private static <T> Node<T> findNodeWithContent(Node<T> tree, T content) {

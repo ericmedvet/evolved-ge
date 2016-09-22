@@ -5,6 +5,7 @@
  */
 package it.units.malelab.ege;
 
+import com.google.common.collect.Range;
 import java.util.BitSet;
 
 /**
@@ -40,15 +41,23 @@ public class Genotype {
   }
   
   public int toInt() {
-    if (size<=Integer.SIZE/2) {
-      if (bitSet.toLongArray().length<=0) {
-        return 0;
-      }
-      return (int)bitSet.toLongArray()[0];
+    if (size>Integer.SIZE/2) {
+      return toInt(Integer.SIZE/2);
     }
-    Genotype compressed = new Genotype(Integer.SIZE/2);
+    if (bitSet.toLongArray().length<=0) {
+      return 0;
+    }
+    return (int)bitSet.toLongArray()[0];
+  }
+  
+  public int toInt(int maxValue) {
+    int bits = (int)Math.ceil(Math.log10(maxValue)/Math.log10(2d));
+    if (size<=bits) {
+      return toInt();
+    }
+    Genotype compressed = new Genotype(bits);
     for (int i = 0; i<compressed.size; i++) {
-      Genotype slice = getEqualSlice(i, compressed.size);
+      Genotype slice = getIndexedEqualSlice(i, compressed.size);
       if (slice.count()>slice.size/2) {
         compressed.bitSet.set(i);
       }
@@ -71,6 +80,11 @@ public class Genotype {
       sb.append(bitSet.get(i) ? '1' : '0');
     }
     return sb.toString();
+  }
+  
+  public boolean get(int index) {
+    checkIndexes(index, index+1);
+    return bitSet.get(index);
   }
   
   public void flip() {
@@ -105,18 +119,37 @@ public class Genotype {
     return copy;
   }
   
-  public Genotype getEqualSlice(int index, int pieces) {
-    int pieceSize = (int) Math.round((double) size / (double) pieces);
-    int fromIndex = pieceSize * index;
-    int toIndex = pieceSize * (index + 1);
-    if (index == pieces - 1) {
-      toIndex = size;
-    }
-    if ((fromIndex < toIndex) && (toIndex <= size)) {
-      return slice(fromIndex, toIndex);
+  public Genotype getIndexedEqualSlice(int index, int pieces) {
+    Range<Integer> range = getRangeOfIndexedEqualSlices(Range.closedOpen(index, index+1), pieces);
+    if ((range.lowerEndpoint() < range.upperEndpoint()) && (range.upperEndpoint() <= size)) {
+      return slice(range.lowerEndpoint(), range.upperEndpoint());
     } else {
       return new Genotype(0);
     }
+  }
+  
+  public Range<Integer> getRangeOfIndexedEqualSlices(Range<Integer> sliceRange, int pieces) {
+    int pieceSize = (int) Math.round((double) size / (double) pieces);
+    int localFromIndex = 0;
+    int localToIndex = 0;
+    int fromIndex = 0;
+    int toIndex = 0;
+    for (int i = 0; i<pieces; i++) {
+      localFromIndex = localToIndex;
+      localToIndex = localFromIndex+pieceSize;
+      if (i == sliceRange.lowerEndpoint()) {
+        fromIndex = localFromIndex;
+      }
+      if (i == sliceRange.upperEndpoint()) {
+        toIndex = localToIndex;
+        break;
+      }
+      pieceSize = (int) Math.round((double) (size-toIndex) / (double) (pieces-i));
+    }
+    if (sliceRange.upperEndpoint()==pieces) {
+      toIndex = size;
+    }    
+    return Range.closedOpen(fromIndex, toIndex);
   }
 
     

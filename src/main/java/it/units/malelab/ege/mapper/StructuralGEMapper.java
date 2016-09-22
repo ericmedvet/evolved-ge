@@ -13,6 +13,7 @@ import it.units.malelab.ege.Node;
 import it.units.malelab.ege.Pair;
 import it.units.malelab.ege.Utils;
 import it.units.malelab.ege.grammar.Grammar;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,7 +85,7 @@ public class StructuralGEMapper<T> extends AbstractMapper<T> {
       }
       //get codon
       int codonIndex = codonsRangesMap.get(nodeToBeReplaced.getContent()).lowerEndpoint() + expandedSymbols.count(nodeToBeReplaced.getContent());
-      int codonValue = genotype.getEqualSlice(codonIndex, numberOfCodons).toInt();
+      int codonValue = genotype.getIndexedEqualSlice(codonIndex, numberOfCodons).toInt();
       List<List<Pair<T, Integer>>> options = nonRecursiveGrammar.getRules().get(nodeToBeReplaced.getContent());
       int optionIndex = codonValue%options.size();
       //add children
@@ -104,6 +105,12 @@ public class StructuralGEMapper<T> extends AbstractMapper<T> {
       node.getChildren().add(transform(pairChild));
     }
     return node;
+  }
+  
+  public List<Range<Integer>> getCodonsRanges() {
+    List<Range<Integer>> ranges = new ArrayList<>();
+    ranges.addAll(codonsRangesMap.values());
+    return ranges;
   }
 
 }
