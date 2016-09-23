@@ -1,4 +1,4 @@
-<expr> ::= <expr> <op> <expr> | ( <expr> <op> <expr> )| <pre-op> ( <expr> ) | <var>
+<expr> ::= <expr> <op> <expr> | ( <expr> <op> <expr> ) | <pre-op> ( <expr> ) | <var>
 <op> ::= + | - | / | *
-<pre-op> ::= Sin | Cos | Exp |Log
+<pre-op> ::= Sin | Cos | Exp | Log
 <var> ::= X | 1.0

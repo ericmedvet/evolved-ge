@@ -141,10 +141,10 @@ public class Genotype {
         fromIndex = localFromIndex;
       }
       if (i == sliceRange.upperEndpoint()) {
-        toIndex = localToIndex;
+        toIndex = localFromIndex;
         break;
       }
-      pieceSize = (int) Math.round((double) (size-toIndex) / (double) (pieces-i));
+      pieceSize = (int) Math.round((double) (size-localToIndex) / (double) (pieces-i));
     }
     if (sliceRange.upperEndpoint()==pieces) {
       toIndex = size;

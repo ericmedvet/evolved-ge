@@ -32,6 +32,8 @@ import java.util.regex.Pattern;
  */
 public class Utils {
   
+  public static Node EMPTY_TREE = new Node(null);
+  
   public static Grammar<String> parseFromFile(File file) throws FileNotFoundException, IOException {
     Grammar<String> grammar = new Grammar<>();
     BufferedReader br = new BufferedReader(new FileReader(file));

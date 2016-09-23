@@ -18,18 +18,11 @@ public class Node<T> {
   private final T content;
   private final List<Node<T>> children = new ArrayList<>();
   private Node<T> parent;
-
+  
   public Node(T content) {
     this.content = content;
   }
   
-  public Node(Node<T> toClone) {
-    content = toClone.content;
-    for (Node<T> childToClone : toClone.getChildren()) {
-      children.add(new Node<>(childToClone));
-    }
-  }
-
   public T getContent() {
     return content;
   }
