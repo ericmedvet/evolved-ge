@@ -17,4 +17,25 @@
       <version>19.0</version>
     </dependency>    
   </dependencies>
+  
+  <!-- http://www.mkyong.com/maven/create-a-fat-jar-file-maven-shade-plugin/ -->
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>2.3</version>
+        <executions>
+          <!-- Run shade goal on package phase -->
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
 </project>
