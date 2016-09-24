@@ -7,6 +7,7 @@ package it.units.malelab.ege.mapper;
 
 import it.units.malelab.ege.Genotype;
 import it.units.malelab.ege.grammar.Grammar;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,36 +57,23 @@ public class WeightedHierarchicalMapper<T> extends HierarchicalMapper<T> {
   }
 
   @Override
-  protected Genotype getSlice(Genotype genotype, List<T> symbols, int index) {
-    //it assumes that genotype.size()>=symbols.size()
-    if (symbols.size()==1) {
-      return genotype;
-    }
-    int[] sizes = new int[symbols.size()];
-    int sumOfSizes = 0;
-    int maxSizeIndex = 0;
-    for (int i = 0; i<symbols.size(); i++) {
-      sizes[i] = weightsMap.get(symbols.get(i));
-      sumOfSizes = sumOfSizes+sizes[i];
-      if (sizes[i]>sizes[maxSizeIndex]) {
-        maxSizeIndex = i;
+  protected List<Genotype> getSlices(Genotype genotype, List<T> symbols) {
+    if (symbols.size()>genotype.size()) {
+      List<Genotype> genotypes = new ArrayList<>(symbols.size());
+      for (T symbol : symbols) {
+        genotypes.add(new Genotype(0));
       }
+      return genotypes;
     }
-    int sumOfAdjustedSizes = 0;
-    for (int i = 0; i<sizes.length; i++) {
-      sizes[i] = (int)Math.max(Math.floor((double)sizes[i]/(double)sumOfSizes*(double)genotype.size()), 1);
-      sumOfAdjustedSizes = sumOfAdjustedSizes+sizes[i];
+    List<Integer> sizes = new ArrayList<>(symbols.size());
+    int overallWeight = 0;
+    for (T symbol : symbols) {
+      overallWeight = overallWeight+weightsMap.get(symbol);
     }
-    sizes[maxSizeIndex] = sizes[maxSizeIndex]+(genotype.size()-sumOfAdjustedSizes);
-    int toIndex = 0;
-    for (int i = 0; i<=index; i++) {
-      toIndex = toIndex+sizes[i];      
+    for (T symbol : symbols) {
+      sizes.add((int)Math.max(1, Math.floor((double)weightsMap.get(symbol)/(double)overallWeight*(double)genotype.size())));
     }
-    int fromIndex = (index==0)?0:(toIndex-sizes[index]);
-    if ((fromIndex>=toIndex)||(fromIndex<0)||(toIndex>genotype.size())) {
-      return new Genotype(0);
-    }
-    return genotype.slice(fromIndex, toIndex);
+    return genotype.slices(sizes);
   }
   
 }

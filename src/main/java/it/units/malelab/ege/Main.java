@@ -53,13 +53,6 @@ public class Main {
   public static void main(String[] args) throws IOException {
     Main main = new Main();
     main.localityDegeneracyAnalysis();
-    //main.testMappers();
-    Genotype g = Utils.randomGenotype(100, new Random(1l));
-    System.out.println(g);
-    System.out.println(g.slice(0, 10));
-    for (int i = 0; i < 7; i++) {
-      System.out.println(g.getRangeOfIndexedEqualSlices(Range.closedOpen(i, i + 1), 7));
-    }
   }
 
   public void testBinaryOperators() {
@@ -127,9 +120,10 @@ public class Main {
     outputs.put(filePs, "%d;%s;%s;%s;%.0f;%.0f;%.0f;%.0f;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d%n");
     filePs.println("gSize;grammar;mapper;operator;gd0;gd1;pd0;pd1;p0l;p1l;c0l;c1l;p0d;p1d;c0d;c1d;p0s;p1s;c0s;c1s");
     Random random = new Random(1);
-    int numberOfRepetitions = 1000;
+    int numberOfRepetitions = 1;
     int[] genotypeSizes = new int[]{128, 256, 512, 1024, 2048, 4096};
-    String[] grammarNames = new String[]{"max-grammar", "text", "santa-fe", "symbolic-regression"};
+    //String[] grammarNames = new String[]{"max-grammar", "text", "santa-fe", "symbolic-regression"};
+    String[] grammarNames = new String[]{"max-grammar"};
     final Distance<Genotype> gd = new GenotypeEditDistance();
     final Distance<List<String>> pd = new EditDistance<>();
     Map<String[], Pair<Mapper<String>, GeneticOperator>> map = new LinkedHashMap<>();

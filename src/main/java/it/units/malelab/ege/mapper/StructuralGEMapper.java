@@ -24,21 +24,34 @@ import java.util.Map;
  */
 public class StructuralGEMapper<T> extends AbstractMapper<T> {
 
-  private final Map<Pair<T, Integer>, Range<Integer>> codonsRangesMap;
   private final Grammar<Pair<T, Integer>> nonRecursiveGrammar;
-  private final int numberOfCodons;
+  private final List<Pair<T, Integer>> nonTerminals;
+  private final List<Integer> nonTerminalSizes;
+  private final List<Integer> nonTerminalCodonsNumbers;
+  private int overallSize;
 
   public StructuralGEMapper(int maxDepth, Grammar<T> grammar) {
     super(grammar);
     nonRecursiveGrammar = Utils.resolveRecursiveGrammar(grammar, maxDepth);
-    codonsRangesMap = new LinkedHashMap<>();
+    Map<Pair<T, Integer>, Range<Integer>> codonsRangesMap = new LinkedHashMap<>();
     int startingIndex = 0;
     for (Pair<T, Integer> p : nonRecursiveGrammar.getRules().keySet()) {
       int maximumExpansions = maximumExpansions(p, nonRecursiveGrammar);
       codonsRangesMap.put(p, Range.closedOpen(startingIndex, startingIndex + maximumExpansions));
       startingIndex = startingIndex + maximumExpansions;
     }
-    numberOfCodons = startingIndex + 1;
+    nonTerminals = new ArrayList<>(codonsRangesMap.keySet());
+    nonTerminalSizes = new ArrayList<>();
+    nonTerminalCodonsNumbers = new ArrayList<>();
+    overallSize = 0;
+    for (Pair<T, Integer> nonTerminal : nonTerminals) {
+      Range<Integer> range = codonsRangesMap.get(nonTerminal);
+      int nonTerminalCodonsNumber = range.upperEndpoint() - range.lowerEndpoint();
+      int codonSize = (int) Math.max(Math.ceil(Math.log10(nonRecursiveGrammar.getRules().get(nonTerminal).size()) / Math.log10(2)), 1);
+      nonTerminalSizes.add(nonTerminalCodonsNumber * codonSize);
+      nonTerminalCodonsNumbers.add(nonTerminalCodonsNumber);
+      overallSize = overallSize + nonTerminalCodonsNumber * codonSize;
+    }
   }
 
   private <E> int maximumExpansions(E nonTerminal, Grammar<E> g) {
@@ -67,9 +80,22 @@ public class StructuralGEMapper<T> extends AbstractMapper<T> {
 
   @Override
   public Node<T> map(Genotype genotype) throws MappingException {
-    if (genotype.size() < numberOfCodons) {
-      throw new MappingException(String.format("Short genotype (%d<%d)", genotype.size(), numberOfCodons));
+    //transform genotypes in ints
+    if (genotype.size() < overallSize) {
+      throw new MappingException(String.format("Short genotype (%d<%d)", genotype.size(), overallSize));
     }
+    Map<Pair<T, Integer>, List<Integer>> codons = new LinkedHashMap<>();
+    List<Genotype> nonTerminalGenotypes = genotype.slices(nonTerminalSizes);
+    for (int i = 0; i < nonTerminals.size(); i++) {
+      int codonSize = (int) Math.max(Math.ceil(Math.log10(nonRecursiveGrammar.getRules().get(nonTerminals.get(i)).size()) / Math.log10(2)), 1);
+      List<Genotype> codonGenotypes = nonTerminalGenotypes.get(i).slices(nonTerminalCodonsNumbers.get(i));
+      List<Integer> nonTerminalCodons = new ArrayList<>(nonTerminalCodonsNumbers.get(i));
+      for (int j = 0; j < nonTerminalCodonsNumbers.get(i); j++) {
+        nonTerminalCodons.add(codonGenotypes.get(j).compress(codonSize).toInt());
+      }
+      codons.put(nonTerminals.get(i), nonTerminalCodons);
+    }
+    //map
     Multiset<Pair<T, Integer>> expandedSymbols = LinkedHashMultiset.create();
     Node<Pair<T, Integer>> tree = new Node<>(nonRecursiveGrammar.getStartingSymbol());
     while (true) {
@@ -84,10 +110,9 @@ public class StructuralGEMapper<T> extends AbstractMapper<T> {
         break;
       }
       //get codon
-      int codonIndex = codonsRangesMap.get(nodeToBeReplaced.getContent()).lowerEndpoint() + expandedSymbols.count(nodeToBeReplaced.getContent());
-      int codonValue = genotype.getIndexedEqualSlice(codonIndex, numberOfCodons).toInt();
+      int codonValue = codons.get(nodeToBeReplaced.getContent()).get(expandedSymbols.count(nodeToBeReplaced.getContent()));
       List<List<Pair<T, Integer>>> options = nonRecursiveGrammar.getRules().get(nodeToBeReplaced.getContent());
-      int optionIndex = codonValue%options.size();
+      int optionIndex = codonValue % options.size();
       //add children
       for (Pair<T, Integer> p : options.get(optionIndex)) {
         Node<Pair<T, Integer>> newChild = new Node<>(p);
@@ -98,7 +123,7 @@ public class StructuralGEMapper<T> extends AbstractMapper<T> {
     //transform tree
     return transform(tree);
   }
-  
+
   private Node<T> transform(Node<Pair<T, Integer>> pairNode) {
     Node<T> node = new Node<>(pairNode.getContent().getFirst());
     for (Node<Pair<T, Integer>> pairChild : pairNode.getChildren()) {
@@ -106,11 +131,9 @@ public class StructuralGEMapper<T> extends AbstractMapper<T> {
     }
     return node;
   }
-  
-  public List<Range<Integer>> getCodonsRanges() {
-    List<Range<Integer>> ranges = new ArrayList<>();
-    ranges.addAll(codonsRangesMap.values());
-    return ranges;
+
+  public List<Integer> getNonTerminalSizes() {
+    return nonTerminalSizes;
   }
 
 }

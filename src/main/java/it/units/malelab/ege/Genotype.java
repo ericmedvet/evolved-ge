@@ -5,8 +5,13 @@
  */
 package it.units.malelab.ege;
 
+import com.google.common.collect.Collections2;
 import com.google.common.collect.Range;
+import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  *
@@ -41,30 +46,16 @@ public class Genotype {
   }
   
   public int toInt() {
+    Genotype genotype = this;
     if (size>Integer.SIZE/2) {
-      return toInt(Integer.SIZE/2);
+      genotype = compress(Integer.SIZE/2);
     }
-    if (bitSet.toLongArray().length<=0) {
+    if (genotype.bitSet.toLongArray().length<=0) {
       return 0;
     }
-    return (int)bitSet.toLongArray()[0];
+    return (int)genotype.bitSet.toLongArray()[0];
   }
-  
-  public int toInt(int maxValue) {
-    int bits = (int)Math.ceil(Math.log10(maxValue)/Math.log10(2d));
-    if (size<=bits) {
-      return toInt();
-    }
-    Genotype compressed = new Genotype(bits);
-    for (int i = 0; i<compressed.size; i++) {
-      Genotype slice = getIndexedEqualSlice(i, compressed.size);
-      if (slice.count()>slice.size/2) {
-        compressed.bitSet.set(i);
-      }
-    }
-    return compressed.toInt();
-  }
-  
+    
   public void set(int fromIndex, Genotype other) {
     checkIndexes(fromIndex, fromIndex+other.size());
     for (int i = 0; i<other.size(); i++) {
@@ -118,38 +109,75 @@ public class Genotype {
     copy.or(bitSet);
     return copy;
   }
-  
-  public Genotype getIndexedEqualSlice(int index, int pieces) {
-    Range<Integer> range = getRangeOfIndexedEqualSlices(Range.closedOpen(index, index+1), pieces);
-    if ((range.lowerEndpoint() < range.upperEndpoint()) && (range.upperEndpoint() <= size)) {
-      return slice(range.lowerEndpoint(), range.upperEndpoint());
-    } else {
-      return new Genotype(0);
+    
+  public Genotype compress(int newSize) {
+    Genotype compressed = new Genotype(newSize);
+    List<Genotype> slices = slices(newSize);
+    for (int i = 0; i<slices.size(); i++) {
+      compressed.bitSet.set(i, slices.get(i).count()>slices.get(i).size()/2);
     }
+    return compressed;
   }
   
-  public Range<Integer> getRangeOfIndexedEqualSlices(Range<Integer> sliceRange, int pieces) {
-    int pieceSize = (int) Math.round((double) size / (double) pieces);
-    int localFromIndex = 0;
-    int localToIndex = 0;
-    int fromIndex = 0;
-    int toIndex = 0;
-    for (int i = 0; i<pieces; i++) {
-      localFromIndex = localToIndex;
-      localToIndex = localFromIndex+pieceSize;
-      if (i == sliceRange.lowerEndpoint()) {
-        fromIndex = localFromIndex;
-      }
-      if (i == sliceRange.upperEndpoint()) {
-        toIndex = localFromIndex;
-        break;
-      }
-      pieceSize = (int) Math.round((double) (size-localToIndex) / (double) (pieces-i));
+  public List<Genotype> slices(final List<Integer> sizes) {
+    List<Genotype> genotypes = new ArrayList<>();
+    int sumOfAllSizes = 0;
+    for (int localSize : sizes) {
+      sumOfAllSizes = sumOfAllSizes+localSize;
     }
-    if (sliceRange.upperEndpoint()==pieces) {
-      toIndex = size;
-    }    
-    return Range.closedOpen(fromIndex, toIndex);
+    //compute ideal piece sizes
+    List<Integer> pieceSizes = new ArrayList<>(sizes.size());
+    List<Integer> sizeIndexes = new ArrayList<>(sizes.size());
+    int totalSize = 0;
+    for (int i = 0; i<sizes.size(); i++) {
+      int pieceSize = (int)Math.max(1, Math.floor((double) size / (double) sumOfAllSizes));
+      pieceSizes.add(pieceSize);
+      sizeIndexes.add(i);
+      totalSize = totalSize+pieceSize*sizes.get(i);
+    }
+    Collections.sort(sizeIndexes, new Comparator<Integer>() {
+      @Override
+      public int compare(Integer i1, Integer i2) {
+        return -Integer.compare(sizes.get(i1), sizes.get(i2));
+      }
+    });
+    for (int i = 0; i<pieceSizes.size(); i++) {
+      int index = sizeIndexes.get(i);
+      if (totalSize+sizes.get(index)<=size) {
+        pieceSizes.set(index, pieceSizes.get(index)+1);
+        totalSize = totalSize+sizes.get(index);
+      }
+    }
+    int fromIndex;
+    int toIndex = 0;
+    int sumOfUsedSizes = 0;
+    for (int i = 0; i<sizes.size(); i++) {
+      fromIndex = toIndex;
+      toIndex = fromIndex+pieceSizes.get(i)*sizes.get(i);
+      if (i==sizes.size()-1) {
+        toIndex = size;
+      }
+      genotypes.add(slice(fromIndex, toIndex));
+      sumOfUsedSizes = sumOfUsedSizes+sizes.get(i);
+    }
+    return genotypes;
+  }
+  
+  public List<Genotype> slices(int number) {
+    List<Integer> sizes = new ArrayList<>(number);
+    for (int i = 0; i<number; i++) {
+      sizes.add(1);
+    }
+    return slices(sizes);
+  }
+  
+  public Genotype append(Genotype genotype) {
+    Genotype resultGenotype = new Genotype(size+genotype.size);
+    if (size>0) {
+      resultGenotype.set(0, this);
+    }
+    resultGenotype.set(size, genotype);
+    return resultGenotype;
   }
 
     

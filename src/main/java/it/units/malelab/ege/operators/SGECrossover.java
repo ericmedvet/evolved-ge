@@ -5,7 +5,6 @@
  */
 package it.units.malelab.ege.operators;
 
-import com.google.common.collect.Range;
 import it.units.malelab.ege.Genotype;
 import it.units.malelab.ege.mapper.StructuralGEMapper;
 import java.util.Arrays;
@@ -16,34 +15,39 @@ import java.util.Random;
  *
  * @author eric
  */
-public class SGECrossover extends TwoPointsCrossover {
+public class SGECrossover implements GeneticOperator {
 
-  private final List<Range<Integer>> codonsRanges;
-  private final int numberOfCodons;
+  private final List<Integer> nonTerminalSizes;
+  private final Random random;
+  private int overallSize;
 
   public SGECrossover(StructuralGEMapper sgeMapper, Random random) {
-    super(random);
-    codonsRanges = sgeMapper.getCodonsRanges();
-    int max = Integer.MIN_VALUE;
-    for (Range<Integer> range : codonsRanges) {
-      max = Math.max(range.upperEndpoint(), max);
+    nonTerminalSizes = sgeMapper.getNonTerminalSizes();
+    this.random = random;
+    overallSize = 0;
+    for (int size : nonTerminalSizes) {
+      overallSize = overallSize+size;
     }
-    numberOfCodons = max;
   }
           
   @Override
   public List<Genotype> apply(List<Genotype> parents) {
     Genotype parent1 = parents.get(0);
     Genotype parent2 = parents.get(1);
-    Range<Integer> codonRange = codonsRanges.get(random.nextInt(codonsRanges.size()));
-    Range<Integer> range1 = parent1.getRangeOfIndexedEqualSlices(codonRange, numberOfCodons);
-    Range<Integer> range2 = parent2.getRangeOfIndexedEqualSlices(codonRange, numberOfCodons);
-    if (range1.isEmpty()||range2.isEmpty()) {
-      return Arrays.asList(
-              new Genotype(parent1.size(), parent1.asBitSet()),
-              new Genotype(parent2.size(), parent2.asBitSet()));
+    if (Math.min(parent1.size(), parent2.size())<overallSize) {
+      //should be an exception
+      return parents;
     }
-    return children(parent1, range1, parent2, range2);
+    int nonTerminalIndex = random.nextInt(nonTerminalSizes.size());
+    List<Genotype> parent1Slices = parent1.slices(nonTerminalSizes);
+    List<Genotype> parent2Slices = parent2.slices(nonTerminalSizes);
+    Genotype child1 = new Genotype(0);
+    Genotype child2 = new Genotype(0);
+    for (int i = 0; i<parent1Slices.size(); i++) {
+      child1 = child1.append(((i==nonTerminalIndex)?parent2Slices:parent1Slices).get(i));
+      child2 = child2.append(((i==nonTerminalIndex)?parent1Slices:parent2Slices).get(i));
+    }
+    return Arrays.asList(child1, child2);
   }
   
 }
