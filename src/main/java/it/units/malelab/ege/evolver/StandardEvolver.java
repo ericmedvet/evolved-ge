@@ -75,6 +75,7 @@ public class StandardEvolver<T> implements Evolver<T> {
     }
     //end
     Utils.broadcast(new EvolutionEndEvent<>(population, configuration.getNumberOfGenerations(), this), listeners);
+    executor.shutdown();
   }
 
   private CacheLoader<Genotype, Node<T>> getMappingCacheLoader() {

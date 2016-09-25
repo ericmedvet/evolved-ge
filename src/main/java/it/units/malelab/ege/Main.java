@@ -285,7 +285,7 @@ public class Main {
             100,
             new RandomInitializer(1024, random),
             new AnyValidator(),
-            new WeightedHierarchicalMapper<>(8, grammar), //new StandardGEMapper<>(8, 10, grammar),
+            new StandardGEMapper<>(8, 10, grammar),
             Arrays.asList(
                     new Configuration.GeneticOperatorConfiguration(new Copy(), new TournamentSelector(100, random), 0.01d),
                     new Configuration.GeneticOperatorConfiguration(new TwoPointsCrossover(random), new TournamentSelector(5, random), 0.8d),
