@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.operators;
+package it.units.malelab.ege.operator;
 
 import it.units.malelab.ege.Genotype;
 import it.units.malelab.ege.mapper.StructuralGEMapper;
@@ -15,7 +15,7 @@ import java.util.Random;
  *
  * @author eric
  */
-public class SGECrossover implements GeneticOperator {
+public class SGECrossover extends AbstractCrossover {
 
   private final List<Integer> nonTerminalSizes;
   private final Random random;

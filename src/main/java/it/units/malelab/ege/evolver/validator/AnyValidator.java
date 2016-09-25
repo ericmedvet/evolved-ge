@@ -3,17 +3,19 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.operators;
+package it.units.malelab.ege.evolver.validator;
 
 import it.units.malelab.ege.Genotype;
-import java.util.List;
 
 /**
  *
  * @author eric
  */
-public interface GeneticOperator {
-  
-  public List<Genotype> apply(List<Genotype> parents);
+public class AnyValidator implements GenotypeValidator {
+
+  @Override
+  public boolean validate(Genotype genotype) {
+    return true;
+  }
   
 }

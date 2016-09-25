@@ -3,24 +3,22 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.operators;
+package it.units.malelab.ege.operator;
 
 import it.units.malelab.ege.Genotype;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
-import java.util.Set;
 
 /**
  *
  * @author eric
  */
-public class SparseFlipMutation implements GeneticOperator {
+public class CompactFlipMutation extends AbstractMutation {
   
   private final Random random;
 
-  public SparseFlipMutation(Random random) {
+  public CompactFlipMutation(Random random) {
     this.random = random;
   }
 
@@ -29,14 +27,9 @@ public class SparseFlipMutation implements GeneticOperator {
     Genotype parent = parents.get(0);
     Genotype child = new Genotype(parent.size());
     child.set(0, parent);
-    int size = Math.max(1, random.nextInt(child.size()));
-    Set<Integer> indexes = new HashSet<>();
-    while (indexes.size()<size) {
-      indexes.add(random.nextInt(child.size()));
-    }
-    for (int index : indexes) {
-      child.flip(index);
-    }
+    int fromIndex = random.nextInt(child.size()-1);
+    int size = Math.max(1, random.nextInt(child.size()-fromIndex));
+    child.flip(fromIndex, fromIndex+size);
     return Collections.singletonList(child);
   }  
   

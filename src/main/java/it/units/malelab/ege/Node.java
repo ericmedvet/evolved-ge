@@ -15,6 +15,8 @@ import java.util.List;
  */
 public class Node<T> {
   
+  public static Node EMPTY_TREE = new Node(null);
+  
   private final T content;
   private final List<Node<T>> children = new ArrayList<>();
   private Node<T> parent;

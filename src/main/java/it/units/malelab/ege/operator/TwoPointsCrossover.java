@@ -3,11 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.operators;
+package it.units.malelab.ege.operator;
 
 import com.google.common.collect.Range;
 import it.units.malelab.ege.Genotype;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -16,7 +15,7 @@ import java.util.Random;
  *
  * @author eric
  */
-public class TwoPointsCrossover implements GeneticOperator {
+public class TwoPointsCrossover extends AbstractCrossover {
 
   protected final Random random;
 

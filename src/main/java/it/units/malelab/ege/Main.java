@@ -15,21 +15,31 @@ import it.units.malelab.ege.mapper.HierarchicalMapper;
 import it.units.malelab.ege.mapper.Mapper;
 import it.units.malelab.ege.mapper.MappingException;
 import it.units.malelab.ege.mapper.StandardGEMapper;
-import it.units.malelab.ege.operators.CompactFlipMutation;
-import it.units.malelab.ege.operators.GeneticOperator;
-import it.units.malelab.ege.operators.SparseFlipMutation;
+import it.units.malelab.ege.operator.CompactFlipMutation;
+import it.units.malelab.ege.operator.GeneticOperator;
+import it.units.malelab.ege.operator.SparseFlipMutation;
 import it.units.malelab.ege.distance.Distance;
 import it.units.malelab.ege.distance.EditDistance;
 import it.units.malelab.ege.distance.GenotypeEditDistance;
+import it.units.malelab.ege.evolver.validator.AnyValidator;
+import it.units.malelab.ege.evolver.Configuration;
+import it.units.malelab.ege.evolver.Evolver;
+import it.units.malelab.ege.evolver.initializer.RandomInitializer;
+import it.units.malelab.ege.evolver.StandardEvolver;
+import it.units.malelab.ege.evolver.fitness.DistanceFitness;
+import it.units.malelab.ege.evolver.listener.EvolutionListener;
+import it.units.malelab.ege.evolver.listener.SimpleGenerationPrinter;
+import it.units.malelab.ege.evolver.selector.TournamentSelector;
 import it.units.malelab.ege.mapper.PiGEMapper;
 import it.units.malelab.ege.mapper.StructuralGEMapper;
 import it.units.malelab.ege.mapper.WeightedHierarchicalMapper;
-import it.units.malelab.ege.operators.LengthPreservingOnePointCrossover;
-import it.units.malelab.ege.operators.LengthPreservingTwoPointsCrossover;
-import it.units.malelab.ege.operators.OnePointCrossover;
-import it.units.malelab.ege.operators.ProbabilisticMutation;
-import it.units.malelab.ege.operators.SGECrossover;
-import it.units.malelab.ege.operators.TwoPointsCrossover;
+import it.units.malelab.ege.operator.Copy;
+import it.units.malelab.ege.operator.LengthPreservingOnePointCrossover;
+import it.units.malelab.ege.operator.LengthPreservingTwoPointsCrossover;
+import it.units.malelab.ege.operator.OnePointCrossover;
+import it.units.malelab.ege.operator.ProbabilisticMutation;
+import it.units.malelab.ege.operator.SGECrossover;
+import it.units.malelab.ege.operator.TwoPointsCrossover;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -43,6 +53,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.WeakHashMap;
+import java.util.concurrent.ExecutionException;
 
 /**
  *
@@ -50,9 +61,9 @@ import java.util.WeakHashMap;
  */
 public class Main {
 
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
     Main main = new Main();
-    main.localityDegeneracyAnalysis();
+    main.evolve();
   }
 
   public void testBinaryOperators() {
@@ -113,7 +124,7 @@ public class Main {
   }
 
   public void localityDegeneracyAnalysis() throws IOException {
-    PrintStream filePs = new PrintStream("analysis." + dateForFile() + ".csv", "UTF-8");
+    PrintStream filePs = new PrintStream("/home/eric/Scrivania/analysis." + dateForFile() + ".csv", "UTF-8");
     filePs.println("gSize;operator;grammar;mapper;i;dg1;dg2;dp1;dp2;p1PSize;p2PSize;c1PSize;c2PSize");
     Map<PrintStream, String> outputs = new HashMap<>();
     outputs.put(System.out, "%4d %10.10s %10.10s %15.15s || %4.0f %4.0f | %4.0f %4.0f || %4d %4d | %4d %4d || %4d %4d | %4d %4d || %4d %4d | %4d %4d ||%n");
@@ -181,7 +192,7 @@ public class Main {
                   try {
                     return mapper.map(key.getThird());
                   } catch (MappingException e) {
-                    return Utils.EMPTY_TREE;
+                    return Node.EMPTY_TREE;
                   }
                 }
               });
@@ -200,7 +211,7 @@ public class Main {
               .build(new CacheLoader<List<Node<String>>, Double>() {
                 @Override
                 public Double load(List<Node<String>> key) throws Exception {
-                  if ((key.get(0).equals(Utils.EMPTY_TREE))||(key.get(1).equals(Utils.EMPTY_TREE))) {
+                  if ((key.get(0).equals(Node.EMPTY_TREE))||(key.get(1).equals(Node.EMPTY_TREE))) {
                     return Double.NaN;
                   }
                   return pd.d(Utils.contents(key.get(0).leaves()), Utils.contents(key.get(1).leaves()));
@@ -219,8 +230,8 @@ public class Main {
           //compute/retrieve phenotypes
           Node<String> phenotypeParent0 = phenotypesCache.getUnchecked(new Triplet<>(entry.getKey()[0], entry.getKey()[1], parents.get(0)));
           Node<String> phenotypeChild0 = phenotypesCache.getUnchecked(new Triplet<>(entry.getKey()[0], entry.getKey()[1], children.get(0)));
-          Node<String> phenotypeParent1 = Utils.EMPTY_TREE;
-          Node<String> phenotypeChild1 = Utils.EMPTY_TREE;
+          Node<String> phenotypeParent1 = Node.EMPTY_TREE;
+          Node<String> phenotypeChild1 = Node.EMPTY_TREE;
           if (binary) {
             phenotypeParent1 = phenotypesCache.getUnchecked(new Triplet<>(entry.getKey()[0], entry.getKey()[1], parents.get(1)));
             phenotypeChild1 = phenotypesCache.getUnchecked(new Triplet<>(entry.getKey()[0], entry.getKey()[1], children.get(1)));
@@ -232,18 +243,18 @@ public class Main {
             pd0 = phenotypeDistancesCache.getUnchecked(Arrays.asList(phenotypeParent1, phenotypeChild1));
           }
           //get tree measures
-          Integer parent0Lenght = (phenotypeParent0.equals(Utils.EMPTY_TREE)) ? null : phenotypeParent0.leaves().size();
-          Integer parent1Lenght = (phenotypeParent1.equals(Utils.EMPTY_TREE)) ? null : phenotypeParent1.leaves().size();
-          Integer child0Lenght = (phenotypeChild0.equals(Utils.EMPTY_TREE)) ? null : phenotypeChild0.leaves().size();
-          Integer child1Lenght = (phenotypeChild1.equals(Utils.EMPTY_TREE)) ? null : phenotypeChild1.leaves().size();
-          Integer parent0Depth = (phenotypeParent0.equals(Utils.EMPTY_TREE)) ? null : phenotypeParent0.depth();
-          Integer parent1Depth = (phenotypeParent1.equals(Utils.EMPTY_TREE)) ? null : phenotypeParent1.depth();
-          Integer child0Depth = (phenotypeChild0.equals(Utils.EMPTY_TREE)) ? null : phenotypeChild0.depth();
-          Integer child1Depth = (phenotypeChild1.equals(Utils.EMPTY_TREE)) ? null : phenotypeChild1.depth();
-          Integer parent0Size = (phenotypeParent0.equals(Utils.EMPTY_TREE)) ? null : phenotypeParent0.size();
-          Integer parent1Size = (phenotypeParent1.equals(Utils.EMPTY_TREE)) ? null : phenotypeParent1.size();
-          Integer child0Size = (phenotypeChild0.equals(Utils.EMPTY_TREE)) ? null : phenotypeChild0.size();
-          Integer child1Size = (phenotypeChild1.equals(Utils.EMPTY_TREE)) ? null : phenotypeChild1.size();
+          Integer parent0Lenght = (phenotypeParent0.equals(Node.EMPTY_TREE)) ? null : phenotypeParent0.leaves().size();
+          Integer parent1Lenght = (phenotypeParent1.equals(Node.EMPTY_TREE)) ? null : phenotypeParent1.leaves().size();
+          Integer child0Lenght = (phenotypeChild0.equals(Node.EMPTY_TREE)) ? null : phenotypeChild0.leaves().size();
+          Integer child1Lenght = (phenotypeChild1.equals(Node.EMPTY_TREE)) ? null : phenotypeChild1.leaves().size();
+          Integer parent0Depth = (phenotypeParent0.equals(Node.EMPTY_TREE)) ? null : phenotypeParent0.depth();
+          Integer parent1Depth = (phenotypeParent1.equals(Node.EMPTY_TREE)) ? null : phenotypeParent1.depth();
+          Integer child0Depth = (phenotypeChild0.equals(Node.EMPTY_TREE)) ? null : phenotypeChild0.depth();
+          Integer child1Depth = (phenotypeChild1.equals(Node.EMPTY_TREE)) ? null : phenotypeChild1.depth();
+          Integer parent0Size = (phenotypeParent0.equals(Node.EMPTY_TREE)) ? null : phenotypeParent0.size();
+          Integer parent1Size = (phenotypeParent1.equals(Node.EMPTY_TREE)) ? null : phenotypeParent1.size();
+          Integer child0Size = (phenotypeChild0.equals(Node.EMPTY_TREE)) ? null : phenotypeChild0.size();
+          Integer child1Size = (phenotypeChild1.equals(Node.EMPTY_TREE)) ? null : phenotypeChild1.size();
           //print
           for (Map.Entry<PrintStream, String> outputEntry : outputs.entrySet()) {
             outputEntry.getKey().printf(outputEntry.getValue(),
@@ -264,6 +275,27 @@ public class Main {
   private String dateForFile() {
     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyMMddHHmm");
     return simpleDateFormat.format(new Date());
+  }
+  
+  private void evolve() throws IOException, ExecutionException, InterruptedException {
+    Random random = new Random(1);
+    Grammar<String> grammar = Utils.parseFromFile(new File("grammars/text.bnf"));
+    Configuration<String> configuration = new Configuration<>(
+            100,
+            100,
+            new RandomInitializer(1024, random),
+            new AnyValidator(),
+            new WeightedHierarchicalMapper<>(8, grammar), //new StandardGEMapper<>(8, 10, grammar),
+            Arrays.asList(
+                    new Configuration.GeneticOperatorConfiguration(new Copy(), new TournamentSelector(100, random), 0.01d),
+                    new Configuration.GeneticOperatorConfiguration(new TwoPointsCrossover(random), new TournamentSelector(5, random), 0.8d),
+                    new Configuration.GeneticOperatorConfiguration(new ProbabilisticMutation(random, 0.01), new TournamentSelector(5, random), 0.19d)
+            ),
+            new DistanceFitness<>(Arrays.asList("Hello".split("")), new EditDistance<String>()));
+    Evolver<String> evolver = new StandardEvolver<>(configuration);
+    List<EvolutionListener<String>> listeners = new ArrayList<>();
+    listeners.add(new SimpleGenerationPrinter<String>(System.out, "g=%3d pop=%3d f=%3.0f %s%n"));
+    evolver.go(listeners);
   }
 
 }

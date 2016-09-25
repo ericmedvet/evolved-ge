@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.operators;
+package it.units.malelab.ege.operator;
 
 import it.units.malelab.ege.Genotype;
 import java.util.Collections;
@@ -16,14 +16,12 @@ import java.util.Set;
  *
  * @author eric
  */
-public class ProbabilisticMutation implements GeneticOperator {
-
+public class SparseFlipMutation extends AbstractMutation {
+  
   private final Random random;
-  private final double p;
 
-  public ProbabilisticMutation(Random random, double p) {
+  public SparseFlipMutation(Random random) {
     this.random = random;
-    this.p = p;
   }
 
   @Override
@@ -31,12 +29,15 @@ public class ProbabilisticMutation implements GeneticOperator {
     Genotype parent = parents.get(0);
     Genotype child = new Genotype(parent.size());
     child.set(0, parent);
-    for (int i = 0; i<child.size(); i++) {
-      if (random.nextDouble()<p) {
-        child.flip(i);
-      }
+    int size = Math.max(1, random.nextInt(child.size()));
+    Set<Integer> indexes = new HashSet<>();
+    while (indexes.size()<size) {
+      indexes.add(random.nextInt(child.size()));
+    }
+    for (int index : indexes) {
+      child.flip(index);
     }
     return Collections.singletonList(child);
-  }
-
+  }  
+  
 }

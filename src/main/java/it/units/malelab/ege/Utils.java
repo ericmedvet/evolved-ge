@@ -5,9 +5,12 @@
  */
 package it.units.malelab.ege;
 
+import it.units.malelab.ege.evolver.Individual;
 import it.units.malelab.ege.grammar.Grammar;
 import it.units.malelab.ege.mapper.Mapper;
 import it.units.malelab.ege.mapper.MappingException;
+import it.units.malelab.ege.evolver.event.EvolutionEvent;
+import it.units.malelab.ege.evolver.listener.EvolutionListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -18,12 +21,15 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 
 /**
@@ -31,8 +37,6 @@ import java.util.regex.Pattern;
  * @author eric
  */
 public class Utils {
-  
-  public static Node EMPTY_TREE = new Node(null);
   
   public static Grammar<String> parseFromFile(File file) throws FileNotFoundException, IOException {
     Grammar<String> grammar = new Grammar<>();
@@ -219,6 +223,31 @@ public class Utils {
     } catch (MappingException ex) {
       return Collections.EMPTY_LIST;
     }
+  }
+  
+  public static <T> void sortByFitness(List<Individual<T>> individuals) {
+    Collections.sort(individuals, new Comparator<Individual<T>>() {
+      @Override
+      public int compare(Individual<T> i1, Individual<T> i2) {
+        return i1.getFitness().compareTo(i2.getFitness());
+      }
+    });
+  }
+  
+  public static <T> void broadcast(EvolutionEvent<T> event, List<EvolutionListener<T>> listeners) {
+    for (EvolutionListener<T> listener : listeners) {
+      if (listener.getEventClasses().contains(event.getClass())) {
+        listener.listen(event);
+      }
+    }
+  }
+  
+  public static <T> List<T> getAll(List<Future<List<T>>> futures) throws InterruptedException, ExecutionException {
+    List<T> results = new ArrayList<>();
+    for (Future<List<T>> future : futures) {
+      results.addAll(future.get());
+    }
+    return results;
   }
   
 }
