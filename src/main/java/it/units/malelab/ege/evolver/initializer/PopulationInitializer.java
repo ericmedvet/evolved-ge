@@ -6,7 +6,7 @@
 package it.units.malelab.ege.evolver.initializer;
 
 import it.units.malelab.ege.evolver.validator.GenotypeValidator;
-import it.units.malelab.ege.Genotype;
+import it.units.malelab.ege.evolver.genotype.Genotype;
 import java.util.List;
 
 /**

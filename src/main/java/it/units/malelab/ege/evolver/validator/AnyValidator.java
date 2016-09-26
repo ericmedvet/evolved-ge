@@ -5,7 +5,7 @@
  */
 package it.units.malelab.ege.evolver.validator;
 
-import it.units.malelab.ege.Genotype;
+import it.units.malelab.ege.evolver.genotype.Genotype;
 
 /**
  *

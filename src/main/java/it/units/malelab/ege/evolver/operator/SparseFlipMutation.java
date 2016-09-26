@@ -3,9 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.operator;
+package it.units.malelab.ege.evolver.operator;
 
-import it.units.malelab.ege.BitsGenotype;
+import it.units.malelab.ege.evolver.genotype.BitsGenotype;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -18,10 +18,8 @@ import java.util.Set;
  */
 public class SparseFlipMutation extends AbstractMutation<BitsGenotype> {
   
-  private final Random random;
-
   public SparseFlipMutation(Random random) {
-    this.random = random;
+    super(random);
   }
 
   @Override

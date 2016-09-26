@@ -5,7 +5,7 @@
  */
 package it.units.malelab.ege.evolver;
 
-import it.units.malelab.ege.Genotype;
+import it.units.malelab.ege.evolver.genotype.Genotype;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
 import java.util.List;
 import java.util.concurrent.ExecutionException;

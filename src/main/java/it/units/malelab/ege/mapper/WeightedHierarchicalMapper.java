@@ -5,7 +5,7 @@
  */
 package it.units.malelab.ege.mapper;
 
-import it.units.malelab.ege.BitsGenotype;
+import it.units.malelab.ege.evolver.genotype.BitsGenotype;
 import it.units.malelab.ege.grammar.Grammar;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -71,7 +71,7 @@ public class WeightedHierarchicalMapper<T> extends HierarchicalMapper<T> {
       overallWeight = overallWeight+weightsMap.get(symbol);
     }
     for (T symbol : symbols) {
-      sizes.add((int)Math.max(1, Math.floor((double)weightsMap.get(symbol)/(double)overallWeight*(double)genotype.size())));
+      sizes.add((int)Math.floor((double)weightsMap.get(symbol)/(double)overallWeight*(double)genotype.size()));
     }
     return genotype.slices(sizes);
   }

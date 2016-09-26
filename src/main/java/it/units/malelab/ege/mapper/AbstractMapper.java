@@ -5,7 +5,7 @@
  */
 package it.units.malelab.ege.mapper;
 
-import it.units.malelab.ege.Genotype;
+import it.units.malelab.ege.evolver.genotype.Genotype;
 import it.units.malelab.ege.grammar.Grammar;
 
 /**

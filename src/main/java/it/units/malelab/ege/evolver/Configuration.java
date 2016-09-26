@@ -5,13 +5,13 @@
  */
 package it.units.malelab.ege.evolver;
 
-import it.units.malelab.ege.Genotype;
+import it.units.malelab.ege.evolver.genotype.Genotype;
 import it.units.malelab.ege.evolver.initializer.PopulationInitializer;
 import it.units.malelab.ege.evolver.validator.GenotypeValidator;
 import it.units.malelab.ege.evolver.fitness.FitnessComputer;
 import it.units.malelab.ege.evolver.selector.Selector;
 import it.units.malelab.ege.mapper.Mapper;
-import it.units.malelab.ege.operator.GeneticOperator;
+import it.units.malelab.ege.evolver.operator.GeneticOperator;
 import java.util.List;
 
 /**

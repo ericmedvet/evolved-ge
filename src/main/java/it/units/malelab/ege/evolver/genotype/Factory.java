@@ -3,16 +3,16 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.evolver.validator;
+package it.units.malelab.ege.evolver.genotype;
 
-import it.units.malelab.ege.evolver.genotype.Genotype;
+import java.util.Random;
 
 /**
  *
  * @author eric
  */
-public interface GenotypeValidator<G extends Genotype> {
+public interface Factory<G extends Genotype> {
   
-    public boolean validate(G genotype);
-
+  public G build(Random random);
+  
 }

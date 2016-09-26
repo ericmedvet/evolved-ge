@@ -8,7 +8,7 @@ package it.units.malelab.ege.mapper;
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Range;
-import it.units.malelab.ege.BitsGenotype;
+import it.units.malelab.ege.evolver.genotype.BitsGenotype;
 import it.units.malelab.ege.Node;
 import it.units.malelab.ege.Pair;
 import it.units.malelab.ege.Utils;
@@ -22,7 +22,7 @@ import java.util.Map;
  *
  * @author eric
  */
-public class BitsStructuralGEMapper<T> extends AbstractMapper<BitsGenotype, T> {
+public class BitsSGEMapper<T> extends AbstractMapper<BitsGenotype, T> {
 
   private final Grammar<Pair<T, Integer>> nonRecursiveGrammar;
   private final List<Pair<T, Integer>> nonTerminals;
@@ -30,7 +30,7 @@ public class BitsStructuralGEMapper<T> extends AbstractMapper<BitsGenotype, T> {
   private final List<Integer> nonTerminalCodonsNumbers;
   private int overallSize;
 
-  public BitsStructuralGEMapper(int maxDepth, Grammar<T> grammar) {
+  public BitsSGEMapper(int maxDepth, Grammar<T> grammar) {
     super(grammar);
     nonRecursiveGrammar = Utils.resolveRecursiveGrammar(grammar, maxDepth);
     Map<Pair<T, Integer>, Range<Integer>> codonsRangesMap = new LinkedHashMap<>();

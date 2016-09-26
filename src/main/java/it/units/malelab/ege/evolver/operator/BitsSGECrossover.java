@@ -3,10 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.operator;
+package it.units.malelab.ege.evolver.operator;
 
-import it.units.malelab.ege.BitsGenotype;
-import it.units.malelab.ege.mapper.BitsStructuralGEMapper;
+import it.units.malelab.ege.evolver.genotype.BitsGenotype;
+import it.units.malelab.ege.mapper.BitsSGEMapper;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -18,12 +18,11 @@ import java.util.Random;
 public class BitsSGECrossover extends AbstractCrossover<BitsGenotype> {
 
   private final List<Integer> nonTerminalSizes;
-  private final Random random;
   private int overallSize;
 
-  public BitsSGECrossover(BitsStructuralGEMapper sgeMapper, Random random) {
+  public BitsSGECrossover(BitsSGEMapper sgeMapper, Random random) {
+    super(random);
     nonTerminalSizes = sgeMapper.getNonTerminalSizes();
-    this.random = random;
     overallSize = 0;
     for (int size : nonTerminalSizes) {
       overallSize = overallSize+size;

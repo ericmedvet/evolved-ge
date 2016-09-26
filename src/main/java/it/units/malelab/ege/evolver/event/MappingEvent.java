@@ -5,8 +5,8 @@
  */
 package it.units.malelab.ege.evolver.event;
 
-import it.units.malelab.ege.BitsGenotype;
-import it.units.malelab.ege.Genotype;
+import it.units.malelab.ege.evolver.genotype.BitsGenotype;
+import it.units.malelab.ege.evolver.genotype.Genotype;
 import it.units.malelab.ege.Node;
 import it.units.malelab.ege.evolver.Evolver;
 

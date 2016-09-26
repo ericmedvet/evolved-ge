@@ -5,6 +5,8 @@
  */
 package it.units.malelab.ege;
 
+import it.units.malelab.ege.evolver.genotype.Genotype;
+import it.units.malelab.ege.evolver.genotype.BitsGenotype;
 import it.units.malelab.ege.evolver.Individual;
 import it.units.malelab.ege.grammar.Grammar;
 import it.units.malelab.ege.mapper.Mapper;
@@ -66,15 +68,7 @@ public class Utils {
     br.close();
     return grammar;
   }
-  
-  public static BitsGenotype randomGenotype(int size, Random random) {
-    BitSet bitSet = new BitSet(size);
-    for (int i = 0; i<size; i++) {
-      bitSet.set(i, random.nextBoolean());
-    }
-    return new BitsGenotype(size, bitSet);
-  }
-  
+    
   public static double mean(double[] values) {
     if (values.length==0) {
       return Double.NaN;
@@ -136,6 +130,7 @@ public class Utils {
   }
   
   public static <T> Node<T> expand(T symbol, Grammar<T> grammar, int depth, int maxDepth) {
+    //TODO something not good here on text.bnf
     if (depth>maxDepth) {
       return null;
     }

@@ -6,7 +6,7 @@
 package it.units.malelab.ege.evolver;
 
 import it.units.malelab.ege.evolver.fitness.Fitness;
-import it.units.malelab.ege.Genotype;
+import it.units.malelab.ege.evolver.genotype.Genotype;
 import it.units.malelab.ege.Node;
 
 /**

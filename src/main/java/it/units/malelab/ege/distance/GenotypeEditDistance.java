@@ -5,7 +5,7 @@
  */
 package it.units.malelab.ege.distance;
 
-import it.units.malelab.ege.BitsGenotype;
+import it.units.malelab.ege.evolver.genotype.BitsGenotype;
 import java.util.Arrays;
 
 /**

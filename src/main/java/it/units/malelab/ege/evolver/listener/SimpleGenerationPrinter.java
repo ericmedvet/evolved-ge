@@ -5,11 +5,12 @@
  */
 package it.units.malelab.ege.evolver.listener;
 
-import it.units.malelab.ege.Genotype;
+import it.units.malelab.ege.evolver.genotype.Genotype;
 import it.units.malelab.ege.Utils;
 import it.units.malelab.ege.evolver.Individual;
 import it.units.malelab.ege.evolver.event.EvolutionEvent;
 import it.units.malelab.ege.evolver.event.GenerationEvent;
+import it.units.malelab.ege.evolver.genotype.BitsGenotype;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;

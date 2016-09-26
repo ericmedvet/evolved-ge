@@ -5,54 +5,36 @@
  */
 package it.units.malelab.ege;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.collect.Range;
+import it.units.malelab.ege.evolver.genotype.BitsGenotype;
 import it.units.malelab.ege.grammar.Grammar;
-import it.units.malelab.ege.mapper.BreathFirstMapper;
-import it.units.malelab.ege.mapper.HierarchicalMapper;
-import it.units.malelab.ege.mapper.Mapper;
-import it.units.malelab.ege.mapper.MappingException;
-import it.units.malelab.ege.mapper.StandardGEMapper;
-import it.units.malelab.ege.operator.CompactFlipMutation;
-import it.units.malelab.ege.operator.GeneticOperator;
-import it.units.malelab.ege.operator.SparseFlipMutation;
-import it.units.malelab.ege.distance.Distance;
 import it.units.malelab.ege.distance.EditDistance;
-import it.units.malelab.ege.distance.GenotypeEditDistance;
 import it.units.malelab.ege.evolver.validator.AnyValidator;
 import it.units.malelab.ege.evolver.Configuration;
 import it.units.malelab.ege.evolver.Evolver;
-import it.units.malelab.ege.evolver.initializer.BitsRandomInitializer;
+import it.units.malelab.ege.evolver.initializer.RandomInitializer;
 import it.units.malelab.ege.evolver.StandardEvolver;
 import it.units.malelab.ege.evolver.fitness.DistanceFitness;
+import it.units.malelab.ege.evolver.genotype.BitsGenotypeFactory;
+import it.units.malelab.ege.evolver.genotype.SGEGenotype;
+import it.units.malelab.ege.evolver.genotype.SGEGenotypeFactory;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
 import it.units.malelab.ege.evolver.listener.SimpleGenerationPrinter;
 import it.units.malelab.ege.evolver.selector.TournamentSelector;
-import it.units.malelab.ege.mapper.PiGEMapper;
-import it.units.malelab.ege.mapper.BitsStructuralGEMapper;
-import it.units.malelab.ege.mapper.WeightedHierarchicalMapper;
-import it.units.malelab.ege.operator.Copy;
-import it.units.malelab.ege.operator.LengthPreservingOnePointCrossover;
-import it.units.malelab.ege.operator.LengthPreservingTwoPointsCrossover;
-import it.units.malelab.ege.operator.OnePointCrossover;
-import it.units.malelab.ege.operator.ProbabilisticMutation;
-import it.units.malelab.ege.operator.BitsSGECrossover;
-import it.units.malelab.ege.operator.TwoPointsCrossover;
+import it.units.malelab.ege.evolver.operator.Copy;
+import it.units.malelab.ege.evolver.operator.ProbabilisticMutation;
+import it.units.malelab.ege.evolver.operator.SGECrossover;
+import it.units.malelab.ege.evolver.operator.SGEMutation;
+import it.units.malelab.ege.evolver.operator.TwoPointsCrossover;
+import it.units.malelab.ege.mapper.BitsSGEMapper;
+import it.units.malelab.ege.mapper.SGEMapper;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
-import java.util.WeakHashMap;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -63,64 +45,8 @@ public class Main {
 
   public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
     Main main = new Main();
-    main.evolve();
-  }
-
-  public void testBinaryOperators() {
-    Random r = new Random(1);
-    List<GeneticOperator> operators = new ArrayList<>();
-    operators.add(new OnePointCrossover(r));
-    operators.add(new TwoPointsCrossover(r));
-    operators.add(new LengthPreservingOnePointCrossover(r));
-    operators.add(new LengthPreservingTwoPointsCrossover(r));
-    for (int i = 0; i < 5; i++) {
-      List<BitsGenotype> parents = new ArrayList<>();
-      parents.add(Utils.randomGenotype(256, r));
-      parents.add(Utils.randomGenotype(256, r));
-      for (GeneticOperator operator : operators) {
-        List<BitsGenotype> children = operator.apply(parents);
-        System.out.printf("%20.20s | %4d %4d | %4d %4d%n",
-                operator.getClass().getSimpleName(),
-                parents.get(0).size(), parents.get(1).size(),
-                children.get(0).size(), children.get(1).size());
-      }
-    }
-  }
-
-  public void testMappers() throws IOException {
-    Grammar<String> g1 = Utils.parseFromFile(new File("grammars/max-grammar-easy.bnf"));
-    Grammar<String> g2 = Utils.parseFromFile(new File("grammars/text.bnf"));
-    Grammar<String> g3 = Utils.parseFromFile(new File("grammars/simple-recursive.bnf"));
-    Mapper<BitsGenotype, String> wf1 = new WeightedHierarchicalMapper<>(5, g1);
-    Mapper<BitsGenotype, String> wf2 = new WeightedHierarchicalMapper<>(5, g2);
-    Mapper<BitsGenotype, String> wf3 = new WeightedHierarchicalMapper<>(5, g3);
-    Mapper<BitsGenotype, String> f1 = new HierarchicalMapper<>(g1);
-    Mapper<BitsGenotype, String> f2 = new HierarchicalMapper<>(g2);
-    Mapper<BitsGenotype, String> f3 = new HierarchicalMapper<>(g3);
-    Mapper<BitsGenotype, String> ge1 = new StandardGEMapper<>(8, 10, g1);
-    Mapper<BitsGenotype, String> ge2 = new StandardGEMapper<>(8, 10, g2);
-    Mapper<BitsGenotype, String> ge3 = new StandardGEMapper<>(8, 10, g3);
-    Mapper<BitsGenotype, String> sge1 = new BitsStructuralGEMapper<>(5, g1);
-    Mapper<BitsGenotype, String> sge2 = new BitsStructuralGEMapper<>(5, g2);
-    Mapper<BitsGenotype, String> sge3 = new BitsStructuralGEMapper<>(5, g3);
-    Random r = new Random(1);
-    for (int i = 0; i < 5; i++) {
-      BitsGenotype g = Utils.randomGenotype(128, r);
-      System.out.printf("%3d %3d %3d | %3d %3d %3d | %3d %3d %3d | %3d %3d %3d%n",
-              Utils.safelyMapAndFlat(ge1, g).size(),
-              Utils.safelyMapAndFlat(ge2, g).size(),
-              Utils.safelyMapAndFlat(ge3, g).size(),
-              Utils.safelyMapAndFlat(f1, g).size(),
-              Utils.safelyMapAndFlat(f2, g).size(),
-              Utils.safelyMapAndFlat(f3, g).size(),
-              Utils.safelyMapAndFlat(wf1, g).size(),
-              Utils.safelyMapAndFlat(wf2, g).size(),
-              Utils.safelyMapAndFlat(wf3, g).size(),
-              Utils.safelyMapAndFlat(sge1, g).size(),
-              Utils.safelyMapAndFlat(sge2, g).size(),
-              Utils.safelyMapAndFlat(sge3, g).size()
-      );
-    }
+    main.evolveSGE();
+    //System.out.println(Utils.resolveRecursiveGrammar(Utils.parseFromFile(new File("grammars/text.bnf")), 10));
   }
 
   /*
@@ -279,24 +205,49 @@ public class Main {
     return simpleDateFormat.format(new Date());
   }
   
-  private void evolve() throws IOException, ExecutionException, InterruptedException {
+  private void evolveGE() throws IOException, ExecutionException, InterruptedException {
     Random random = new Random(1);
     Grammar<String> grammar = Utils.parseFromFile(new File("grammars/text.bnf"));
     Configuration<BitsGenotype, String> configuration = new Configuration<>(
-            100,
-            100,
-            new BitsRandomInitializer(1024, random),
+            1000,
+            1000,
+            new RandomInitializer(random, new BitsGenotypeFactory(64)),
             new AnyValidator<BitsGenotype>(),
-            new StandardGEMapper<>(8, 10, grammar),
+            //new StandardGEMapper<>(8, 10, grammar),
+            //new HierarchicalMapper<>(grammar),
+            //new WeightedHierarchicalMapper<>(10, grammar),
+            new BitsSGEMapper<>(10, grammar),
             Arrays.asList(
                     new Configuration.GeneticOperatorConfiguration<>(new Copy<BitsGenotype>(), new TournamentSelector(100, random), 0.01d),
                     new Configuration.GeneticOperatorConfiguration<>(new TwoPointsCrossover(random), new TournamentSelector(5, random), 0.8d),
                     new Configuration.GeneticOperatorConfiguration<>(new ProbabilisticMutation(random, 0.01), new TournamentSelector(5, random), 0.19d)
             ),
-            new DistanceFitness<>(Arrays.asList("Hello".split("")), new EditDistance<String>()));
-    Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(configuration);
+            new DistanceFitness<>(Arrays.asList("hello world".split("")), new EditDistance<String>()));
+    Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(1, configuration);
     List<EvolutionListener<BitsGenotype, String>> listeners = new ArrayList<>();
     listeners.add(new SimpleGenerationPrinter<BitsGenotype, String>(System.out, "g=%3d pop=%3d f=%3.0f %s%n"));
+    evolver.go(listeners);
+  }
+
+  private void evolveSGE() throws IOException, ExecutionException, InterruptedException {
+    Random random = new Random(1);
+    Grammar<String> grammar = Utils.parseFromFile(new File("grammars/text.bnf"));
+    SGEMapper<String> mapper = new SGEMapper<>(10, grammar);
+    Configuration<SGEGenotype<String>, String> configuration = new Configuration<>(
+            1000,
+            1000,
+            new RandomInitializer(random, new SGEGenotypeFactory<>(mapper)),
+            new AnyValidator<SGEGenotype<String>>(),
+            mapper,
+            Arrays.asList(
+                    new Configuration.GeneticOperatorConfiguration<>(new Copy<SGEGenotype<String>>(), new TournamentSelector(100, random), 0.01d),
+                    new Configuration.GeneticOperatorConfiguration<>(new SGECrossover<String>(random), new TournamentSelector(5, random), 0.8d),
+                    new Configuration.GeneticOperatorConfiguration<>(new SGEMutation<>(mapper, random), new TournamentSelector(5, random), 0.19d)
+            ),
+            new DistanceFitness<>(Arrays.asList("hello world".split("")), new EditDistance<String>()));
+    Evolver<SGEGenotype<String>, String> evolver = new StandardEvolver<>(1, configuration);
+    List<EvolutionListener<SGEGenotype<String>, String>> listeners = new ArrayList<>();
+    listeners.add(new SimpleGenerationPrinter<SGEGenotype<String>, String>(System.out, "g=%3d pop=%3d f=%3.0f %s%n"));
     evolver.go(listeners);
   }
 

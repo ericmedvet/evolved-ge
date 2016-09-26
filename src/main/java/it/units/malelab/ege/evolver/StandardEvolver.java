@@ -16,8 +16,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import it.units.malelab.ege.BitsGenotype;
-import it.units.malelab.ege.Genotype;
+import it.units.malelab.ege.evolver.genotype.Genotype;
 import it.units.malelab.ege.Node;
 import it.units.malelab.ege.Utils;
 import it.units.malelab.ege.mapper.MappingException;
@@ -39,9 +38,11 @@ public class StandardEvolver<G extends Genotype, T> implements Evolver<G, T> {
   private static final int CACHE_SIZE = 10000;
 
   private final Configuration<G, T> configuration;
+  private final ExecutorService executor;
 
-  public StandardEvolver(Configuration<G, T> configuration) {
+  public StandardEvolver(int numberOfThreads, Configuration<G, T> configuration) {
     this.configuration = configuration;
+    executor = Executors.newFixedThreadPool(numberOfThreads);
   }
 
   @Override
@@ -53,7 +54,6 @@ public class StandardEvolver<G extends Genotype, T> implements Evolver<G, T> {
   public void go(List<EvolutionListener<G, T>> listeners) throws InterruptedException, ExecutionException {
     LoadingCache<G, Node<T>> mappingCache = CacheBuilder.newBuilder().maximumSize(CACHE_SIZE).build(getMappingCacheLoader());
     LoadingCache<Node<T>, Fitness> fitnessCache = CacheBuilder.newBuilder().maximumSize(CACHE_SIZE).build(getFitnessCacheLoader());
-    ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     //initialize population
     List<Callable<List<Individual<G, T>>>> tasks = new ArrayList<>();
     for (G genotype : configuration.getPopulationInitializer().getGenotypes(configuration.getPopulationSize(), configuration.getInitGenotypeValidator())) {

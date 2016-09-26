@@ -3,19 +3,24 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.operator;
+package it.units.malelab.ege.evolver.operator;
 
-import it.units.malelab.ege.Genotype;
+import it.units.malelab.ege.evolver.genotype.Genotype;
+import java.util.Random;
 
 /**
  *
  * @author eric
  */
-public abstract class AbstractMutation<G extends Genotype> implements GeneticOperator<G> {
+public abstract class AbstractCrossover<G extends Genotype> extends AbstractOperator<G> {
+
+  public AbstractCrossover(Random random) {
+    super(random);
+  }
 
   @Override
   public int getParentsArity() {
-    return 1;
+    return 2;
   }
 
   @Override

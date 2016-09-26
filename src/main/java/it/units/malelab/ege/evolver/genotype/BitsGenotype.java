@@ -3,13 +3,14 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege;
+package it.units.malelab.ege.evolver.genotype;
 
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 /**
  *
@@ -155,8 +156,27 @@ public class BitsGenotype implements Genotype {
       if (i==sizes.size()-1) {
         toIndex = size;
       }
-      genotypes.add(slice(fromIndex, toIndex));
+      if (fromIndex==toIndex) {
+        genotypes.add(new BitsGenotype(0));
+      } else {
+        genotypes.add(slice(fromIndex, toIndex));
+      }
       sumOfUsedSizes = sumOfUsedSizes+sizes.get(i);
+    }
+    //check if same genotype and correct
+    int nonZeroSizes = 0;
+    for (BitsGenotype genotype : genotypes) {
+      if (genotype.size>0) {
+        nonZeroSizes = nonZeroSizes+1;
+      }
+    }
+    if (nonZeroSizes==1) {
+      for (int i = 0; i<genotypes.size(); i++) {
+        if (genotypes.get(i).size>0) {
+          genotypes.set(i, new BitsGenotype(genotypes.get(i).size-1, genotypes.get(i).bitSet));
+          break;
+        }
+      }
     }
     return genotypes;
   }
@@ -178,5 +198,30 @@ public class BitsGenotype implements Genotype {
     return resultGenotype;
   }
 
+  @Override
+  public int hashCode() {
+    int hash = 3;
+    hash = 47 * hash + this.size;
+    hash = 47 * hash + Objects.hashCode(this.bitSet);
+    return hash;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    final BitsGenotype other = (BitsGenotype) obj;
+    if (this.size != other.size) {
+      return false;
+    }
+    if (!Objects.equals(this.bitSet, other.bitSet)) {
+      return false;
+    }
+    return true;
+  }
     
 }

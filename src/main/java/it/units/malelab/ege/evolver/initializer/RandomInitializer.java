@@ -6,8 +6,10 @@
 package it.units.malelab.ege.evolver.initializer;
 
 import it.units.malelab.ege.evolver.validator.GenotypeValidator;
-import it.units.malelab.ege.BitsGenotype;
+import it.units.malelab.ege.evolver.genotype.BitsGenotype;
 import it.units.malelab.ege.Utils;
+import it.units.malelab.ege.evolver.genotype.Factory;
+import it.units.malelab.ege.evolver.genotype.Genotype;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -16,22 +18,22 @@ import java.util.Random;
  *
  * @author eric
  */
-public class BitsRandomInitializer implements PopulationInitializer<BitsGenotype> {
+public class RandomInitializer<G extends Genotype> implements PopulationInitializer<G> {
   
-  private final int size;
   private final Random random;
+  private final Factory<G> factory;
 
-  public BitsRandomInitializer(int size, Random random) {
-    this.size = size;
+  public RandomInitializer(Random random, Factory<G> factory) {
     this.random = random;
+    this.factory = factory;
   }
 
   @Override
-  public List<BitsGenotype> getGenotypes(int n, GenotypeValidator genotypeValidator) {
-    List<BitsGenotype> genotypes = new ArrayList<>(n);
+  public List<G> getGenotypes(int n, GenotypeValidator<G> genotypeValidator) {
+    List<G> genotypes = new ArrayList<>(n);
     for (int i = 0; i<n; i++) {
       while (true) {
-        BitsGenotype genotype = Utils.randomGenotype(size, random);
+        G genotype = factory.build(random);
         if (genotypeValidator.validate(genotype)) {
           genotypes.add(genotype);
           break;

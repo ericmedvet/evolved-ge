@@ -3,10 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.operator;
+package it.units.malelab.ege.evolver.operator;
 
 import com.google.common.collect.Range;
-import it.units.malelab.ege.BitsGenotype;
+import it.units.malelab.ege.evolver.genotype.BitsGenotype;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;

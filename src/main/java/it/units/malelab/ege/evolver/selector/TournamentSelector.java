@@ -5,8 +5,7 @@
  */
 package it.units.malelab.ege.evolver.selector;
 
-import it.units.malelab.ege.Genotype;
-import it.units.malelab.ege.evolver.selector.Selector;
+import it.units.malelab.ege.evolver.genotype.Genotype;
 import it.units.malelab.ege.Utils;
 import it.units.malelab.ege.evolver.Individual;
 import java.util.ArrayList;
@@ -31,7 +30,8 @@ public class TournamentSelector<G extends Genotype, T> implements Selector<G, T>
   public Individual<G, T> select(List<Individual<G, T>> population) {
     List<Individual<G, T>> individuals = new ArrayList<>();
     for (int i = 0; i<Math.min(population.size(), size); i++) {
-      individuals.add(population.get(random.nextInt(population.size())));
+      int index = random.nextInt(population.size());
+      individuals.add(population.get(index));
     }
     Utils.sortByFitness(individuals);
     return individuals.get(0);
