@@ -5,13 +5,13 @@
  */
 package it.units.malelab.ege.evolver.listener;
 
+import it.units.malelab.ege.Genotype;
 import it.units.malelab.ege.Utils;
 import it.units.malelab.ege.evolver.Individual;
 import it.units.malelab.ege.evolver.event.EvolutionEvent;
 import it.units.malelab.ege.evolver.event.GenerationEvent;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -20,7 +20,7 @@ import java.util.Set;
  *
  * @author eric
  */
-public class SimpleGenerationPrinter<T> implements EvolutionListener<T> {
+public class SimpleGenerationPrinter<G extends Genotype, T> implements EvolutionListener<G, T> {
 
   private final PrintStream ps;
   private final String format;
@@ -34,8 +34,8 @@ public class SimpleGenerationPrinter<T> implements EvolutionListener<T> {
   }
 
   @Override
-  public void listen(EvolutionEvent<T> event) {
-    List<Individual<T>> population = new ArrayList<>(((GenerationEvent)event).getPopulation());
+  public void listen(EvolutionEvent<G, T> event) {
+    List<Individual<G, T>> population = new ArrayList<>(((GenerationEvent)event).getPopulation());
     Utils.sortByFitness(population);
     ps.printf(format,
             event.getGeneration(),

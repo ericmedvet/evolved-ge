@@ -5,18 +5,19 @@
  */
 package it.units.malelab.ege.evolver.event;
 
+import it.units.malelab.ege.Genotype;
 import it.units.malelab.ege.evolver.Evolver;
 
 /**
  *
  * @author eric
  */
-public class EvolutionEvent<T> {
+public class EvolutionEvent<G extends Genotype, T> {
   
   private final int generation;
   private final Evolver evolver;
 
-  public EvolutionEvent(int generation, Evolver<T> evolver) {
+  public EvolutionEvent(int generation, Evolver<G, T> evolver) {
     this.generation = generation;
     this.evolver = evolver;
   }
@@ -25,7 +26,7 @@ public class EvolutionEvent<T> {
     return generation;
   }
 
-  public Evolver<T> getEvolver() {
+  public Evolver<G, T> getEvolver() {
     return evolver;
   }
   

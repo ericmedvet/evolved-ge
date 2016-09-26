@@ -7,14 +7,13 @@ package it.units.malelab.ege.mapper;
 
 import it.units.malelab.ege.Genotype;
 import it.units.malelab.ege.Node;
-import java.util.List;
 
 /**
  *
  * @author eric
  */
-public interface Mapper<T> {
+public interface Mapper<G extends Genotype, T> {
   
-  public Node<T> map(Genotype genotype) throws MappingException;
+  public Node<T> map(G genotype) throws MappingException;
   
 }

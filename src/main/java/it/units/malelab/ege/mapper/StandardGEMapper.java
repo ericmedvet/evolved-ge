@@ -5,7 +5,7 @@
  */
 package it.units.malelab.ege.mapper;
 
-import it.units.malelab.ege.Genotype;
+import it.units.malelab.ege.BitsGenotype;
 import it.units.malelab.ege.Node;
 import it.units.malelab.ege.grammar.Grammar;
 import java.util.List;
@@ -14,7 +14,7 @@ import java.util.List;
  *
  * @author eric
  */
-public class StandardGEMapper<T> extends AbstractMapper<T> {
+public class StandardGEMapper<T> extends AbstractMapper<BitsGenotype, T> {
   
   private final int codonLenght;
   private final int maxWraps;
@@ -26,7 +26,7 @@ public class StandardGEMapper<T> extends AbstractMapper<T> {
   }    
 
   @Override
-  public Node<T> map(Genotype genotype) throws MappingException {
+  public Node<T> map(BitsGenotype genotype) throws MappingException {
     if (genotype.size()<codonLenght) {
       throw new MappingException(String.format("Short genotype (%d<%d)", genotype.size(), codonLenght));
     }

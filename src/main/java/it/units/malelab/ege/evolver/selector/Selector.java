@@ -5,6 +5,7 @@
  */
 package it.units.malelab.ege.evolver.selector;
 
+import it.units.malelab.ege.Genotype;
 import it.units.malelab.ege.evolver.Individual;
 import java.util.List;
 
@@ -12,8 +13,8 @@ import java.util.List;
  *
  * @author eric
  */
-public interface Selector {
+public interface Selector<G extends Genotype, T> {
   
-  public <T> Individual<T> select(List<Individual<T>> population);
+  public Individual<G, T> select(List<Individual<G, T>> population);
   
 }

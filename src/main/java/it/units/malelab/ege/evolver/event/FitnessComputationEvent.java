@@ -5,6 +5,7 @@
  */
 package it.units.malelab.ege.evolver.event;
 
+import it.units.malelab.ege.Genotype;
 import it.units.malelab.ege.evolver.Evolver;
 import it.units.malelab.ege.evolver.Individual;
 
@@ -12,16 +13,16 @@ import it.units.malelab.ege.evolver.Individual;
  *
  * @author eric
  */
-public class FitnessComputationEvent<T> extends TimeEvent<T> {
+public class FitnessComputationEvent<G extends  Genotype, T> extends TimeEvent<G, T> {
   
-  private final Individual<T> individual;
+  private final Individual<G, T> individual;
 
-  public FitnessComputationEvent(Individual<T> individual, long elapsedNanos, int generation, Evolver<T> evolver) {
+  public FitnessComputationEvent(Individual<G, T> individual, long elapsedNanos, int generation, Evolver<G, T> evolver) {
     super(elapsedNanos, generation, evolver);
     this.individual = individual;
   }
 
-  public Individual<T> getIndividual() {
+  public Individual<G, T> getIndividual() {
     return individual;
   }
   

@@ -5,6 +5,7 @@
  */
 package it.units.malelab.ege.evolver;
 
+import it.units.malelab.ege.Genotype;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -13,9 +14,9 @@ import java.util.concurrent.ExecutionException;
  *
  * @author eric
  */
-public interface Evolver<T> {
+public interface Evolver<G extends Genotype,T> {
   
-  public Configuration<T> getConfiguration();
-  public void go(List<EvolutionListener<T>> listeners) throws InterruptedException, ExecutionException;
+  public Configuration<G, T> getConfiguration();
+  public void go(List<EvolutionListener<G, T>> listeners) throws InterruptedException, ExecutionException;
   
 }

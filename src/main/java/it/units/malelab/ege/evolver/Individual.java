@@ -13,19 +13,19 @@ import it.units.malelab.ege.Node;
  *
  * @author eric
  */
-public class Individual<T> {
+public class Individual<G extends Genotype, T> {
   
-  private final Genotype genotype;
+  private final G genotype;
   private final Node<T> phenotype;
   private final Fitness fitness;
 
-  public Individual(Genotype genotype, Node<T> phenotype, Fitness fitness) {
+  public Individual(G genotype, Node<T> phenotype, Fitness fitness) {
     this.genotype = genotype;
     this.phenotype = phenotype;
     this.fitness = fitness;
   }
 
-  public Genotype getGenotype() {
+  public G getGenotype() {
     return genotype;
   }
 

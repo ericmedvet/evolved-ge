@@ -67,12 +67,12 @@ public class Utils {
     return grammar;
   }
   
-  public static Genotype randomGenotype(int size, Random random) {
+  public static BitsGenotype randomGenotype(int size, Random random) {
     BitSet bitSet = new BitSet(size);
     for (int i = 0; i<size; i++) {
       bitSet.set(i, random.nextBoolean());
     }
-    return new Genotype(size, bitSet);
+    return new BitsGenotype(size, bitSet);
   }
   
   public static double mean(double[] values) {
@@ -217,7 +217,7 @@ public class Utils {
     }
   }
   
-  public static <T> List<T> safelyMapAndFlat(Mapper<T> mapper, Genotype genotype) {
+  public static <G extends Genotype, T> List<T> safelyMapAndFlat(Mapper<G, T> mapper, G genotype) {
     try {
       return contents(mapper.map(genotype).leaves());
     } catch (MappingException ex) {
@@ -225,17 +225,17 @@ public class Utils {
     }
   }
   
-  public static <T> void sortByFitness(List<Individual<T>> individuals) {
-    Collections.sort(individuals, new Comparator<Individual<T>>() {
+  public static <G extends Genotype, T> void sortByFitness(List<Individual<G, T>> individuals) {
+    Collections.sort(individuals, new Comparator<Individual<G, T>>() {
       @Override
-      public int compare(Individual<T> i1, Individual<T> i2) {
+      public int compare(Individual<G, T> i1, Individual<G, T> i2) {
         return i1.getFitness().compareTo(i2.getFitness());
       }
     });
   }
   
-  public static <T> void broadcast(EvolutionEvent<T> event, List<EvolutionListener<T>> listeners) {
-    for (EvolutionListener<T> listener : listeners) {
+  public static <G extends Genotype, T> void broadcast(EvolutionEvent<G, T> event, List<EvolutionListener<G, T>> listeners) {
+    for (EvolutionListener<G, T> listener : listeners) {
       if (listener.getEventClasses().contains(event.getClass())) {
         listener.listen(event);
       }

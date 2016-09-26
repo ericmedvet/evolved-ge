@@ -5,7 +5,7 @@
  */
 package it.units.malelab.ege.mapper;
 
-import it.units.malelab.ege.Genotype;
+import it.units.malelab.ege.BitsGenotype;
 import it.units.malelab.ege.Node;
 import it.units.malelab.ege.grammar.Grammar;
 import java.util.ArrayList;
@@ -18,7 +18,7 @@ import java.util.Map;
  *
  * @author eric
  */
-public class HierarchicalMapper<T> extends AbstractMapper<T> {
+public class HierarchicalMapper<T> extends AbstractMapper<BitsGenotype, T> {
 
   private final Map<T, Integer> shortestOptionIndexMap;
 
@@ -84,9 +84,9 @@ public class HierarchicalMapper<T> extends AbstractMapper<T> {
   private class EnhancedSymbol<T> {
 
     private final T symbol;
-    private final Genotype genotype;
+    private final BitsGenotype genotype;
 
-    public EnhancedSymbol(T symbol, Genotype genotype) {
+    public EnhancedSymbol(T symbol, BitsGenotype genotype) {
       this.symbol = symbol;
       this.genotype = genotype;
     }
@@ -95,14 +95,14 @@ public class HierarchicalMapper<T> extends AbstractMapper<T> {
       return symbol;
     }
 
-    public Genotype getGenotype() {
+    public BitsGenotype getGenotype() {
       return genotype;
     }
 
   }
 
   @Override
-  public Node<T> map(Genotype genotype) throws MappingException {
+  public Node<T> map(BitsGenotype genotype) throws MappingException {
     Node<EnhancedSymbol<T>> enhancedTree = new Node<>(new EnhancedSymbol<>(grammar.getStartingSymbol(), genotype));
     while (true) {
       Node<EnhancedSymbol<T>> nodeToBeReplaced = null;
@@ -117,7 +117,7 @@ public class HierarchicalMapper<T> extends AbstractMapper<T> {
       }
       //get genotype
       T symbol = nodeToBeReplaced.getContent().getSymbol();
-      Genotype symbolGenotype = nodeToBeReplaced.getContent().getGenotype();
+      BitsGenotype symbolGenotype = nodeToBeReplaced.getContent().getGenotype();
       List<List<T>> options = grammar.getRules().get(symbol);
       //get option
       List<T> symbols;
@@ -127,7 +127,7 @@ public class HierarchicalMapper<T> extends AbstractMapper<T> {
         symbols = chooseOption(symbolGenotype, options);
       }
       //add children
-      List<Genotype> childGenotypes = getSlices(symbolGenotype, symbols);
+      List<BitsGenotype> childGenotypes = getSlices(symbolGenotype, symbols);
       for (int i = 0; i < symbols.size(); i++) {
         Node<EnhancedSymbol<T>> newChild = new Node<>(new EnhancedSymbol<>(
                 symbols.get(i),
@@ -140,11 +140,11 @@ public class HierarchicalMapper<T> extends AbstractMapper<T> {
     return extractFromEnhanced(enhancedTree);
   }
 
-  protected List<Genotype> getSlices(Genotype genotype, List<T> symbols) {
+  protected List<BitsGenotype> getSlices(BitsGenotype genotype, List<T> symbols) {
     if (symbols.size()>genotype.size()) {
-      List<Genotype> genotypes = new ArrayList<>(symbols.size());
+      List<BitsGenotype> genotypes = new ArrayList<>(symbols.size());
       for (T symbol : symbols) {
-        genotypes.add(new Genotype(0));
+        genotypes.add(new BitsGenotype(0));
       }
       return genotypes;
     }
@@ -159,13 +159,13 @@ public class HierarchicalMapper<T> extends AbstractMapper<T> {
     return node;
   }
 
-  private <K> K chooseOption(Genotype genotype, List<K> options) {
+  private <K> K chooseOption(BitsGenotype genotype, List<K> options) {
     if (options.size() == 1) {
       return options.get(0);
     }
     int index = 0;
     double max = Double.MIN_VALUE;
-    List<Genotype> slices = genotype.slices(options.size());
+    List<BitsGenotype> slices = genotype.slices(options.size());
     for (int i = 0; i < options.size(); i++) {
       double value = (double) slices.get(i).count() / (double) slices.get(i).size();
       if (value > max) {

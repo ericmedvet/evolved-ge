@@ -8,7 +8,7 @@ package it.units.malelab.ege.mapper;
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Range;
-import it.units.malelab.ege.Genotype;
+import it.units.malelab.ege.BitsGenotype;
 import it.units.malelab.ege.Node;
 import it.units.malelab.ege.Pair;
 import it.units.malelab.ege.Utils;
@@ -22,7 +22,7 @@ import java.util.Map;
  *
  * @author eric
  */
-public class StructuralGEMapper<T> extends AbstractMapper<T> {
+public class BitsStructuralGEMapper<T> extends AbstractMapper<BitsGenotype, T> {
 
   private final Grammar<Pair<T, Integer>> nonRecursiveGrammar;
   private final List<Pair<T, Integer>> nonTerminals;
@@ -30,7 +30,7 @@ public class StructuralGEMapper<T> extends AbstractMapper<T> {
   private final List<Integer> nonTerminalCodonsNumbers;
   private int overallSize;
 
-  public StructuralGEMapper(int maxDepth, Grammar<T> grammar) {
+  public BitsStructuralGEMapper(int maxDepth, Grammar<T> grammar) {
     super(grammar);
     nonRecursiveGrammar = Utils.resolveRecursiveGrammar(grammar, maxDepth);
     Map<Pair<T, Integer>, Range<Integer>> codonsRangesMap = new LinkedHashMap<>();
@@ -79,16 +79,16 @@ public class StructuralGEMapper<T> extends AbstractMapper<T> {
   }
 
   @Override
-  public Node<T> map(Genotype genotype) throws MappingException {
+  public Node<T> map(BitsGenotype genotype) throws MappingException {
     //transform genotypes in ints
     if (genotype.size() < overallSize) {
       throw new MappingException(String.format("Short genotype (%d<%d)", genotype.size(), overallSize));
     }
     Map<Pair<T, Integer>, List<Integer>> codons = new LinkedHashMap<>();
-    List<Genotype> nonTerminalGenotypes = genotype.slices(nonTerminalSizes);
+    List<BitsGenotype> nonTerminalGenotypes = genotype.slices(nonTerminalSizes);
     for (int i = 0; i < nonTerminals.size(); i++) {
       int codonSize = (int) Math.max(Math.ceil(Math.log10(nonRecursiveGrammar.getRules().get(nonTerminals.get(i)).size()) / Math.log10(2)), 1);
-      List<Genotype> codonGenotypes = nonTerminalGenotypes.get(i).slices(nonTerminalCodonsNumbers.get(i));
+      List<BitsGenotype> codonGenotypes = nonTerminalGenotypes.get(i).slices(nonTerminalCodonsNumbers.get(i));
       List<Integer> nonTerminalCodons = new ArrayList<>(nonTerminalCodonsNumbers.get(i));
       for (int j = 0; j < nonTerminalCodonsNumbers.get(i); j++) {
         nonTerminalCodons.add(codonGenotypes.get(j).compress(codonSize).toInt());

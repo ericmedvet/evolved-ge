@@ -5,6 +5,7 @@
  */
 package it.units.malelab.ege.evolver.event;
 
+import it.units.malelab.ege.Genotype;
 import it.units.malelab.ege.evolver.Evolver;
 import it.units.malelab.ege.evolver.Individual;
 import java.util.List;
@@ -13,16 +14,16 @@ import java.util.List;
  *
  * @author eric
  */
-public class GenerationEvent<T> extends EvolutionEvent<T> {
+public class GenerationEvent<G extends Genotype, T> extends EvolutionEvent<G, T> {
   
-  private final List<Individual<T>> population;
+  private final List<Individual<G, T>> population;
 
-  public GenerationEvent(List<Individual<T>> population, int generation, Evolver<T> evolver) {
+  public GenerationEvent(List<Individual<G, T>> population, int generation, Evolver<G, T> evolver) {
     super(generation, evolver);
     this.population = population;
   }
 
-  public List<Individual<T>> getPopulation() {
+  public List<Individual<G, T>> getPopulation() {
     return population;
   }
     

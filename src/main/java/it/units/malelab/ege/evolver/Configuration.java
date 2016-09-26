@@ -5,6 +5,7 @@
  */
 package it.units.malelab.ege.evolver;
 
+import it.units.malelab.ege.Genotype;
 import it.units.malelab.ege.evolver.initializer.PopulationInitializer;
 import it.units.malelab.ege.evolver.validator.GenotypeValidator;
 import it.units.malelab.ege.evolver.fitness.FitnessComputer;
@@ -12,34 +13,33 @@ import it.units.malelab.ege.evolver.selector.Selector;
 import it.units.malelab.ege.mapper.Mapper;
 import it.units.malelab.ege.operator.GeneticOperator;
 import java.util.List;
-import java.util.Map;
 
 /**
  *
  * @author eric
  */
-public class Configuration<T> {
+public class Configuration<G extends Genotype, T> {
   
   private final int populationSize;
   private final int numberOfGenerations;
-  private final PopulationInitializer populationInitializer;
-  private final GenotypeValidator initGenotypeValidator;
-  private final Mapper<T> mapper;
-  private final List<GeneticOperatorConfiguration> operators;
+  private final PopulationInitializer<G> populationInitializer;
+  private final GenotypeValidator<G> initGenotypeValidator;
+  private final Mapper<G, T> mapper;
+  private final List<GeneticOperatorConfiguration<G>> operators;
   private final FitnessComputer<T> fitnessComputer;
   
-  public static class GeneticOperatorConfiguration {
-    private final GeneticOperator operator;
+  public static class GeneticOperatorConfiguration<G extends Genotype> {
+    private final GeneticOperator<G> operator;
     private final Selector selector;
     private final double rate;
 
-    public GeneticOperatorConfiguration(GeneticOperator operator, Selector selector, double rate) {
+    public GeneticOperatorConfiguration(GeneticOperator<G> operator, Selector selector, double rate) {
       this.operator = operator;
       this.selector = selector;
       this.rate = rate;
     }
 
-    public GeneticOperator getOperator() {
+    public GeneticOperator<G> getOperator() {
       return operator;
     }
 
@@ -53,7 +53,7 @@ public class Configuration<T> {
     
   }
 
-  public Configuration(int populationSize, int numberOfGenerations, PopulationInitializer populationInitializer, GenotypeValidator initGenotypeValidator, Mapper<T> mapper, List<GeneticOperatorConfiguration> operators, FitnessComputer<T> fitnessComputer) {
+  public Configuration(int populationSize, int numberOfGenerations, PopulationInitializer<G> populationInitializer, GenotypeValidator<G> initGenotypeValidator, Mapper<G, T> mapper, List<GeneticOperatorConfiguration<G>> operators, FitnessComputer<T> fitnessComputer) {
     this.populationSize = populationSize;
     this.numberOfGenerations = numberOfGenerations;
     this.populationInitializer = populationInitializer;
@@ -71,24 +71,24 @@ public class Configuration<T> {
     return numberOfGenerations;
   }
 
-  public PopulationInitializer getPopulationInitializer() {
+  public PopulationInitializer<G> getPopulationInitializer() {
     return populationInitializer;
   }
 
-  public GenotypeValidator getInitGenotypeValidator() {
+  public GenotypeValidator<G> getInitGenotypeValidator() {
     return initGenotypeValidator;
   }
 
-  public Mapper<T> getMapper() {
+  public Mapper<G, T> getMapper() {
     return mapper;
   }
 
-  public List<GeneticOperatorConfiguration> getOperators() {
+  public List<GeneticOperatorConfiguration<G>> getOperators() {
     return operators;
   }
 
   public FitnessComputer<T> getFitnessComputer() {
     return fitnessComputer;
   }
-  
+
 }

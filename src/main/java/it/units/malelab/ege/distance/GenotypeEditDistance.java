@@ -5,19 +5,19 @@
  */
 package it.units.malelab.ege.distance;
 
-import it.units.malelab.ege.Genotype;
+import it.units.malelab.ege.BitsGenotype;
 import java.util.Arrays;
 
 /**
  *
  * @author eric
  */
-public class GenotypeEditDistance implements Distance<Genotype> {
+public class GenotypeEditDistance implements Distance<BitsGenotype> {
   
   private final EditDistance<Boolean> d = new EditDistance<Boolean>();
 
   @Override
-  public double d(Genotype g1, Genotype g2) {
+  public double d(BitsGenotype g1, BitsGenotype g2) {
     Boolean[] bs1 = new Boolean[g1.size()];
     Boolean[] bs2 = new Boolean[g2.size()];
     for (int i = 0; i<bs1.length; i++) {

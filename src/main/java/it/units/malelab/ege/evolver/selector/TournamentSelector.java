@@ -5,6 +5,7 @@
  */
 package it.units.malelab.ege.evolver.selector;
 
+import it.units.malelab.ege.Genotype;
 import it.units.malelab.ege.evolver.selector.Selector;
 import it.units.malelab.ege.Utils;
 import it.units.malelab.ege.evolver.Individual;
@@ -16,7 +17,7 @@ import java.util.Random;
  *
  * @author eric
  */
-public class TournamentSelector implements Selector {
+public class TournamentSelector<G extends Genotype, T> implements Selector<G, T> {
   
   private final int size;
   private final Random random;
@@ -27,8 +28,8 @@ public class TournamentSelector implements Selector {
   }
 
   @Override
-  public <T> Individual<T> select(List<Individual<T>> population) {
-    List<Individual<T>> individuals = new ArrayList<>();
+  public Individual<G, T> select(List<Individual<G, T>> population) {
+    List<Individual<G, T>> individuals = new ArrayList<>();
     for (int i = 0; i<Math.min(population.size(), size); i++) {
       individuals.add(population.get(random.nextInt(population.size())));
     }

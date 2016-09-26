@@ -11,10 +11,10 @@ import it.units.malelab.ege.Genotype;
  *
  * @author eric
  */
-public class AnyValidator implements GenotypeValidator {
+public class AnyValidator<G extends Genotype> implements GenotypeValidator<G> {
 
   @Override
-  public boolean validate(Genotype genotype) {
+  public boolean validate(G genotype) {
     return true;
   }
   

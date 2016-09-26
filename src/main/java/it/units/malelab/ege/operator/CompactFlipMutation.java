@@ -5,7 +5,7 @@
  */
 package it.units.malelab.ege.operator;
 
-import it.units.malelab.ege.Genotype;
+import it.units.malelab.ege.BitsGenotype;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -14,7 +14,7 @@ import java.util.Random;
  *
  * @author eric
  */
-public class CompactFlipMutation extends AbstractMutation {
+public class CompactFlipMutation extends AbstractMutation<BitsGenotype> {
   
   private final Random random;
 
@@ -23,9 +23,9 @@ public class CompactFlipMutation extends AbstractMutation {
   }
 
   @Override
-  public List<Genotype> apply(List<Genotype> parents) {
-    Genotype parent = parents.get(0);
-    Genotype child = new Genotype(parent.size());
+  public List<BitsGenotype> apply(List<BitsGenotype> parents) {
+    BitsGenotype parent = parents.get(0);
+    BitsGenotype child = new BitsGenotype(parent.size());
     child.set(0, parent);
     int fromIndex = random.nextInt(child.size()-1);
     int size = Math.max(1, random.nextInt(child.size()-fromIndex));

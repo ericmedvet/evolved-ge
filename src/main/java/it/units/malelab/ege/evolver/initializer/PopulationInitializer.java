@@ -13,8 +13,8 @@ import java.util.List;
  *
  * @author eric
  */
-public interface PopulationInitializer {
+public interface PopulationInitializer<G extends Genotype> {
     
-  public List<Genotype> getGenotypes(int n, GenotypeValidator genotypeValidator);
+  public List<G> getGenotypes(int n, GenotypeValidator<G> genotypeValidator);
   
 }

@@ -12,10 +12,10 @@ import java.util.List;
  *
  * @author eric
  */
-public class Copy extends AbstractMutation {
+public class Copy<G extends Genotype> extends AbstractMutation<G> {
 
   @Override
-  public List<Genotype> apply(List<Genotype> parents) {
+  public List<G> apply(List<G> parents) {
     return parents;
   }
   

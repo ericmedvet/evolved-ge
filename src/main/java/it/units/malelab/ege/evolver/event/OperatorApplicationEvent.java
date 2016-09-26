@@ -5,6 +5,7 @@
  */
 package it.units.malelab.ege.evolver.event;
 
+import it.units.malelab.ege.Genotype;
 import it.units.malelab.ege.evolver.Evolver;
 import it.units.malelab.ege.evolver.Individual;
 import it.units.malelab.ege.operator.GeneticOperator;
@@ -14,24 +15,24 @@ import java.util.List;
  *
  * @author eric
  */
-public class OperatorApplicationEvent<T> extends TimeEvent<T> {
+public class OperatorApplicationEvent<G extends Genotype, T> extends TimeEvent<G, T> {
   
-  private final List<Individual<T>> parents;
-  private final List<Individual<T>> children;
+  private final List<Individual<G, T>> parents;
+  private final List<Individual<G, T>> children;
   private final GeneticOperator operator;
 
-  public OperatorApplicationEvent(List<Individual<T>> parents, List<Individual<T>> children, GeneticOperator operator, long elapsedNanos, int generation, Evolver<T> evolver) {
+  public OperatorApplicationEvent(List<Individual<G, T>> parents, List<Individual<G, T>> children, GeneticOperator operator, long elapsedNanos, int generation, Evolver<G, T> evolver) {
     super(elapsedNanos, generation, evolver);
     this.parents = parents;
     this.children = children;
     this.operator = operator;
   }
   
-  public List<Individual<T>> getParents() {
+  public List<Individual<G, T>> getParents() {
     return parents;
   }
 
-  public List<Individual<T>> getChildren() {
+  public List<Individual<G, T>> getChildren() {
     return children;
   }
 

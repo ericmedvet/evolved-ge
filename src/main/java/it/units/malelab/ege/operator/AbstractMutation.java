@@ -5,11 +5,13 @@
  */
 package it.units.malelab.ege.operator;
 
+import it.units.malelab.ege.Genotype;
+
 /**
  *
  * @author eric
  */
-public abstract class AbstractMutation implements GeneticOperator {
+public abstract class AbstractMutation<G extends Genotype> implements GeneticOperator<G> {
 
   @Override
   public int getParentsArity() {

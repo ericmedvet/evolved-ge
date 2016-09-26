@@ -5,18 +5,18 @@
  */
 package it.units.malelab.ege.evolver.event;
 
+import it.units.malelab.ege.Genotype;
 import it.units.malelab.ege.evolver.Evolver;
-import it.units.malelab.ege.evolver.event.EvolutionEvent;
 
 /**
  *
  * @author eric
  */
-public class TimeEvent<T> extends EvolutionEvent<T> {
+public class TimeEvent<G extends Genotype, T> extends EvolutionEvent<G, T> {
   
   private final long elapsedNanos;
 
-  public TimeEvent(long elapsedNanos, int generation, Evolver<T> evolver) {
+  public TimeEvent(long elapsedNanos, int generation, Evolver<G, T> evolver) {
     super(generation, evolver);
     this.elapsedNanos = elapsedNanos;
   }

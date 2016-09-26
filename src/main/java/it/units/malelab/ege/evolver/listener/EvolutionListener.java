@@ -5,6 +5,7 @@
  */
 package it.units.malelab.ege.evolver.listener;
 
+import it.units.malelab.ege.Genotype;
 import it.units.malelab.ege.evolver.event.EvolutionEvent;
 import java.util.Set;
 
@@ -12,9 +13,9 @@ import java.util.Set;
  *
  * @author eric
  */
-public interface EvolutionListener<T> {
+public interface EvolutionListener<G extends Genotype, T> {
   
-  public void listen(EvolutionEvent<T> event);
+  public void listen(EvolutionEvent<G, T> event);
   public Set<Class<? extends EvolutionEvent>> getEventClasses();
   
 }

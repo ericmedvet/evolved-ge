@@ -5,6 +5,7 @@
  */
 package it.units.malelab.ege.evolver.event;
 
+import it.units.malelab.ege.BitsGenotype;
 import it.units.malelab.ege.Genotype;
 import it.units.malelab.ege.Node;
 import it.units.malelab.ege.evolver.Evolver;
@@ -13,18 +14,18 @@ import it.units.malelab.ege.evolver.Evolver;
  *
  * @author eric
  */
-public class MappingEvent<T> extends TimeEvent<T> {
+public class MappingEvent<G extends Genotype, T> extends TimeEvent<G, T> {
   
-  private final Genotype genotype;
+  private final G genotype;
   private final Node<T> phenotype;
 
-  public MappingEvent(Genotype genotype, Node<T> phenotype, long elapsedNanos, int generation, Evolver<T> evolver) {
+  public MappingEvent(G genotype, Node<T> phenotype, long elapsedNanos, int generation, Evolver<G, T> evolver) {
     super(elapsedNanos, generation, evolver);
     this.genotype = genotype;
     this.phenotype = phenotype;
   }
 
-  public Genotype getGenotype() {
+  public G getGenotype() {
     return genotype;
   }
 

@@ -6,7 +6,7 @@
 package it.units.malelab.ege.operator;
 
 import com.google.common.collect.Range;
-import it.units.malelab.ege.Genotype;
+import it.units.malelab.ege.BitsGenotype;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -15,7 +15,7 @@ import java.util.Random;
  *
  * @author eric
  */
-public class TwoPointsCrossover extends AbstractCrossover {
+public class TwoPointsCrossover extends AbstractCrossover<BitsGenotype> {
 
   protected final Random random;
 
@@ -24,9 +24,9 @@ public class TwoPointsCrossover extends AbstractCrossover {
   }
           
   @Override
-  public List<Genotype> apply(List<Genotype> parents) {
-    Genotype parent1 = parents.get(0);
-    Genotype parent2 = parents.get(1);
+  public List<BitsGenotype> apply(List<BitsGenotype> parents) {
+    BitsGenotype parent1 = parents.get(0);
+    BitsGenotype parent2 = parents.get(1);
     int startIndex1 = Math.min(Math.max(1, random.nextInt(parent1.size())), parent1.size()-2);
     int startIndex2 = Math.min(Math.max(1, random.nextInt(parent2.size())), parent2.size()-2);
     int endIndex1 = Math.min(Math.max(startIndex1+1, random.nextInt(parent1.size())), parent1.size());
@@ -36,15 +36,15 @@ public class TwoPointsCrossover extends AbstractCrossover {
             parent2, Range.openClosed(startIndex2, endIndex2));
   }
   
-  protected List<Genotype> children(Genotype parent1, Range<Integer> range1, Genotype parent2, Range<Integer> range2) {
+  protected List<BitsGenotype> children(BitsGenotype parent1, Range<Integer> range1, BitsGenotype parent2, Range<Integer> range2) {
     int startIndex1 = range1.lowerEndpoint();
     int startIndex2 = range2.lowerEndpoint();
     int endIndex1 = range1.upperEndpoint();
     int endIndex2 = range2.upperEndpoint();
     int child1Size = parent1.size()-(endIndex1-startIndex1)+(endIndex2-startIndex2);
     int child2Size = parent2.size()-(endIndex2-startIndex2)+(endIndex1-startIndex1);
-    Genotype child1 = new Genotype(child1Size);
-    Genotype child2 = new Genotype(child2Size);
+    BitsGenotype child1 = new BitsGenotype(child1Size);
+    BitsGenotype child2 = new BitsGenotype(child2Size);
     if (startIndex1>0) {
       child1.set(0, parent1.slice(0, startIndex1));    
     }

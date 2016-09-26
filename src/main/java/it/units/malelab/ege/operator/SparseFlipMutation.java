@@ -5,7 +5,7 @@
  */
 package it.units.malelab.ege.operator;
 
-import it.units.malelab.ege.Genotype;
+import it.units.malelab.ege.BitsGenotype;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -16,7 +16,7 @@ import java.util.Set;
  *
  * @author eric
  */
-public class SparseFlipMutation extends AbstractMutation {
+public class SparseFlipMutation extends AbstractMutation<BitsGenotype> {
   
   private final Random random;
 
@@ -25,9 +25,9 @@ public class SparseFlipMutation extends AbstractMutation {
   }
 
   @Override
-  public List<Genotype> apply(List<Genotype> parents) {
-    Genotype parent = parents.get(0);
-    Genotype child = new Genotype(parent.size());
+  public List<BitsGenotype> apply(List<BitsGenotype> parents) {
+    BitsGenotype parent = parents.get(0);
+    BitsGenotype child = new BitsGenotype(parent.size());
     child.set(0, parent);
     int size = Math.max(1, random.nextInt(child.size()));
     Set<Integer> indexes = new HashSet<>();

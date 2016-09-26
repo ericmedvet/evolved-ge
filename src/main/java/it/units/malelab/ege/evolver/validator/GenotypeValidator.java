@@ -11,8 +11,8 @@ import it.units.malelab.ege.Genotype;
  *
  * @author eric
  */
-public interface GenotypeValidator {
+public interface GenotypeValidator<G extends Genotype> {
   
-    public boolean validate(Genotype genotype);
+    public boolean validate(G genotype);
 
 }

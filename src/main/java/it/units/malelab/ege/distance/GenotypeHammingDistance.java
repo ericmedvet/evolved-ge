@@ -5,16 +5,16 @@
  */
 package it.units.malelab.ege.distance;
 
-import it.units.malelab.ege.Genotype;
+import it.units.malelab.ege.BitsGenotype;
 
 /**
  *
  * @author eric
  */
-public class GenotypeHammingDistance implements Distance<Genotype> {
+public class GenotypeHammingDistance implements Distance<BitsGenotype> {
 
   @Override
-  public double d(Genotype g1, Genotype g2) {
+  public double d(BitsGenotype g1, BitsGenotype g2) {
     if (g2.size()!=g2.size()) {
       throw new IllegalArgumentException(String.format("Genotypes of different size: %d vs. %d%n", g1.size(), g2.size()));
     }
