@@ -38,5 +38,14 @@ public class SGEGenotype<T> implements Genotype {
   public String toString() {
     return genes.toString();
   }
+
+  @Override
+  public int size() {
+    int size = 0;
+    for (List<Integer> gene : genes.values()) {
+      size = size+gene.size();
+    }
+    return size;
+  }
   
 }

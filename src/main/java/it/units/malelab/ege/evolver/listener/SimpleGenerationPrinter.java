@@ -42,6 +42,7 @@ public class SimpleGenerationPrinter<G extends Genotype, T> implements Evolution
             event.getGeneration(),
             population.size(),
             population.get(0).getFitness().getValue(),
+            population.get(0).getGenotype().size(),
             Utils.contents(population.get(0).getPhenotype().leaves())
             );
   }
