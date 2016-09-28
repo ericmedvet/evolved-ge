@@ -11,7 +11,7 @@ import it.units.malelab.ege.evolver.genotype.BitsGenotype;
  *
  * @author eric
  */
-public class GenotypeHammingDistance implements Distance<BitsGenotype> {
+public class BitsGenotypeHammingDistance implements Distance<BitsGenotype> {
 
   @Override
   public double d(BitsGenotype g1, BitsGenotype g2) {

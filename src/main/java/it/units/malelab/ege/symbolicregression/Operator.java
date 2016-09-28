@@ -20,6 +20,7 @@ public enum Operator implements Element {
   SIN("sin"),
   COS("cos"),
   INVERSE("1/"),
+  OPPOSITE("_"),
   SQRT("√");
   
   private final String string;

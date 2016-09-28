@@ -13,34 +13,35 @@ import it.units.malelab.ege.evolver.Configuration;
 import it.units.malelab.ege.evolver.Evolver;
 import it.units.malelab.ege.evolver.initializer.RandomInitializer;
 import it.units.malelab.ege.evolver.StandardEvolver;
-import it.units.malelab.ege.evolver.fitness.DistanceFitness;
+import it.units.malelab.ege.evolver.fitness.FitnessComputer;
+import it.units.malelab.ege.evolver.fitness.LeafContentsDistanceFitness;
 import it.units.malelab.ege.evolver.fitness.SymbolicRegressionFitness;
 import it.units.malelab.ege.evolver.genotype.BitsGenotypeFactory;
 import it.units.malelab.ege.evolver.genotype.SGEGenotype;
 import it.units.malelab.ege.evolver.genotype.SGEGenotypeFactory;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
-import it.units.malelab.ege.evolver.listener.SimpleGenerationPrinter;
+import it.units.malelab.ege.evolver.listener.GenerationLogger;
 import it.units.malelab.ege.evolver.selector.TournamentSelector;
 import it.units.malelab.ege.evolver.operator.Copy;
+import it.units.malelab.ege.evolver.operator.LengthPreservingTwoPointsCrossover;
 import it.units.malelab.ege.evolver.operator.ProbabilisticMutation;
 import it.units.malelab.ege.evolver.operator.SGECrossover;
 import it.units.malelab.ege.evolver.operator.SGEMutation;
 import it.units.malelab.ege.evolver.operator.TwoPointsCrossover;
+import it.units.malelab.ege.evolver.selector.BestSelector;
 import it.units.malelab.ege.mapper.BitsSGEMapper;
+import it.units.malelab.ege.mapper.BreathFirstMapper;
 import it.units.malelab.ege.mapper.HierarchicalMapper;
-import it.units.malelab.ege.mapper.Mapper;
 import it.units.malelab.ege.mapper.MappingException;
 import it.units.malelab.ege.mapper.SGEMapper;
 import it.units.malelab.ege.mapper.StandardGEMapper;
 import it.units.malelab.ege.mapper.WeightedHierarchicalMapper;
-import it.units.malelab.ege.symbolicregression.Element;
 import it.units.malelab.ege.symbolicregression.MathUtils;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -55,16 +56,7 @@ public class Main {
 
   public static void main(String[] args) throws IOException, ExecutionException, InterruptedException, MappingException {
     Main main = new Main();
-    //TODO check why elitism does not work
     main.evolveGE();
-    System.exit(0);
-    //System.out.println(Utils.resolveRecursiveGrammar(Utils.parseFromFile(new File("grammars/text.bnf")), 10));
-    SymbolicRegressionFitness srf = new SymbolicRegressionFitness(new SymbolicRegressionFitness.TargetFunction() {
-      @Override
-      public double compute(double... v) {
-        return .5 * v[0] * v[0] - 1 / (v[0] + .5);
-      }
-    }, new LinkedHashMap<>(MathUtils.varValuesMap("x", MathUtils.uniformSample(1, 10, .5))));
   }
 
   /*
@@ -224,55 +216,45 @@ public class Main {
 
   private void evolveGE() throws IOException, ExecutionException, InterruptedException {
     Random random = new Random(1);
-    Grammar<String> grammar = Utils.parseFromFile(new File("grammars/symbolic-regression.bnf"));
-    Configuration<BitsGenotype, String> configuration = new Configuration<>(
-            100,
-            100,
-            new RandomInitializer(random, new BitsGenotypeFactory(1024)),
-            new AnyValidator<BitsGenotype>(),
-            //new StandardGEMapper<>(8, 5, grammar),
-            //new HierarchicalMapper<>(grammar),
-            new WeightedHierarchicalMapper<>(10, grammar),
-            //new BitsSGEMapper<>(10, grammar),
-            Arrays.asList(
-                    new Configuration.GeneticOperatorConfiguration<>(new Copy<BitsGenotype>(), new TournamentSelector(100, random), 0.01d),
-                    new Configuration.GeneticOperatorConfiguration<>(new TwoPointsCrossover(random), new TournamentSelector(5, random), 0.8d),
-                    new Configuration.GeneticOperatorConfiguration<>(new ProbabilisticMutation(random, 0.01), new TournamentSelector(5, random), 0.19d)
-            ),
-            new SymbolicRegressionFitness(new SymbolicRegressionFitness.TargetFunction() {
-              @Override
-              public double compute(double... v) {
-                return .5 * v[0] * v[0] - 1 / (v[0] + .5);
-              }
-            }, new LinkedHashMap<>(MathUtils.varValuesMap("x", MathUtils.uniformSample(1, 10, .5)))));
-
-    //new DistanceFitness<>(Arrays.asList("hello world".split("")), new EditDistance<String>()));
-    Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(1, configuration);
+    Grammar<String> grammar = Utils.parseFromFile(new File("grammars/symbolic-regression-harmonic.bnf"));
+    Configuration<BitsGenotype, String> configuration = new Configuration<>();
+    configuration
+            .populationSize(500)
+            .numberOfGenerations(100)
+            .populationInitializer(new RandomInitializer<>(random, new BitsGenotypeFactory(1024)))
+            .initGenotypeValidator(new AnyValidator<BitsGenotype>())
+            .mapper(new StandardGEMapper<>(8, 5, grammar))
+            .mapper(new WeightedHierarchicalMapper<>(6, grammar))
+            .mapper(new HierarchicalMapper<>(grammar))
+            //.mapper(new BitsSGEMapper<>(6, grammar))
+            .operators(Arrays.asList(
+                            new Configuration.GeneticOperatorConfiguration<>(new Copy<BitsGenotype>(), new BestSelector(), 0.01d),
+                            new Configuration.GeneticOperatorConfiguration<>(new TwoPointsCrossover(random), new TournamentSelector(3, random), 0.9d),
+                            new Configuration.GeneticOperatorConfiguration<>(new ProbabilisticMutation(random, 0.02), new TournamentSelector(3, random), 0.09d)
+                    ))
+            .fitnessComputer(harmonicCurveProblem());
+    Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(3, configuration);
     List<EvolutionListener<BitsGenotype, String>> listeners = new ArrayList<>();
-    listeners.add(new SimpleGenerationPrinter<BitsGenotype, String>(System.out, "g=%3d pop=%3d best.f=%3.3f size=%4d %s%n"));
+    listeners.add(new GenerationLogger<BitsGenotype, String>(System.out, "%5.1f", 5));
     evolver.go(listeners);
   }
 
-  private void evolveSGE() throws IOException, ExecutionException, InterruptedException {
-    Random random = new Random(1);
-    Grammar<String> grammar = Utils.parseFromFile(new File("grammars/text.bnf"));
-    SGEMapper<String> mapper = new SGEMapper<>(10, grammar);
-    Configuration<SGEGenotype<String>, String> configuration = new Configuration<>(
-            1000,
-            1000,
-            new RandomInitializer(random, new SGEGenotypeFactory<>(mapper)),
-            new AnyValidator<SGEGenotype<String>>(),
-            mapper,
-            Arrays.asList(
-                    new Configuration.GeneticOperatorConfiguration<>(new Copy<SGEGenotype<String>>(), new TournamentSelector(100, random), 0.01d),
-                    new Configuration.GeneticOperatorConfiguration<>(new SGECrossover<String>(random), new TournamentSelector(5, random), 0.8d),
-                    new Configuration.GeneticOperatorConfiguration<>(new SGEMutation<>(mapper, random), new TournamentSelector(5, random), 0.19d)
-            ),
-            new DistanceFitness<>(Arrays.asList("hello world".split("")), new EditDistance<String>()));
-    Evolver<SGEGenotype<String>, String> evolver = new StandardEvolver<>(1, configuration);
-    List<EvolutionListener<SGEGenotype<String>, String>> listeners = new ArrayList<>();
-    listeners.add(new SimpleGenerationPrinter<SGEGenotype<String>, String>(System.out, "g=%3d pop=%3d f=%3.0f %s%n"));
-    evolver.go(listeners);
+  public static FitnessComputer<String> harmonicCurveProblem() {
+    return new SymbolicRegressionFitness(new SymbolicRegressionFitness.TargetFunction() {
+      @Override
+      public double compute(double... v) {
+        double s = 0;
+        for (int i = 1; i < v[0]; i++) {
+          s = s + 1 / i;
+        }
+        return s;
+      }
+
+      @Override
+      public String[] varNames() {
+        return new String[]{"x"};
+      }
+    }, new LinkedHashMap<>(MathUtils.varValuesMap("x", MathUtils.uniformSample(1, 50, 1))));
   }
 
 }

@@ -37,4 +37,26 @@ public class NumericFitness implements Fitness<Double> {
     return Double.toString(value);
   }
 
+  @Override
+  public int hashCode() {
+    int hash = 7;
+    hash = 73 * hash + (int) (Double.doubleToLongBits(this.value) ^ (Double.doubleToLongBits(this.value) >>> 32));
+    return hash;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    final NumericFitness other = (NumericFitness) obj;
+    if (Double.doubleToLongBits(this.value) != Double.doubleToLongBits(other.value)) {
+      return false;
+    }
+    return true;
+  }
+  
 }

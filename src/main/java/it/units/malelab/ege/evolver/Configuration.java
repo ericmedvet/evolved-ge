@@ -19,16 +19,17 @@ import java.util.List;
  * @author eric
  */
 public class Configuration<G extends Genotype, T> {
-  
-  private final int populationSize;
-  private final int numberOfGenerations;
-  private final PopulationInitializer<G> populationInitializer;
-  private final GenotypeValidator<G> initGenotypeValidator;
-  private final Mapper<G, T> mapper;
-  private final List<GeneticOperatorConfiguration<G>> operators;
-  private final FitnessComputer<T> fitnessComputer;
-  
+
+  private int populationSize;
+  private int numberOfGenerations;
+  private PopulationInitializer<G> populationInitializer;
+  private GenotypeValidator<G> initGenotypeValidator;
+  private Mapper<G, T> mapper;
+  private List<GeneticOperatorConfiguration<G>> operators;
+  private FitnessComputer<T> fitnessComputer;
+
   public static class GeneticOperatorConfiguration<G extends Genotype> {
+
     private final GeneticOperator<G> operator;
     private final Selector selector;
     private final double rate;
@@ -50,17 +51,19 @@ public class Configuration<G extends Genotype, T> {
     public double getRate() {
       return rate;
     }
-    
-  }
 
-  public Configuration(int populationSize, int numberOfGenerations, PopulationInitializer<G> populationInitializer, GenotypeValidator<G> initGenotypeValidator, Mapper<G, T> mapper, List<GeneticOperatorConfiguration<G>> operators, FitnessComputer<T> fitnessComputer) {
-    this.populationSize = populationSize;
-    this.numberOfGenerations = numberOfGenerations;
-    this.populationInitializer = populationInitializer;
-    this.initGenotypeValidator = initGenotypeValidator;
-    this.mapper = mapper;
-    this.operators = operators;
-    this.fitnessComputer = fitnessComputer;
+  }
+  
+  public Configuration<G, T> copy() {
+    Configuration<G, T> copy = new Configuration<>();
+    copy.populationSize = populationSize;
+    copy.numberOfGenerations = numberOfGenerations;
+    copy.populationInitializer = populationInitializer;
+    copy.initGenotypeValidator = initGenotypeValidator;
+    copy.mapper = mapper;
+    copy.operators = operators;
+    copy.fitnessComputer = fitnessComputer;
+    return copy;
   }
 
   public int getPopulationSize() {
@@ -89,6 +92,41 @@ public class Configuration<G extends Genotype, T> {
 
   public FitnessComputer<T> getFitnessComputer() {
     return fitnessComputer;
+  }
+
+  public Configuration<G, T> populationSize(int populationSize) {
+    this.populationSize = populationSize;
+    return this;
+  }
+
+  public Configuration<G, T> numberOfGenerations(int numberOfGenerations) {
+    this.numberOfGenerations = numberOfGenerations;
+    return this;
+  }
+
+  public Configuration<G, T> populationInitializer(PopulationInitializer<G> populationInitializer) {
+    this.populationInitializer = populationInitializer;
+    return this;
+  }
+
+  public Configuration<G, T> initGenotypeValidator(GenotypeValidator<G> initGenotypeValidator) {
+    this.initGenotypeValidator = initGenotypeValidator;
+    return this;
+  }
+
+  public Configuration<G, T> mapper(Mapper<G, T> mapper) {
+    this.mapper = mapper;
+    return this;
+  }
+
+  public Configuration<G, T> operators(List<GeneticOperatorConfiguration<G>> operators) {
+    this.operators = operators;
+    return this;
+  }
+
+  public Configuration<G, T> fitnessComputer(FitnessComputer<T> fitnessComputer) {
+    this.fitnessComputer = fitnessComputer;
+    return this;
   }
 
 }

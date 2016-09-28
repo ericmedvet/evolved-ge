@@ -12,7 +12,7 @@ import java.util.Arrays;
  *
  * @author eric
  */
-public class GenotypeEditDistance implements Distance<BitsGenotype> {
+public class BitsGenotypeEditDistance implements Distance<BitsGenotype> {
   
   private final EditDistance<Boolean> d = new EditDistance<Boolean>();
 

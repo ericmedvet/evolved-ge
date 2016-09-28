@@ -10,6 +10,7 @@ import it.units.malelab.ege.symbolicregression.Element;
 import it.units.malelab.ege.symbolicregression.MathUtils;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -20,19 +21,19 @@ public class SymbolicRegressionFitness implements FitnessComputer<String> {
   
   public static interface TargetFunction {
     public double compute(double... arguments);
+    public String[] varNames();
   }
   
   private final double[] targetValues;
-  private final LinkedHashMap<String, double[]> varValues;
+  private final Map<String, double[]> varValues;
 
-  public SymbolicRegressionFitness(TargetFunction targetFunction, LinkedHashMap<String, double[]> varValues) {
+  public SymbolicRegressionFitness(TargetFunction targetFunction, Map<String, double[]> varValues) {
     this.varValues = varValues;
     targetValues = new double[varValues.get((String)varValues.keySet().toArray()[0]).length];
     for (int i = 0; i<targetValues.length; i++) {
       double[] arguments = new double[varValues.keySet().size()];
-      int j = 0;
-      for (Map.Entry<String, double[]> entry : varValues.entrySet()) {
-        arguments[j] = entry.getValue()[i];
+      for (int j = 0; j<targetFunction.varNames().length; j++) {
+        arguments[j] = varValues.get(targetFunction.varNames()[j])[i];
         j++;
       }
       targetValues[i] = targetFunction.compute(arguments);

@@ -21,7 +21,11 @@ public class MathUtils {
       return null;
     }
     if (node.getContent() instanceof Variable) {
-      return values.get(node.getContent().toString());
+      double[] result = values.get(node.getContent().toString());
+      if (result==null) {
+        throw new RuntimeException(String.format("Undefined variable: %s", node.getContent().toString()));
+      }
+      return result;
     }
     double[] result = new double[length];
     if (node.getContent() instanceof Constant) {
@@ -40,9 +44,6 @@ public class MathUtils {
     for (int j = 0; j<result.length; j++) {
       double[] operands = new double[childrenValues.length];
       for (int k = 0; k<operands.length; k++) {
-        if (childrenValues[k]==null) {
-          System.out.println("aarrgh");
-        }
         operands[k] = childrenValues[k][j];
       }
       result[j] = compute((Operator)node.getContent(), operands);
