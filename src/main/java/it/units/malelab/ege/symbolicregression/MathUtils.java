@@ -6,6 +6,7 @@
 package it.units.malelab.ege.symbolicregression;
 
 import it.units.malelab.ege.Node;
+import it.units.malelab.ege.evolver.PhenotypePrinter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
@@ -60,6 +61,7 @@ public class MathUtils {
       case INVERSE: return 1/operands[0];
       case LOG: return Math.log(operands[0]);
       case MULTIPLICATION: return operands[0]*operands[1];
+      case OPPOSITE: return -operands[0];
       case SIN: return Math.sin(operands[0]);
       case SQRT: return Math.sqrt(operands[0]);
       case SUBTRACTION: return operands[0]-operands[1];
@@ -109,6 +111,18 @@ public class MathUtils {
   
   public static Map<String, double[]> varValuesMap(String string, double... values) {
     return Collections.singletonMap(string, values);
+  }
+  
+  public static PhenotypePrinter<String> phenotypePrinter() {
+    return new PhenotypePrinter<String>() {
+      @Override
+      public String toString(Node<String> node) {
+        if (Node.EMPTY_TREE.equals(node)) {
+          return null;
+        }
+        return transform(node).toString();
+      }
+    };
   }
   
 }

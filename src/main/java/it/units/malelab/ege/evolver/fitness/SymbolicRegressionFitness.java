@@ -34,7 +34,6 @@ public class SymbolicRegressionFitness implements FitnessComputer<String> {
       double[] arguments = new double[varValues.keySet().size()];
       for (int j = 0; j<targetFunction.varNames().length; j++) {
         arguments[j] = varValues.get(targetFunction.varNames()[j])[i];
-        j++;
       }
       targetValues[i] = targetFunction.compute(arguments);
     }
