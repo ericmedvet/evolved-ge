@@ -15,8 +15,10 @@ import it.units.malelab.ege.evolver.fitness.Fitness;
 import it.units.malelab.ege.evolver.fitness.FitnessComputer;
 import it.units.malelab.ege.evolver.fitness.NumericFitness;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -26,25 +28,34 @@ import java.util.Set;
 public abstract class AbstractGenerationLogger<G extends Genotype, T> implements EvolutionListener<G, T> {
 
   private final FitnessComputer<T> generalizationFitnessComputer;
-  private final Set<Class<? extends EvolutionEvent>> eventClasses;
+  protected final Set<Class<? extends EvolutionEvent>> eventClasses;
+  private final String prefix;
 
-  public AbstractGenerationLogger(FitnessComputer<T> generalizationFitnessComputer) {
+  public AbstractGenerationLogger(FitnessComputer<T> generalizationFitnessComputer, String prefix) {
     this.generalizationFitnessComputer = generalizationFitnessComputer;
     eventClasses = new LinkedHashSet<>();
+    this.prefix = prefix;
     eventClasses.add(GenerationEvent.class);
   }
 
-  protected Object[] getNumbers(int generation, List<Individual<G, T>> population) {
-    boolean nf = population.get(0).getFitness() instanceof NumericFitness;
+  protected Map<String, Object> computeIndexes(int generation, List<Individual<G, T>> population) {
     Utils.sortByFitness(population);
     //diversities
     Set<G> genotypes = new HashSet<>();
     Set<Node<T>> phenotypes = new HashSet<>();
     Set<Fitness> fitnesses = new HashSet<>();
+    double avgFitness = 0;
+    double validFitnessCount = 0;
     for (Individual<G, T> individual : population) {
       genotypes.add(individual.getGenotype());
       phenotypes.add(individual.getPhenotype());
       fitnesses.add(individual.getFitness());
+      if (individual.getFitness() instanceof NumericFitness) {
+        if (!Double.isInfinite(((NumericFitness)individual.getFitness()).getValue())) {
+          avgFitness = avgFitness+((NumericFitness)individual.getFitness()).getValue();
+          validFitnessCount = validFitnessCount+1;
+        }
+      }
     }
     //invalid phenotypes
     int countInvalid = 0;
@@ -58,26 +69,37 @@ public abstract class AbstractGenerationLogger<G extends Genotype, T> implements
     if (generalizationFitnessComputer != null) {
       bestGeneralizationFitness = generalizationFitnessComputer.compute(population.get(0).getPhenotype());
     }
-    Object[] numbers = new Object[]{
-      generation,
-      population.size(),
-      (double) genotypes.size() / (double) population.size(),
-      (double) phenotypes.size() / (double) population.size(),
-      (double) fitnesses.size() / (double) population.size(),
-      (double) countInvalid / (double) population.size(),
-      population.get((int) Math.ceil(population.size() / 2)).getGenotype().size(),
-      population.get((int) Math.ceil(population.size() / 2)).getPhenotype()==null?null:population.get((int) Math.ceil(population.size() / 2)).getPhenotype().size(),
-      population.get((int) Math.ceil(population.size() / 2)).getFitness().getValue(),
-      population.get((int) Math.ceil(population.size() / 4)).getGenotype().size(),
-      population.get((int) Math.ceil(population.size() / 2)).getPhenotype()==null?null:population.get((int) Math.ceil(population.size() / 4)).getPhenotype().size(),
-      population.get((int) Math.ceil(population.size() / 4)).getFitness().getValue(),
-      population.get(0).getGenotype().size(),
-      population.get(0).getPhenotype()==null?null:population.get(0).getPhenotype().depth(),
-      population.get(0).getPhenotype()==null?null:population.get(0).getPhenotype().size(),
-      population.get(0).getPhenotype()==null?null:population.get(0).getPhenotype().leaves().size(),
-      population.get(0).getFitness().getValue(),
-      bestGeneralizationFitness != null ? bestGeneralizationFitness.getValue() : null,};
-    return numbers;
+    Individual<G, T> q3Individual = population.get((int) Math.ceil((double)population.size() / (double)4*(double)3));
+    Individual<G, T> q2Individual = population.get((int) Math.ceil((double)population.size() / (double)4*(double)2));
+    Individual<G, T> q1Individual = population.get((int) Math.ceil((double)population.size() / (double)4*(double)1));
+    Individual<G, T> bestIndividual = population.get(0);
+    Map<String, Object> indexes = new LinkedHashMap<>();
+    indexes.put("prefix", prefix);
+    indexes.put("generation", generation);
+    indexes.put("populationSize", population.size());
+    indexes.put("genotypeDiversity", (double) genotypes.size() / (double) population.size());
+    indexes.put("phenotypeDiversity", (double) phenotypes.size() / (double) population.size());
+    indexes.put("fitnessDiversity", (double) fitnesses.size() / (double) population.size());
+    indexes.put("phenotypeInvalidity", (double) countInvalid / (double) population.size());
+    indexes.put("q3GenotypeSize", q3Individual.getGenotype().size());
+    indexes.put("q3PhenotypeSize", q3Individual.getPhenotype().size());
+    indexes.put("q3Fitness", q3Individual.getFitness().getValue());
+    indexes.put("q2GenotypeSize", q2Individual.getGenotype().size());
+    indexes.put("q2PhenotypeSize", q2Individual.getPhenotype().size());
+    indexes.put("q2Fitness", q2Individual.getFitness().getValue());
+    indexes.put("q1GenotypeSize", q1Individual.getGenotype().size());
+    indexes.put("q1PhenotypeSize", q1Individual.getPhenotype().size());
+    indexes.put("q1Fitness", q1Individual.getFitness().getValue());
+    indexes.put("bestGenotypeSize", bestIndividual.getGenotype().size());
+    indexes.put("bestPhenotypeSize", bestIndividual.getPhenotype().size());
+    indexes.put("bestPhenotypeDepth", bestIndividual.getPhenotype().depth());
+    indexes.put("bestPhenotypeLenght", bestIndividual.getPhenotype().leaves().size());
+    indexes.put("bestFitness", bestIndividual.getFitness().getValue());
+    indexes.put("meanFitness", avgFitness/validFitnessCount);
+    if (bestGeneralizationFitness!=null) {
+      indexes.put("generalizationFitness", generalizationFitnessComputer.compute(bestIndividual.getPhenotype()));
+    }
+    return indexes;
   }
 
   @Override

@@ -11,10 +11,9 @@ import it.units.malelab.ege.evolver.event.EvolutionEvent;
 import it.units.malelab.ege.evolver.event.GenerationEvent;
 import it.units.malelab.ege.evolver.fitness.FitnessComputer;
 import it.units.malelab.ege.evolver.genotype.Genotype;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 /**
  *
@@ -28,8 +27,8 @@ public class ScreenGenerationLogger<G extends Genotype, T> extends AbstractGener
 
   private final static int GEN_STEP = 10;
 
-  public ScreenGenerationLogger(String fitnessFormat, int lengthOfFitnessFormat, PhenotypePrinter<T> phenotypePrinter, FitnessComputer<T> generalizationFitnessComputer) {
-    super(generalizationFitnessComputer);
+  public ScreenGenerationLogger(String fitnessFormat, int lengthOfFitnessFormat, PhenotypePrinter<T> phenotypePrinter, FitnessComputer<T> generalizationFitnessComputer, String prefix) {
+    super(generalizationFitnessComputer, prefix);
     this.fitnessFormat = fitnessFormat;
     this.lengthOfFitnessFormat = lengthOfFitnessFormat;
     this.phenotypePrinter = phenotypePrinter;
@@ -40,25 +39,47 @@ public class ScreenGenerationLogger<G extends Genotype, T> extends AbstractGener
     List<Individual<G, T>> population = new ArrayList<>(((GenerationEvent) event).getPopulation());
     int generation = ((GenerationEvent) event).getGeneration();
     if (generation % GEN_STEP == 0) {
-      System.out.printf("%4s %4s | %4s %4s %4s | %4s | %4s %4s %" + lengthOfFitnessFormat + "s | %4s %4s %" + lengthOfFitnessFormat + "s | %4s %4s %4s %4s %" + lengthOfFitnessFormat + "s | %" + lengthOfFitnessFormat + "s | %s%n",
-              "Gen.", "Pop.",
-              "D-G", "D-P", "D-F",
-              "N-P",
-              "50Gs", "50Ps", "50F",
-              "25Gs", "25Ps", "25F",
-              "B-Gs", "B-Pd", "B-Ps", "B-Pl", "B-F",
-              "B-GF",
+      System.out.printf("%4s %4s | %4s %4s %4s | %4s | %4s %4s %" + lengthOfFitnessFormat + "s | %4s %4s %" + lengthOfFitnessFormat + "s | %4s %4s %" + lengthOfFitnessFormat + "s | %4s %4s %4s %4s %" + lengthOfFitnessFormat + "s | %" + lengthOfFitnessFormat + "s %" + lengthOfFitnessFormat + "s | %s%n",
+              "gen", "popS",
+              "divG", "divP", "divF",
+              "invP",
+              "q3Gs", "q3Ps", "q3F",
+              "q2Gs", "q2Ps", "q2F",
+              "q1Gs", "q1Ps", "q1F",
+              "bGs", "bPs", "bPd", "bPl", "bF",
+              "genF",
+              "avgF",
               "Best phenotype"
       );
     }
-    Object[] numbers = getNumbers(generation, population);
-    Object[] data = new Object[numbers.length+1];
+    Map<String, Object> indexes = computeIndexes(generation, population);
     if (phenotypePrinter!=null) {
-      data[data.length-1] = phenotypePrinter.toString(population.get(0).getPhenotype());
+      indexes.put("bestPhenotype", phenotypePrinter.toString(population.get(0).getPhenotype()));
     }
-    System.arraycopy(numbers, 0, data, 0, numbers.length);
-    System.out.printf("%4d %4d | %4.2f %4.2f %4.2f | %4.2f | %4d %4d " + fitnessFormat + " | %4d %4d " + fitnessFormat + " | %4d %4d %4d %4d " + fitnessFormat + " | " + fitnessFormat + " | %s%n",
-            data
+    System.out.printf("%4d %4d | %4.2f %4.2f %4.2f | %4.2f | %4d %4d " + fitnessFormat + " | %4d %4d " + fitnessFormat + " | %4d %4d " + fitnessFormat + " | %4d %4d %4d %4d " + fitnessFormat + " | " + fitnessFormat + " " + fitnessFormat + " | %s%n",
+            indexes.get("generation"),
+            indexes.get("populationSize"),
+            indexes.get("genotypeDiversity"),
+            indexes.get("phenotypeDiversity"),
+            indexes.get("fitnessDiversity"),
+            indexes.get("phenotypeInvalidity"),
+            indexes.get("q3GenotypeSize"),
+            indexes.get("q3PhenotypeSize"),
+            indexes.get("q3Fitness"),
+            indexes.get("q2GenotypeSize"),
+            indexes.get("q2PhenotypeSize"),
+            indexes.get("q2Fitness"),
+            indexes.get("q1GenotypeSize"),
+            indexes.get("q1PhenotypeSize"),
+            indexes.get("q1Fitness"),
+            indexes.get("bestGenotypeSize"),
+            indexes.get("bestPhenotypeSize"),
+            indexes.get("bestPhenotypeDepth"),
+            indexes.get("bestPhenotypeLenght"),
+            indexes.get("bestFitness"),
+            indexes.get("generalizationFitness"),
+            indexes.get("meanFitness"),
+            indexes.get("bestPhenotype")
     );
   }
 

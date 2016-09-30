@@ -5,6 +5,9 @@
  */
 package it.units.malelab.ege;
 
+import it.units.malelab.ege.distance.BitsGenotypeEditDistance;
+import it.units.malelab.ege.distance.Distance;
+import it.units.malelab.ege.distance.EditDistance;
 import it.units.malelab.ege.evolver.genotype.BitsGenotype;
 import it.units.malelab.ege.evolver.validator.AnyValidator;
 import it.units.malelab.ege.evolver.Configuration;
@@ -12,6 +15,7 @@ import it.units.malelab.ege.evolver.Evolver;
 import it.units.malelab.ege.evolver.initializer.RandomInitializer;
 import it.units.malelab.ege.evolver.StandardEvolver;
 import it.units.malelab.ege.evolver.genotype.BitsGenotypeFactory;
+import it.units.malelab.ege.evolver.listener.DynamicLocalityAnalysisLogger;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
 import it.units.malelab.ege.evolver.listener.ScreenGenerationLogger;
 import it.units.malelab.ege.evolver.selector.TournamentSelector;
@@ -27,6 +31,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
@@ -39,13 +44,21 @@ import java.util.concurrent.ExecutionException;
 public class Main {
 
   public static void main(String[] args) throws IOException, ExecutionException, InterruptedException, MappingException {
-    BenchmarkProblems.Problem problem = BenchmarkProblems.max();
-    Configuration<BitsGenotype, String> configuration = defaultConfiguration(problem, 1)
-            .mapper(new WeightedHierarchicalMapper<>(10, problem.getGrammar()))
-            .mapper(new BitsSGEMapper<>(10, problem.getGrammar()));
+    final EditDistance<String> editDistance = new EditDistance<>();
+    BenchmarkProblems.Problem problem = BenchmarkProblems.text("Ciao mondo!");
+    Configuration<BitsGenotype, String> configuration = defaultConfiguration(problem, 1);
+    //configuration.mapper(new WeightedHierarchicalMapper<>(10, problem.getGrammar()));
     Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(1, configuration);
     List<EvolutionListener<BitsGenotype, String>> listeners = new ArrayList<>();
-    listeners.add(new ScreenGenerationLogger<BitsGenotype, String>("%5.1f", 5, problem.getPhenotypePrinter(), problem.getGeneralizationFitnessComputer()));
+    listeners.add(new ScreenGenerationLogger<BitsGenotype, String>("%8.1f", 8, problem.getPhenotypePrinter(), problem.getGeneralizationFitnessComputer(), "0"));
+    listeners.add(new DynamicLocalityAnalysisLogger<>(System.out, new BitsGenotypeEditDistance(), new Distance<Node<String>>() {
+      @Override
+      public double d(Node<String> t1, Node<String> t2) {
+        List<String> s1 = Node.EMPTY_TREE.equals(t1)?Collections.EMPTY_LIST:Utils.contents(t1.leaves());
+        List<String> s2 = Node.EMPTY_TREE.equals(t2)?Collections.EMPTY_LIST:Utils.contents(t2.leaves());
+        return editDistance.d(s1, s2);
+      }
+    }, "0"));
     evolver.go(listeners);
   }
   
