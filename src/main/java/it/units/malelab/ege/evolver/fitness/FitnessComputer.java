@@ -3,17 +3,18 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.mapper;
+package it.units.malelab.ege.evolver.fitness;
 
-import it.units.malelab.ege.evolver.genotype.Genotype;
+import it.units.malelab.ege.evolver.fitness.Fitness;
 import it.units.malelab.ege.Node;
 
 /**
  *
  * @author eric
  */
-public interface Mapper<G extends Genotype, T> {
+public interface FitnessComputer<T> {
   
-  public Node<T> map(G genotype) throws MappingException;
+  public Fitness compute(Node<T> phenotype);
+  public Fitness worstValue();
   
 }

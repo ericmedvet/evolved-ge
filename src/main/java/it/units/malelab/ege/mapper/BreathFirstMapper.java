@@ -5,7 +5,7 @@
  */
 package it.units.malelab.ege.mapper;
 
-import it.units.malelab.ege.Genotype;
+import it.units.malelab.ege.evolver.genotype.BitsGenotype;
 import it.units.malelab.ege.Node;
 import it.units.malelab.ege.grammar.Grammar;
 import java.util.List;
@@ -14,7 +14,7 @@ import java.util.List;
  *
  * @author eric
  */
-public class BreathFirstMapper<T> extends AbstractMapper<T> {
+public class BreathFirstMapper<T> extends AbstractMapper<BitsGenotype, T> {
 
   private final int codonLenght;
   private final int maxWraps;
@@ -43,10 +43,18 @@ public class BreathFirstMapper<T> extends AbstractMapper<T> {
       return depth;
     }
 
+    @Override
+    public String toString() {
+      return symbol+":"+depth;
+    }
+
   }
 
   @Override
-  public Node<T> map(Genotype genotype) throws MappingException {
+  public Node<T> map(BitsGenotype genotype) throws MappingException {
+    if (genotype.size()<codonLenght) {
+      throw new MappingException(String.format("Short genotype (%d<%d)", genotype.size(), codonLenght));
+    }
     Node<EnhancedSymbol<T>> enhancedTree = new Node<>(new EnhancedSymbol<>(grammar.getStartingSymbol(), 0));
     int currentCodonIndex = 0;
     int wraps = 0;
@@ -74,7 +82,7 @@ public class BreathFirstMapper<T> extends AbstractMapper<T> {
       int optionIndex = genotype.slice(currentCodonIndex * codonLenght, (currentCodonIndex + 1) * codonLenght).toInt() % options.size();
       //add children
       for (T t : options.get(optionIndex)) {
-        Node<EnhancedSymbol<T>> newChild = new Node<>(new EnhancedSymbol<>(t, nodeToBeReplaced.getContent().getDepth()));
+        Node<EnhancedSymbol<T>> newChild = new Node<>(new EnhancedSymbol<>(t, nodeToBeReplaced.getContent().getDepth()+1));
         nodeToBeReplaced.getChildren().add(newChild);
       }
       currentCodonIndex = currentCodonIndex+1;

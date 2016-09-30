@@ -5,13 +5,14 @@
  */
 package it.units.malelab.ege.mapper;
 
+import it.units.malelab.ege.evolver.genotype.Genotype;
 import it.units.malelab.ege.grammar.Grammar;
 
 /**
  *
  * @author eric
  */
-public abstract class AbstractMapper<T> implements Mapper<T> {
+public abstract class AbstractMapper<G extends Genotype, T> implements Mapper<G, T> {
 
   protected final Grammar<T> grammar;
 

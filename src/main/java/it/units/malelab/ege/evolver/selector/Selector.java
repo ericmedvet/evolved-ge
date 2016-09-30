@@ -3,17 +3,18 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.mapper;
+package it.units.malelab.ege.evolver.selector;
 
 import it.units.malelab.ege.evolver.genotype.Genotype;
-import it.units.malelab.ege.Node;
+import it.units.malelab.ege.evolver.Individual;
+import java.util.List;
 
 /**
  *
  * @author eric
  */
-public interface Mapper<G extends Genotype, T> {
+public interface Selector<G extends Genotype, T> {
   
-  public Node<T> map(G genotype) throws MappingException;
+  public Individual<G, T> select(List<Individual<G, T>> population);
   
 }

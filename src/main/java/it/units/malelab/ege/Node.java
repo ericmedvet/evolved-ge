@@ -15,13 +15,16 @@ import java.util.List;
  */
 public class Node<T> {
   
+  public static Node EMPTY_TREE = new Node(null);
+  
   private final T content;
   private final List<Node<T>> children = new ArrayList<>();
-
+  private Node<T> parent;
+  
   public Node(T content) {
     this.content = content;
   }
-
+  
   public T getContent() {
     return content;
   }
@@ -41,15 +44,6 @@ public class Node<T> {
     return childContents;
   }
 
-  public List<T> leafContents() {
-    List<Node<T>> nodes = leaves();
-    List<T> contents = new ArrayList<>(nodes.size());
-    for (Node<T> node : nodes) {
-      contents.add(node.getContent());
-    }
-    return contents;
-  }
-
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
@@ -65,6 +59,41 @@ public class Node<T> {
     return sb.toString();
   }
   
+  public List<Node<T>> getAncestors() {
+    if (parent==null) {
+      return Collections.EMPTY_LIST;
+    }
+    List<Node<T>> ancestors = new ArrayList<>();
+    ancestors.add(parent);
+    ancestors.addAll(parent.getAncestors());
+    return Collections.unmodifiableList(ancestors);
+  }
+
+  public Node<T> getParent() {
+    return parent;
+  }
   
+  public void propagateParentship() {
+    for (Node<T> child : children) {
+      child.parent = this;
+      child.propagateParentship();
+    }
+  }
   
+  public int depth() {
+    int max = 0;
+    for (Node<T> child : children) {
+      max = Math.max(max, child.depth());
+    }
+    return max+1;
+  }
+  
+  public int size() {
+    int size = 0;
+    for (Node<T> child : children) {
+      size = size+child.size();
+    }
+    return size+1;
+  }
+    
 }

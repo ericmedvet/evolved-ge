@@ -3,17 +3,16 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.mapper;
+package it.units.malelab.ege.evolver.validator;
 
 import it.units.malelab.ege.evolver.genotype.Genotype;
-import it.units.malelab.ege.Node;
 
 /**
  *
  * @author eric
  */
-public interface Mapper<G extends Genotype, T> {
+public interface GenotypeValidator<G extends Genotype> {
   
-  public Node<T> map(G genotype) throws MappingException;
-  
+    public boolean validate(G genotype);
+
 }

@@ -3,17 +3,21 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.mapper;
+package it.units.malelab.ege.evolver.operator;
 
 import it.units.malelab.ege.evolver.genotype.Genotype;
-import it.units.malelab.ege.Node;
+import java.util.Random;
 
 /**
  *
  * @author eric
  */
-public interface Mapper<G extends Genotype, T> {
+public abstract class AbstractOperator<G extends Genotype> implements GeneticOperator<G> {
   
-  public Node<T> map(G genotype) throws MappingException;
+  protected final Random random;
+
+  public AbstractOperator(Random random) {
+    this.random = random;
+  }
   
 }
