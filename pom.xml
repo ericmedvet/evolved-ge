@@ -15,7 +15,12 @@
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
       <version>19.0</version>
-    </dependency>    
+    </dependency>
+    <dependency>
+      <groupId>at.unisalzburg.dbresearch</groupId>
+      <artifactId>apted</artifactId>
+      <version>0.1.1</version>
+    </dependency>
   </dependencies>
   
   <!-- http://www.mkyong.com/maven/create-a-fat-jar-file-maven-shade-plugin/ -->

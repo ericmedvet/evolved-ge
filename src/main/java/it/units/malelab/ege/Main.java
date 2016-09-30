@@ -6,16 +6,13 @@
 package it.units.malelab.ege;
 
 import it.units.malelab.ege.evolver.genotype.BitsGenotype;
-import it.units.malelab.ege.grammar.Grammar;
 import it.units.malelab.ege.evolver.validator.AnyValidator;
 import it.units.malelab.ege.evolver.Configuration;
 import it.units.malelab.ege.evolver.Evolver;
 import it.units.malelab.ege.evolver.initializer.RandomInitializer;
 import it.units.malelab.ege.evolver.StandardEvolver;
-import it.units.malelab.ege.evolver.fitness.FitnessComputer;
 import it.units.malelab.ege.evolver.genotype.BitsGenotypeFactory;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
-import it.units.malelab.ege.evolver.listener.AbstractGenerationLogger;
 import it.units.malelab.ege.evolver.listener.ScreenGenerationLogger;
 import it.units.malelab.ege.evolver.selector.TournamentSelector;
 import it.units.malelab.ege.evolver.operator.Copy;
@@ -26,7 +23,6 @@ import it.units.malelab.ege.mapper.BitsSGEMapper;
 import it.units.malelab.ege.mapper.MappingException;
 import it.units.malelab.ege.mapper.StandardGEMapper;
 import it.units.malelab.ege.mapper.WeightedHierarchicalMapper;
-import it.units.malelab.ege.symbolicregression.MathUtils;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
