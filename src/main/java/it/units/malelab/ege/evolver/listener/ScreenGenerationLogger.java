@@ -27,15 +27,15 @@ public class ScreenGenerationLogger<G extends Genotype, T> extends AbstractGener
 
   private final static int GEN_STEP = 10;
 
-  public ScreenGenerationLogger(String fitnessFormat, int lengthOfFitnessFormat, PhenotypePrinter<T> phenotypePrinter, FitnessComputer<T> generalizationFitnessComputer, String prefix) {
-    super(generalizationFitnessComputer, prefix);
+  public ScreenGenerationLogger(String fitnessFormat, int lengthOfFitnessFormat, PhenotypePrinter<T> phenotypePrinter, FitnessComputer<T> generalizationFitnessComputer, Map<String, Object> constants) {
+    super(generalizationFitnessComputer, constants);
     this.fitnessFormat = fitnessFormat;
     this.lengthOfFitnessFormat = lengthOfFitnessFormat;
     this.phenotypePrinter = phenotypePrinter;
   }
 
   @Override
-  public void listen(EvolutionEvent<G, T> event) {
+  public synchronized void listen(EvolutionEvent<G, T> event) {
     List<Individual<G, T>> population = new ArrayList<>(((GenerationEvent) event).getPopulation());
     int generation = ((GenerationEvent) event).getGeneration();
     if (generation % GEN_STEP == 0) {

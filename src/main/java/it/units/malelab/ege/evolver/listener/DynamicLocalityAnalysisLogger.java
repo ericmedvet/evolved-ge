@@ -17,11 +17,8 @@ import it.units.malelab.ege.evolver.event.OperatorApplicationEvent;
 import it.units.malelab.ege.evolver.genotype.Genotype;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import org.apache.commons.math3.exception.MathIllegalArgumentException;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 
@@ -32,25 +29,33 @@ import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 public class DynamicLocalityAnalysisLogger<G extends Genotype, T> extends AbstractGenerationLogger<G, T> {
 
   private final PrintStream ps;
+  private final Multimap<String, Pair<Double, Double>> distances;
   private final Distance<G> genotypeDistance;
   private final Distance<Node<T>> phenotypeDistance;
-  private final Multimap<String, Pair<Double, Double>> distances;
   private boolean headerWritten;
 
-  public DynamicLocalityAnalysisLogger(PrintStream ps, Distance<G> genotypeDistance, Distance<Node<T>> phenotypeDistance, String prefix) {
-    super(null, prefix);
+  private final List<String> columnNames;
+
+  private static final int CACHE_SIZE = 10000;
+
+  public DynamicLocalityAnalysisLogger(PrintStream ps, Distance<G> genotypeDistance, Distance<Node<T>> phenotypeDistance, Map<String, Object> constants) {
+    super(null, constants);
     this.ps = ps;
-    this.genotypeDistance = genotypeDistance;
-    this.phenotypeDistance = phenotypeDistance;
     eventClasses.add(OperatorApplicationEvent.class);
     distances = LinkedHashMultimap.create();
     headerWritten = false;
+    this.genotypeDistance = genotypeDistance;
+    this.phenotypeDistance = phenotypeDistance;
+    columnNames = new ArrayList<>();
   }
 
   @Override
-  public void listen(EvolutionEvent<G, T> event) {
+  public synchronized void listen(EvolutionEvent<G, T> event) {
     if (event instanceof GenerationEvent) {
       int generation = ((GenerationEvent) event).getGeneration();
+      if (generation==0) {
+        return;
+      }
       List<Individual<G, T>> population = new ArrayList<>(((GenerationEvent) event).getPopulation());
       Map<String, Object> indexes = computeIndexes(generation, population);
       for (String operatorName : distances.keySet()) {
@@ -69,19 +74,20 @@ public class DynamicLocalityAnalysisLogger<G extends Genotype, T> extends Abstra
         }
         indexes.put("opCorr" + operatorName, corr);
       }
-      SortedMap<String, Object> sortedIndexes = new TreeMap<>(indexes);
       if (!headerWritten) {
-        for (String key : sortedIndexes.keySet()) {
-          ps.print(key);
-          if (!sortedIndexes.lastKey().equals(key)) {
+        columnNames.addAll(indexes.keySet());
+        headerWritten = true;
+        for (String columnName : columnNames) {
+          ps.print(columnName);
+          if (!columnNames.get(columnNames.size() - 1).equals(columnName)) {
             ps.print(";");
           }
         }
         ps.println();
       }
-      for (Map.Entry<String, Object> entry : sortedIndexes.entrySet()) {
-        ps.print(entry.getValue());
-        if (!sortedIndexes.lastKey().equals(entry.getKey())) {
+      for (String columnName : columnNames) {
+        ps.print(indexes.get(columnName));
+        if (!columnNames.get(columnNames.size() - 1).equals(columnName)) {
           ps.print(";");
         }
       }
@@ -89,7 +95,7 @@ public class DynamicLocalityAnalysisLogger<G extends Genotype, T> extends Abstra
       distances.clear();
     } else if (event instanceof OperatorApplicationEvent) {
       OperatorApplicationEvent<G, T> e = ((OperatorApplicationEvent) event);
-      //assume 1 child and 1/2 parents
+      //assume 1 child and 1 or 2 parents
       double gd = genotypeDistance.d(e.getParents().get(0).getGenotype(), e.getChildren().get(0).getGenotype());
       double pd = phenotypeDistance.d(e.getParents().get(0).getPhenotype(), e.getChildren().get(0).getPhenotype());
       if (e.getParents().size() > 1) {

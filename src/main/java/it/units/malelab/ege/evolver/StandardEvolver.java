@@ -71,7 +71,18 @@ public class StandardEvolver<G extends Genotype, T> implements Evolver<G, T> {
         }
       }
       List<Individual<G, T>> newPopulation = new ArrayList<>(Utils.getAll(executor.invokeAll(tasks)));
-      population = newPopulation;
+      if (configuration.getGenerationStrategy().equals(Configuration.GenerationStrategy.REPLACE)) {
+        population = newPopulation;
+      } else if (configuration.getGenerationStrategy().equals(Configuration.GenerationStrategy.ADD_OLD_FIRST)) {
+        population.addAll(newPopulation);
+        Utils.sortByFitness(population);
+        population = population.subList(0, configuration.getPopulationSize());
+      } else if (configuration.getGenerationStrategy().equals(Configuration.GenerationStrategy.ADD_NEW_FIRST)) {
+        newPopulation.addAll(population);
+        population = newPopulation;
+        Utils.sortByFitness(population);
+        population = population.subList(0, configuration.getPopulationSize());
+      } 
       Utils.broadcast(new GenerationEvent<>(population, generation, this), listeners);
     }
     //end

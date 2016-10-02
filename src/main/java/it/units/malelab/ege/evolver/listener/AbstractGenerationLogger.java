@@ -29,12 +29,12 @@ public abstract class AbstractGenerationLogger<G extends Genotype, T> implements
 
   private final FitnessComputer<T> generalizationFitnessComputer;
   protected final Set<Class<? extends EvolutionEvent>> eventClasses;
-  private final String prefix;
+  private final Map<String, Object> constants;
 
-  public AbstractGenerationLogger(FitnessComputer<T> generalizationFitnessComputer, String prefix) {
+  public AbstractGenerationLogger(FitnessComputer<T> generalizationFitnessComputer, Map<String, Object> constants) {
     this.generalizationFitnessComputer = generalizationFitnessComputer;
     eventClasses = new LinkedHashSet<>();
-    this.prefix = prefix;
+    this.constants = constants;
     eventClasses.add(GenerationEvent.class);
   }
 
@@ -67,14 +67,18 @@ public abstract class AbstractGenerationLogger<G extends Genotype, T> implements
     //generalization fitness
     Fitness<T> bestGeneralizationFitness = null;
     if (generalizationFitnessComputer != null) {
-      bestGeneralizationFitness = generalizationFitnessComputer.compute(population.get(0).getPhenotype());
+      if (Node.EMPTY_TREE.equals(population.get(0).getPhenotype())) {
+        bestGeneralizationFitness = generalizationFitnessComputer.worstValue();
+      } else {
+        bestGeneralizationFitness = generalizationFitnessComputer.compute(population.get(0).getPhenotype());
+      }
     }
     Individual<G, T> q3Individual = population.get((int) Math.ceil((double)population.size() / (double)4*(double)3));
     Individual<G, T> q2Individual = population.get((int) Math.ceil((double)population.size() / (double)4*(double)2));
     Individual<G, T> q1Individual = population.get((int) Math.ceil((double)population.size() / (double)4*(double)1));
     Individual<G, T> bestIndividual = population.get(0);
     Map<String, Object> indexes = new LinkedHashMap<>();
-    indexes.put("prefix", prefix);
+    indexes.putAll(constants);
     indexes.put("generation", generation);
     indexes.put("populationSize", population.size());
     indexes.put("genotypeDiversity", (double) genotypes.size() / (double) population.size());
@@ -96,8 +100,8 @@ public abstract class AbstractGenerationLogger<G extends Genotype, T> implements
     indexes.put("bestPhenotypeLenght", bestIndividual.getPhenotype().leaves().size());
     indexes.put("bestFitness", bestIndividual.getFitness().getValue());
     indexes.put("meanFitness", avgFitness/validFitnessCount);
-    if (bestGeneralizationFitness!=null) {
-      indexes.put("generalizationFitness", generalizationFitnessComputer.compute(bestIndividual.getPhenotype()));
+    if (generalizationFitnessComputer!=null) {
+      indexes.put("generalizationFitness", bestGeneralizationFitness.getValue());
     }
     return indexes;
   }

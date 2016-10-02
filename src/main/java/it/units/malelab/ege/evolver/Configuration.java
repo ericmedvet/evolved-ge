@@ -27,6 +27,11 @@ public class Configuration<G extends Genotype, T> {
   private Mapper<G, T> mapper;
   private List<GeneticOperatorConfiguration<G>> operators;
   private FitnessComputer<T> fitnessComputer;
+  private GenerationStrategy generationStrategy;
+  
+  public static enum GenerationStrategy {
+    ADD_NEW_FIRST, ADD_OLD_FIRST, REPLACE;
+  }
 
   public static class GeneticOperatorConfiguration<G extends Genotype> {
 
@@ -63,6 +68,7 @@ public class Configuration<G extends Genotype, T> {
     copy.mapper = mapper;
     copy.operators = operators;
     copy.fitnessComputer = fitnessComputer;
+    copy.generationStrategy = generationStrategy;
     return copy;
   }
 
@@ -92,6 +98,10 @@ public class Configuration<G extends Genotype, T> {
 
   public FitnessComputer<T> getFitnessComputer() {
     return fitnessComputer;
+  }
+
+  public GenerationStrategy getGenerationStrategy() {
+    return generationStrategy;
   }
 
   public Configuration<G, T> populationSize(int populationSize) {
@@ -126,6 +136,11 @@ public class Configuration<G extends Genotype, T> {
 
   public Configuration<G, T> fitnessComputer(FitnessComputer<T> fitnessComputer) {
     this.fitnessComputer = fitnessComputer;
+    return this;
+  }
+  
+  public Configuration<G, T> generationStrategy(GenerationStrategy generationStrategy) {
+    this.generationStrategy = generationStrategy;
     return this;
   }
 
