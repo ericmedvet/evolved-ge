@@ -1,11 +1,8 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package it.units.malelab.ege.distance;
 
+import distance.APTED;
 import it.units.malelab.ege.Node;
+import util.LblTree;
 
 /**
  *
@@ -13,11 +10,30 @@ import it.units.malelab.ege.Node;
  */
 // from https://github.com/unnonouno/tree-edit-distance/blob/master/tree-edit-distance/src/treedist/TreeEditDistance.java
 public class TreeEditDistance<T> implements Distance<Node<T>>{
+private APTED ted;
 
+  public TreeEditDistance () {
+    ted = new APTED((float)1.0, (float)1.0, (float)1.0);
+  }
+  
   @Override
   public double d(Node<T> t1, Node<T> t2) {
-    throw new UnsupportedOperationException("Not supported yet.");
-    
+    return ted.nonNormalizedTreeDist(
+      LblTree.fromString(treeToString(t1)), 
+      LblTree.fromString(treeToString(t2))
+    );
   }  
+  
+  private String treeToString(Node<T> root) {
+    StringBuilder sb = new StringBuilder();
+    sb.append("{").append(root.getContent());
+    if (!root.getChildren().isEmpty()) {
+      for (Node<T> child : root.getChildren()) {
+        sb.append(treeToString(child));
+      }
+    } 
+    sb.append("}");
+    return sb.toString();
+  }
   
 }
