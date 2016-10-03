@@ -14,11 +14,16 @@ import it.units.malelab.ege.evolver.Individual;
 import it.units.malelab.ege.evolver.event.EvolutionEvent;
 import it.units.malelab.ege.evolver.event.GenerationEvent;
 import it.units.malelab.ege.evolver.event.OperatorApplicationEvent;
+import it.units.malelab.ege.evolver.fitness.FitnessComputer;
 import it.units.malelab.ege.evolver.genotype.Genotype;
+import java.io.BufferedOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 import org.apache.commons.math3.exception.MathIllegalArgumentException;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 
@@ -26,90 +31,83 @@ import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
  *
  * @author eric
  */
-public class DynamicLocalityAnalysisLogger<G extends Genotype, T> extends AbstractGenerationLogger<G, T> {
+public class DynamicLocalityAnalysisLogger<G extends Genotype, T> implements EvolutionListener<G, T> {
 
   private final PrintStream ps;
-  private final Multimap<String, Pair<Double, Double>> distances;
-  private final Distance<G> genotypeDistance;
-  private final Distance<Node<T>> phenotypeDistance;
+  private final Map<String, Distance<G>> genotypeDistances;
+  private final Map<String, Distance<Node<T>>> phenotypeDistances;
+  private final Map<String, Object> constants;
   private boolean headerWritten;
+  private final Set<Class<? extends EvolutionEvent>> eventClasses;
+  private final List<String> genotypeDistanceNames;
+  private final List<String> phenotypeDistanceNames;
+  private final List<String> constantNames;
+  
+  private final static int PS_BUFFER = 100*100;
 
-  private final List<String> columnNames;
-
-  private static final int CACHE_SIZE = 10000;
-
-  public DynamicLocalityAnalysisLogger(PrintStream ps, Distance<G> genotypeDistance, Distance<Node<T>> phenotypeDistance, Map<String, Object> constants) {
-    super(null, constants);
-    this.ps = ps;
+  public DynamicLocalityAnalysisLogger(PrintStream ps, Map<String, Distance<G>> genotypeDistances, Map<String, Distance<Node<T>>> phenotypeDistances, Map<String, Object> constants) {
+    this.ps = new PrintStream(new BufferedOutputStream(ps, PS_BUFFER));
+    this.genotypeDistances = genotypeDistances;
+    this.phenotypeDistances = phenotypeDistances;
+    this.constants = constants;
+    eventClasses = new LinkedHashSet<>();
     eventClasses.add(OperatorApplicationEvent.class);
-    distances = LinkedHashMultimap.create();
-    headerWritten = false;
-    this.genotypeDistance = genotypeDistance;
-    this.phenotypeDistance = phenotypeDistance;
-    columnNames = new ArrayList<>();
+    genotypeDistanceNames = new ArrayList<>(genotypeDistances.keySet());
+    phenotypeDistanceNames = new ArrayList<>(phenotypeDistances.keySet());
+    constantNames = new ArrayList<>(constants.keySet());
   }
 
   @Override
   public synchronized void listen(EvolutionEvent<G, T> event) {
-    if (event instanceof GenerationEvent) {
-      int generation = ((GenerationEvent) event).getGeneration();
-      if (generation==0) {
-        return;
+    if (!headerWritten) {
+      ps.print("generation");
+      ps.print(";p0genoSize;p1genoSize;p0phenoSize;p1phenoSize");
+      ps.print(";c0genoSize;c0phenoSize");
+      for (String name : genotypeDistanceNames) {
+        ps.printf(";pc00genoDist%s;pc10genoDist%s", name, name);
       }
-      List<Individual<G, T>> population = new ArrayList<>(((GenerationEvent) event).getPopulation());
-      Map<String, Object> indexes = computeIndexes(generation, population);
-      for (String operatorName : distances.keySet()) {
-        List<Pair<Double, Double>> pairs = new ArrayList<>(distances.get(operatorName));
-        double[] gds = new double[pairs.size()];
-        double[] pds = new double[pairs.size()];
-        for (int i = 0; i < pairs.size(); i++) {
-          gds[i] = pairs.get(i).getFirst();
-          pds[i] = pairs.get(i).getSecond();
-        }
-        double corr = Double.NaN;
-        try {
-          corr = ((new PearsonsCorrelation()).correlation(gds, pds));
-        } catch (MathIllegalArgumentException e) {
-          //ignore: leave at NaN
-        }
-        indexes.put("opCorr" + operatorName, corr);
+      for (String name : phenotypeDistanceNames) {
+        ps.printf(";pc00phenoDist%s;pc10phenoDist%s", name, name);
       }
-      if (!headerWritten) {
-        columnNames.addAll(indexes.keySet());
-        headerWritten = true;
-        for (String columnName : columnNames) {
-          ps.print(columnName);
-          if (!columnNames.get(columnNames.size() - 1).equals(columnName)) {
-            ps.print(";");
-          }
-        }
-        ps.println();
-      }
-      for (String columnName : columnNames) {
-        ps.print(indexes.get(columnName));
-        if (!columnNames.get(columnNames.size() - 1).equals(columnName)) {
-          ps.print(";");
-        }
+      ps.print(";operator");
+      for (String name : constantNames) {
+        ps.printf(";%s", name);
       }
       ps.println();
-      distances.clear();
-    } else if (event instanceof OperatorApplicationEvent) {
-      OperatorApplicationEvent<G, T> e = ((OperatorApplicationEvent) event);
-      //assume 1 child and 1 or 2 parents
-      double gd = genotypeDistance.d(e.getParents().get(0).getGenotype(), e.getChildren().get(0).getGenotype());
-      double pd = phenotypeDistance.d(e.getParents().get(0).getPhenotype(), e.getChildren().get(0).getPhenotype());
-      if (e.getParents().size() > 1) {
-        for (int i = 1; i < e.getParents().size(); i++) {
-          double localGd = genotypeDistance.d(e.getParents().get(i).getGenotype(), e.getChildren().get(0).getGenotype());
-          double localPd = phenotypeDistance.d(e.getParents().get(i).getPhenotype(), e.getChildren().get(0).getPhenotype());
-          if (localGd < gd) {
-            gd = localGd;
-            pd = localPd;
-          }
-        }
-      }
-      distances.get(e.getOperator().getClass().getSimpleName()).add(new Pair<>(gd, pd));
+      headerWritten = true;
     }
+    OperatorApplicationEvent<G, T> e = ((OperatorApplicationEvent) event);
+    //assume 1 child and 1 or 2 parents
+    ps.printf("%d;%d;%d;%d;%d;%d;%d",
+            e.getGeneration(),
+            e.getParents().get(0).getGenotype().size(),
+            e.getParents().size() > 1 ? e.getParents().get(1).getGenotype().size() : null,
+            (Node.EMPTY_TREE.equals(e.getParents().get(0).getPhenotype()))?null:e.getParents().get(0).getPhenotype().size(),
+            ((e.getParents().size() == 1)||Node.EMPTY_TREE.equals(e.getParents().get(1).getPhenotype())) ? null:e.getParents().get(1).getPhenotype().size(),
+            e.getChildren().get(0).getGenotype().size(),
+            (Node.EMPTY_TREE.equals(e.getChildren().get(0).getPhenotype()))?null:e.getChildren().get(0).getPhenotype().size()
+    );
+    for (String name : genotypeDistanceNames) {
+      ps.printf(";%f;%f",
+              genotypeDistances.get(name).d(e.getParents().get(0).getGenotype(), e.getChildren().get(0).getGenotype()),
+              e.getParents().size() > 1 ? genotypeDistances.get(name).d(e.getParents().get(1).getGenotype(), e.getChildren().get(0).getGenotype()) : null
+      );
+    }
+    for (String name : phenotypeDistanceNames) {
+      Double d00 = (Node.EMPTY_TREE.equals(e.getParents().get(0).getPhenotype())||Node.EMPTY_TREE.equals(e.getChildren().get(0).getPhenotype()))?null:phenotypeDistances.get(name).d(e.getParents().get(0).getPhenotype(), e.getChildren().get(0).getPhenotype());
+      Double d10 = ((e.getParents().size() == 1)||Node.EMPTY_TREE.equals(e.getParents().get(1).getPhenotype())||Node.EMPTY_TREE.equals(e.getChildren().get(0).getPhenotype()))?null:phenotypeDistances.get(name).d(e.getParents().get(1).getPhenotype(), e.getChildren().get(0).getPhenotype());
+      ps.printf(";%f;%f", d00, d10);
+    }
+    ps.printf(";%s", e.getOperator().getClass().getSimpleName());
+    for (String name : constantNames) {
+      ps.printf(";%s", constants.get(name));
+    }
+    ps.println();
+  }
+
+  @Override
+  public Set<Class<? extends EvolutionEvent>> getEventClasses() {
+    return eventClasses;
   }
 
 }

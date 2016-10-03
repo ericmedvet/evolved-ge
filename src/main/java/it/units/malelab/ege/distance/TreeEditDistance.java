@@ -9,21 +9,22 @@ import util.LblTree;
  * @author eric
  */
 // from https://github.com/unnonouno/tree-edit-distance/blob/master/tree-edit-distance/src/treedist/TreeEditDistance.java
-public class TreeEditDistance<T> implements Distance<Node<T>>{
-private APTED ted;
+public class TreeEditDistance<T> implements Distance<Node<T>> {
 
-  public TreeEditDistance () {
-    ted = new APTED((float)1.0, (float)1.0, (float)1.0);
+  private final APTED ted;
+
+  public TreeEditDistance() {
+    ted = new APTED((float) 1.0, (float) 1.0, (float) 1.0);
   }
-  
+
   @Override
   public double d(Node<T> t1, Node<T> t2) {
     return ted.nonNormalizedTreeDist(
-      LblTree.fromString(treeToString(t1)), 
-      LblTree.fromString(treeToString(t2))
+            LblTree.fromString(treeToString(t1)),
+            LblTree.fromString(treeToString(t2))
     );
-  }  
-  
+  }
+
   private String treeToString(Node<T> root) {
     StringBuilder sb = new StringBuilder();
     sb.append("{").append(root.getContent());
@@ -31,9 +32,9 @@ private APTED ted;
       for (Node<T> child : root.getChildren()) {
         sb.append(treeToString(child));
       }
-    } 
+    }
     sb.append("}");
     return sb.toString();
   }
-  
+
 }

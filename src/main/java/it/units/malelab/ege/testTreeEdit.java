@@ -68,14 +68,14 @@ public class testTreeEdit {
                         distance = treeEditDist.d(t1, t2);
                         passedTime = System.nanoTime() - actualTime;
                         treeTime += passedTime;
-                        System.out.print("[Tree Edit: " + distance + ", in " + (Math.floorDiv(passedTime, 1000)) + "us]");
+                        //System.out.print("[Tree Edit: " + distance + ", in " + (Math.floorDiv(passedTime, 1000)) + "us]");
 
                         s2 = Node.EMPTY_TREE.equals(t2) ? Collections.EMPTY_LIST : Utils.contents(t2.leaves());
                         actualTime = System.nanoTime();
                         distance = editDist.d(s1, s2);
                         passedTime = System.nanoTime() - actualTime;
                         leavesTime += passedTime;
-                        System.out.println("[Leaves Edit: " + distance + ", in " + (Math.floorDiv(passedTime, 1000)) + "us]");
+                        //System.out.println("[Leaves Edit: " + distance + ", in " + (Math.floorDiv(passedTime, 1000)) + "us]");
 
                     } catch (MappingException ex) {
                         //System.out.println(ex.getMessage()); 
@@ -87,6 +87,6 @@ public class testTreeEdit {
         }
         System.out.println("TreeEditDistance time: " + treeTime + "ns");
         System.out.println("EditDistance time: " + leavesTime + "ns");
-        System.out.println("TreeEditDistance is " + Math.floorDiv(treeTime,leavesTime) + " times slower");
+        //System.out.println("TreeEditDistance is " + Math.floorDiv(treeTime,leavesTime) + " times slower");
     }
 }

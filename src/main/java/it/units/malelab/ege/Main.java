@@ -9,6 +9,7 @@ import it.units.malelab.ege.distance.BitsGenotypeEditDistance;
 import it.units.malelab.ege.distance.CachedDistance;
 import it.units.malelab.ege.distance.Distance;
 import it.units.malelab.ege.distance.EditDistance;
+import it.units.malelab.ege.distance.TreeEditDistance;
 import it.units.malelab.ege.evolver.genotype.BitsGenotype;
 import it.units.malelab.ege.evolver.validator.AnyValidator;
 import it.units.malelab.ege.evolver.Configuration;
@@ -19,13 +20,18 @@ import it.units.malelab.ege.evolver.genotype.BitsGenotypeFactory;
 import it.units.malelab.ege.evolver.listener.DynamicLocalityAnalysisLogger;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
 import it.units.malelab.ege.evolver.listener.ScreenGenerationLogger;
+import it.units.malelab.ege.evolver.listener.StreamGenerationLogger;
+import it.units.malelab.ege.evolver.operator.BitsSGECrossover;
 import it.units.malelab.ege.evolver.selector.TournamentSelector;
 import it.units.malelab.ege.evolver.operator.ProbabilisticMutation;
+import it.units.malelab.ege.evolver.operator.SGECrossover;
+import it.units.malelab.ege.evolver.operator.SGEMutation;
 import it.units.malelab.ege.evolver.operator.TwoPointsCrossover;
 import it.units.malelab.ege.grammar.Grammar;
 import it.units.malelab.ege.mapper.BitsSGEMapper;
 import it.units.malelab.ege.mapper.BreathFirstMapper;
 import it.units.malelab.ege.mapper.HierarchicalMapper;
+import it.units.malelab.ege.mapper.Mapper;
 import it.units.malelab.ege.mapper.MappingException;
 import it.units.malelab.ege.mapper.PiGEMapper;
 import it.units.malelab.ege.mapper.SGEMapper;
@@ -51,8 +57,24 @@ import java.util.concurrent.ExecutionException;
 public class Main {
 
   public static void main(String[] args) throws IOException, ExecutionException, InterruptedException, MappingException {
-    PrintStream filePS = new PrintStream(args[0].replace("DATE", dateForFile()));
+    //define distances
+    Map<String, Distance<BitsGenotype>> genotypeDistances = new LinkedHashMap<>();
+    genotypeDistances.put("BitsEdit", new CachedDistance<>(new BitsGenotypeEditDistance()));
+    Map<String, Distance<Node<String>>> phenotypeDistances = new LinkedHashMap<>();
     final EditDistance<String> editDistance = new EditDistance<>();
+    phenotypeDistances.put("LeavesEdit", new CachedDistance<>(new Distance<Node<String>>() {
+      @Override
+      public double d(Node<String> t1, Node<String> t2) {
+        List<String> s1 = Node.EMPTY_TREE.equals(t1) ? Collections.EMPTY_LIST : Utils.contents(t1.leaves());
+        List<String> s2 = Node.EMPTY_TREE.equals(t2) ? Collections.EMPTY_LIST : Utils.contents(t2.leaves());
+        return editDistance.d(s1, s2);
+      }
+    }));
+    phenotypeDistances.put("TreeEdit", new CachedDistance<>(new TreeEditDistance<String>()));
+    //prepare file
+    PrintStream generationFilePS = new PrintStream(args[0].replace("DATE", dateForFile()));
+    PrintStream distancesFilePS = new PrintStream(args[1].replace("DATE", dateForFile()));
+    //prepare problems
     Map<String, BenchmarkProblems.Problem> problems = new LinkedHashMap<>();
     problems.put("harmonic", BenchmarkProblems.harmonicCurveProblem());
     problems.put("poly4", BenchmarkProblems.classic4PolynomialProblem());
@@ -63,7 +85,7 @@ public class Main {
       for (int r = 0; r < 30; r++) {
         Random random = new Random(r);
         for (int m = 0; m < 5; m++) {
-          for (int genotypeSize : Arrays.asList(128, 256, 512, 1024, 2048)) {
+          for (int genotypeSize : Arrays.asList(1024)) {
             Configuration<BitsGenotype, String> configuration = defaultConfiguration(problem, random);
             Grammar<String> grammar = problems.get(problemName).getGrammar();
             switch (m) {
@@ -77,7 +99,13 @@ public class Main {
                 configuration.mapper(new PiGEMapper<>(16, 5, grammar));
                 break;
               case 3:
-                configuration.mapper(new BitsSGEMapper<>(6, grammar));
+                BitsSGEMapper<String> sgeMapper = new BitsSGEMapper<>(6, grammar);
+                configuration
+                        .mapper(sgeMapper)
+                        .operators(Arrays.asList(
+                                        new Configuration.GeneticOperatorConfiguration<>(new BitsSGECrossover(sgeMapper, random), new TournamentSelector(5, random), 0.8d),
+                                        new Configuration.GeneticOperatorConfiguration<>(new ProbabilisticMutation(random, 0.01), new TournamentSelector(5, random), 0.2d)
+                                ));
                 break;
               case 4:
                 configuration.mapper(new HierarchicalMapper<>(grammar));
@@ -86,8 +114,8 @@ public class Main {
                 configuration.mapper(new WeightedHierarchicalMapper<>(6, grammar));
                 break;
             }
-            configuration.populationInitializer(new RandomInitializer<>(random, new BitsGenotypeFactory(1024)));
-            Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(Runtime.getRuntime().availableProcessors()-1, configuration);
+            configuration.populationInitializer(new RandomInitializer<>(random, new BitsGenotypeFactory(genotypeSize)));
+            Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(Runtime.getRuntime().availableProcessors() - 1, configuration);
             Map<String, Object> constants = new LinkedHashMap<>();
             constants.put("problem", problemName);
             constants.put("mapper", configuration.getMapper().getClass().getSimpleName());
@@ -95,14 +123,8 @@ public class Main {
             constants.put("run", r);
             List<EvolutionListener<BitsGenotype, String>> listeners = new ArrayList<>();
             listeners.add(new ScreenGenerationLogger<BitsGenotype, String>("%8.1f", 8, problem.getPhenotypePrinter(), problem.getGeneralizationFitnessComputer(), constants));
-            listeners.add(new DynamicLocalityAnalysisLogger<>(filePS, new CachedDistance<>(new BitsGenotypeEditDistance()), new CachedDistance<>(new Distance<Node<String>>() {
-              @Override
-              public double d(Node<String> t1, Node<String> t2) {
-                List<String> s1 = Node.EMPTY_TREE.equals(t1) ? Collections.EMPTY_LIST : Utils.contents(t1.leaves());
-                List<String> s2 = Node.EMPTY_TREE.equals(t2) ? Collections.EMPTY_LIST : Utils.contents(t2.leaves());
-                return editDistance.d(s1, s2);
-              }
-            }), constants));
+            listeners.add(new StreamGenerationLogger<BitsGenotype, String>(generationFilePS, problem.getGeneralizationFitnessComputer(), constants));
+            listeners.add(new DynamicLocalityAnalysisLogger<>(distancesFilePS, genotypeDistances, phenotypeDistances, constants));
             System.out.println(constants);
             evolver.go(listeners);
             System.out.println();
@@ -110,7 +132,8 @@ public class Main {
         }
       }
     }
-    filePS.close();
+    generationFilePS.close();
+    phenotypeDistances.clear();
   }
 
   private static String dateForFile() {
@@ -122,7 +145,7 @@ public class Main {
     Configuration<BitsGenotype, String> configuration = new Configuration<>();
     configuration
             .populationSize(500)
-            .numberOfGenerations(100)
+            .numberOfGenerations(50)
             .populationInitializer(new RandomInitializer<>(random, new BitsGenotypeFactory(1024)))
             .initGenotypeValidator(new AnyValidator<BitsGenotype>())
             .mapper(new StandardGEMapper<>(8, 5, problem.getGrammar()))
