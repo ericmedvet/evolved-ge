@@ -68,14 +68,15 @@ public class TestDistances {
         }));
         phenotypeDistances.put("TreeEdit", new CachedDistance<>(new TreeEditDistance<String>()));
         //prepare file
-        PrintStream distancesFilePS = new PrintStream("dist" + dateForFile());
+        PrintStream distancesFilePS = new PrintStream("dist" + dateForFile() + ".csv");
+        distancesFilePS.println("Problem,Mapper,Operator,GenoSize,ChildSize,p1C_G,p1C_P,p1C_F,p2C_G,p2C_P,p2C_F,p1p2_G,p1p2_P,p1p2_F");
         //prepare problems
         Map<String, BenchmarkProblems.Problem> problems = new LinkedHashMap<>();
         problems.put("harmonic", BenchmarkProblems.harmonicCurveProblem());
         problems.put("poly4", BenchmarkProblems.classic4PolynomialProblem());
         problems.put("max", BenchmarkProblems.max());
         problems.put("text", BenchmarkProblems.text("Hello world!"));
-        //problems.put("santafe", BenchmarkProblems.santaFe());
+        problems.put("santafe", BenchmarkProblems.santaFe());
         Mapper mapper;
         AbstractOperator operator;
         List[] genosSet1 = new List[5];
@@ -160,6 +161,7 @@ public class TestDistances {
             }
         }
         phenotypeDistances.clear();
+        distancesFilePS.close();
     }
 
     private static String dateForFile() {
@@ -169,7 +171,7 @@ public class TestDistances {
 
     private static void calcDistances(List p1Set, List p2Set, Mapper mapper, AbstractOperator operator, PrintStream out, Distance<BitsGenotype> genoDist, Distance<Node<String>> phenoDist, Problem problem, Map<String, String> descr) {
         BitsGenotype cG, p1G, p2G;
-        Node<String> cP, p1P, p2P;
+        Node cP, p1P, p2P;
         double cF, p1F, p2F;
         Double[] distArray;
         if (operator instanceof AbstractMutation) {
@@ -184,10 +186,10 @@ public class TestDistances {
                     p1P = mapper.map(p1G);
                     cP = mapper.map(cG);
                     distArray[1] = phenoDist.d(p1P, cP);
-                    //p1F = (double)problem.getFitnessComputer().compute(p1P).getValue();
-                    //cF = (double)problem.getFitnessComputer().compute(cP).getValue();
-                    //distArray[2] = Math.abs(cF-p1F);
-                    System.out.printf("%s, %s, %s, %d, %d, %f, %f, %f, %f, %f, %f, %f, %f, %f\n",
+                    p1F = (double)problem.getFitnessComputer().compute(p1P).getValue();
+                    cF = (double)problem.getFitnessComputer().compute(cP).getValue();
+                    distArray[2] = Math.abs(cF-p1F);
+                    out.printf("%s, %s, %s, %d, %d, %f, %f, %f, %f, %f, %f, %f, %f, %f\n",
                             descr.get("problemName"),
                             descr.get("mapperName"),
                             descr.get("operatorName"),
@@ -203,7 +205,7 @@ public class TestDistances {
                             distArray[7],
                             distArray[8]
                     );
-                } catch (MappingException ex) {
+                } catch (Exception ex) {
                     //Logger.getLogger(TestDistances.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
@@ -225,13 +227,13 @@ public class TestDistances {
                     distArray[1] = phenoDist.d(p1P, cP);
                     distArray[4] = phenoDist.d(p2P, cP);
                     distArray[7] = phenoDist.d(p1P, p2P);
-                    //p1F = (double)problem.getFitnessComputer().compute(p1P).getValue();
-                    //p2F = (double)problem.getFitnessComputer().compute(p2P).getValue();
-                    //cF = (double)problem.getFitnessComputer().compute(cP).getValue();
-                    //distArray[2] = Math.abs(cF-p1F);
-                    //distArray[5] = Math.abs(p2F-cF);
-                    //distArray[8] = Math.abs(p1F-p2F);
-                    System.out.printf("%s, %s, %s, %d, %d, %f, %f, %f, %f, %f, %f, %f, %f, %f\n",
+                    p1F = (double)problem.getFitnessComputer().compute(p1P).getValue();
+                    p2F = (double)problem.getFitnessComputer().compute(p2P).getValue();
+                    cF = (double)problem.getFitnessComputer().compute(cP).getValue();
+                    distArray[2] = Math.abs(cF-p1F);
+                    distArray[5] = Math.abs(p2F-cF);
+                    distArray[8] = Math.abs(p1F-p2F);
+                    out.printf("%s, %s, %s, %d, %d, %f, %f, %f, %f, %f, %f, %f, %f, %f\n",
                             descr.get("problemName"),
                             descr.get("mapperName"),
                             descr.get("operatorName"),
@@ -247,7 +249,7 @@ public class TestDistances {
                             distArray[7],
                             distArray[8]
                     );
-                } catch (MappingException ex) {
+                } catch (Exception ex) {
                     //Logger.getLogger(TestDistances.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
