@@ -80,7 +80,7 @@ public class TestDistances {
         problems.put("santafe", BenchmarkProblems.santaFe());
         Mapper mapper;
         AbstractOperator operator;
-        int n_individuals = 1;
+        int n_individuals = 100;
         List[] genosSet1 = new List[5];
         List[] genosSet2 = new List[5];
         for (int i = 0; i < 5; i++) {
@@ -160,6 +160,7 @@ public class TestDistances {
                             for (int i = 0; i < genosSet1.length; i++) {
                                 calcDistances(genosSet1[i], genosSet2[i], mapper, operator, distancesFilePS, genotypeDistances.get("BitsEdit"), phenotypeDistances.get(distancePName), problem, descriptions);
                             }
+                            System.out.printf("%s %s %s %s\n",descriptions.get("distanceName"), descriptions.get("problemName"), descriptions.get("mapperName"), descriptions.get("operatorName"));
                         }
                     }
                 }
@@ -185,20 +186,29 @@ public class TestDistances {
     private static Double distFitCalc(FitnessComputer pc, Node a, Node b) {
         try {
             return Math.abs((double) pc.compute(a).getValue() - (double) pc.compute(b).getValue());
-        } catch (Exception ex) {
+        } catch (NullPointerException ex) {
             return null;
         }
+    }
 
+    private static Double distPhenoCalc(Distance<Node<String>> d, Node a, Node b) {
+        if (!a.equals(Node.EMPTY_TREE) && !b.equals(Node.EMPTY_TREE)) {
+            return d.d(a, b);
+        } else {
+            return null;
+        }
     }
 
     private static void calcDistances(List p1Set, List p2Set, Mapper mapper, AbstractOperator operator, PrintStream out, Distance<BitsGenotype> genoDist, Distance<Node<String>> phenoDist, Problem problem, Map<String, String> descr) {
         BitsGenotype cG, p1G, p2G;
         Node cP, p1P, p2P;
         Double[] distArray;
+        int[] sizes;
         if (operator instanceof AbstractMutation) {
             for (int i = 0; i < p1Set.size(); i++) {
                 try {
                     distArray = new Double[9];
+                    sizes = new int[9];
                     /* array with the distances:
                                                 |     p1-c    |    p2-c     |    p1-p2    |
                                                 |  G   P   F  |  G   P   F  |  G   P   F  |
@@ -209,7 +219,17 @@ public class TestDistances {
                     distArray[0] = genoDist.d(p1G, cG);
                     p1P = mapApply(mapper, p1G);
                     cP = mapApply(mapper, cG);
-                    distArray[1] = phenoDist.d(p1P, cP);
+                    if (!cP.equals(Node.EMPTY_TREE)) {
+                        sizes[0] = cP.size();
+                        sizes[1] = cP.depth();
+                        sizes[2] = cP.leaves().size();
+                    }
+                    if (!p1P.equals(Node.EMPTY_TREE)) {
+                        sizes[3] = p1P.size();
+                        sizes[4] = p1P.depth();
+                        sizes[5] = p1P.leaves().size();
+                    }
+                    distArray[1] = distPhenoCalc(phenoDist, p1P, cP);
                     distArray[2] = distFitCalc(problem.getFitnessComputer(), p1P, cP);
                     out.printf("%s;%s;%s;%s;%d;%d;%f;%f;%f;%f;%f;%f;%f;%f;%f;%d;%d;%d;%d;%d;%d;%d;%d;%d\n",
                             descr.get("distanceName"),
@@ -219,7 +239,7 @@ public class TestDistances {
                             p1G.size(),
                             cG.size(),
                             distArray[0], distArray[1], distArray[2], distArray[3], distArray[4], distArray[5], distArray[6], distArray[7], distArray[8],
-                            cP.size(), cP.depth(), cP.leaves().size(), p1P.size(), p1P.depth(), p1P.leaves().size(), null, null, null
+                            sizes[0], sizes[1], sizes[2], sizes[3], sizes[4], sizes[5], sizes[6], sizes[7], sizes[8]
                     );
                 } catch (ArrayIndexOutOfBoundsException ex) {
                     System.out.println(ex.toString());
@@ -229,6 +249,7 @@ public class TestDistances {
             for (int i = 0; i < p1Set.size(); i++) {
                 try {
                     distArray = new Double[9];
+                    sizes = new int[9];
                     /* array with the distances:
                                                 |     p1-c    |    p2-c     |    p1-p2    |
                                                 |  G   P   F  |  G   P   F  |  G   P   F  |
@@ -243,9 +264,24 @@ public class TestDistances {
                     cP = mapApply(mapper, cG);
                     p1P = mapApply(mapper, p1G);
                     p2P = mapApply(mapper, p2G);
-                    distArray[1] = phenoDist.d(p1P, cP);
-                    distArray[4] = phenoDist.d(p2P, cP);
-                    distArray[7] = phenoDist.d(p1P, p2P);
+                    if (!cP.equals(Node.EMPTY_TREE)) {
+                        sizes[0] = cP.size();
+                        sizes[1] = cP.depth();
+                        sizes[2] = cP.leaves().size();
+                    }
+                    if (!p1P.equals(Node.EMPTY_TREE)) {
+                        sizes[3] = p1P.size();
+                        sizes[4] = p1P.depth();
+                        sizes[5] = p1P.leaves().size();
+                    }
+                    if (!p2P.equals(Node.EMPTY_TREE)) {
+                        sizes[6] = p2P.size();
+                        sizes[7] = p2P.depth();
+                        sizes[8] = p2P.leaves().size();
+                    }
+                    distArray[1] = distPhenoCalc(phenoDist, p1P, cP);
+                    distArray[4] = distPhenoCalc(phenoDist, p2P, cP);
+                    distArray[7] = distPhenoCalc(phenoDist, p1P, p2P);
                     distArray[2] = distFitCalc(problem.getFitnessComputer(), p1P, cP);
                     distArray[5] = distFitCalc(problem.getFitnessComputer(), p2P, cP);
                     distArray[8] = distFitCalc(problem.getFitnessComputer(), p1P, p2P);
@@ -257,7 +293,7 @@ public class TestDistances {
                             p1G.size(),
                             cG.size(),
                             distArray[0], distArray[1], distArray[2], distArray[3], distArray[4], distArray[5], distArray[6], distArray[7], distArray[8],
-                            cP.size(), cP.depth(), cP.leaves().size(), p1P.size(), p1P.depth(), p1P.leaves().size(), p2P.size(), p2P.depth(), p2P.leaves().size()
+                            sizes[0], sizes[1], sizes[2], sizes[3], sizes[4], sizes[5], sizes[6], sizes[7], sizes[8]
                     );
                 } catch (ArrayIndexOutOfBoundsException ex) {
                     System.out.println(ex.toString());

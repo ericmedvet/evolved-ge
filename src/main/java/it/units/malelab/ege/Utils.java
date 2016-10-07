@@ -15,9 +15,11 @@ import it.units.malelab.ege.evolver.event.EvolutionEvent;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -41,8 +43,12 @@ import java.util.regex.Pattern;
 public class Utils {
   
   public static Grammar<String> parseFromFile(File file) throws FileNotFoundException, IOException {
+      return parseFromFile(file, "UTF-8");
+  }
+    
+  public static Grammar<String> parseFromFile(File file, String charset) throws FileNotFoundException, IOException {
     Grammar<String> grammar = new Grammar<>();
-    BufferedReader br = new BufferedReader(new FileReader(file));
+    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file), charset));
     String line;
     while ((line = br.readLine())!=null) {
       String[] components = line.split(Pattern.quote(Grammar.RULE_ASSIGNMENT_STRING));
