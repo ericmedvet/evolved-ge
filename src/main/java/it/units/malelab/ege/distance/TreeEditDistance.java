@@ -11,14 +11,9 @@ import util.LblTree;
 // from https://github.com/unnonouno/tree-edit-distance/blob/master/tree-edit-distance/src/treedist/TreeEditDistance.java
 public class TreeEditDistance<T> implements Distance<Node<T>> {
 
-  private final APTED ted;
-
-  public TreeEditDistance() {
-    ted = new APTED((float) 1.0, (float) 1.0, (float) 1.0);
-  }
-
   @Override
   public double d(Node<T> t1, Node<T> t2) {
+    APTED ted = new APTED((float) 1.0, (float) 1.0, (float) 1.0);
     return ted.nonNormalizedTreeDist(
             LblTree.fromString(treeToString(t1)),
             LblTree.fromString(treeToString(t2))
