@@ -69,7 +69,7 @@ public class SantaFeFitness implements FitnessComputer<String> {
     /**
      * Find the end if statement
      */
-    private void lookAheadEnd_If(List<Node<String>> phenotype, int programCounter) {
+    private void lookAheadEndIf(List<Node<String>> phenotype, int programCounter) {
         boolean found = false;
         int depth = 0;//Keep track of nested ifs
         //While program not finished and the else bloch for depth 0 is found
@@ -115,7 +115,7 @@ public class SantaFeFitness implements FitnessComputer<String> {
             } else if (token.equals(SantaFeFitness.RIGHT)) {//right
                 trail.right();
             } else if (token.equals(SantaFeFitness.ELSE)) {
-                lookAheadEnd_If(phenotype, programCounter);
+                lookAheadEndIf(phenotype, programCounter);
             } else if (!token.equals(SantaFeFitness.END_IF)) {
                 throw new IllegalArgumentException("Illegal Terminal symbol:" + token);
             }

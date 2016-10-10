@@ -5,23 +5,15 @@
  */
 package it.units.malelab.ege.evolver.listener;
 
-import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Multimap;
-import it.units.malelab.ege.Node;
-import it.units.malelab.ege.Pair;
-import it.units.malelab.ege.distance.Distance;
 import it.units.malelab.ege.evolver.Individual;
 import it.units.malelab.ege.evolver.event.EvolutionEvent;
 import it.units.malelab.ege.evolver.event.GenerationEvent;
-import it.units.malelab.ege.evolver.event.OperatorApplicationEvent;
 import it.units.malelab.ege.evolver.fitness.FitnessComputer;
 import it.units.malelab.ege.evolver.genotype.Genotype;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.math3.exception.MathIllegalArgumentException;
-import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 
 /**
  *

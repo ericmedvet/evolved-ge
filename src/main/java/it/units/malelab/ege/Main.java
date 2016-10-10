@@ -17,6 +17,7 @@ import it.units.malelab.ege.evolver.Evolver;
 import it.units.malelab.ege.evolver.initializer.RandomInitializer;
 import it.units.malelab.ege.evolver.StandardEvolver;
 import it.units.malelab.ege.evolver.genotype.BitsGenotypeFactory;
+import it.units.malelab.ege.evolver.listener.AbstractGenerationLogger;
 import it.units.malelab.ege.evolver.listener.DynamicLocalityAnalysisLogger;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
 import it.units.malelab.ege.evolver.listener.ScreenGenerationLogger;
@@ -24,17 +25,13 @@ import it.units.malelab.ege.evolver.listener.StreamGenerationLogger;
 import it.units.malelab.ege.evolver.operator.BitsSGECrossover;
 import it.units.malelab.ege.evolver.selector.TournamentSelector;
 import it.units.malelab.ege.evolver.operator.ProbabilisticMutation;
-import it.units.malelab.ege.evolver.operator.SGECrossover;
-import it.units.malelab.ege.evolver.operator.SGEMutation;
 import it.units.malelab.ege.evolver.operator.TwoPointsCrossover;
 import it.units.malelab.ege.grammar.Grammar;
 import it.units.malelab.ege.mapper.BitsSGEMapper;
 import it.units.malelab.ege.mapper.BreathFirstMapper;
 import it.units.malelab.ege.mapper.HierarchicalMapper;
-import it.units.malelab.ege.mapper.Mapper;
 import it.units.malelab.ege.mapper.MappingException;
 import it.units.malelab.ege.mapper.PiGEMapper;
-import it.units.malelab.ege.mapper.SGEMapper;
 import it.units.malelab.ege.mapper.StandardGEMapper;
 import it.units.malelab.ege.mapper.WeightedHierarchicalMapper;
 import java.io.IOException;
@@ -76,10 +73,13 @@ public class Main {
     PrintStream distancesFilePS = new PrintStream(args[1].replace("DATE", dateForFile()));
     //prepare problems
     Map<String, BenchmarkProblems.Problem> problems = new LinkedHashMap<>();
-    problems.put("harmonic", BenchmarkProblems.harmonicCurveProblem());
-    problems.put("poly4", BenchmarkProblems.classic4PolynomialProblem());
-    problems.put("max", BenchmarkProblems.max());
+    //Sproblems.put("harmonic", BenchmarkProblems.harmonicCurveProblem());
+    //problems.put("poly4", BenchmarkProblems.classic4PolynomialProblem());
+    //problems.put("max", BenchmarkProblems.max());
+    problems.put("santaFe", BenchmarkProblems.santaFe());
     problems.put("text", BenchmarkProblems.text("Hello world!"));
+    AbstractGenerationLogger<BitsGenotype, String> generationFileLogger = null;
+    DynamicLocalityAnalysisLogger<BitsGenotype, String> distanceFileLogger = null;
     for (String problemName : problems.keySet()) {
       BenchmarkProblems.Problem problem = problems.get(problemName);
       for (int r = 0; r < 30; r++) {
@@ -121,10 +121,21 @@ public class Main {
             constants.put("mapper", configuration.getMapper().getClass().getSimpleName());
             constants.put("initGenoSize", genotypeSize);
             constants.put("run", r);
+            if (generationFileLogger==null) {
+              generationFileLogger = new StreamGenerationLogger<BitsGenotype, String>(generationFilePS, null, Collections.EMPTY_MAP);             
+            } else {
+              generationFileLogger.setConstants(constants);
+              generationFileLogger.setGeneralizationFitnessComputer(problem.getGeneralizationFitnessComputer());              
+            }
+            if (distanceFileLogger==null) {
+              distanceFileLogger = new DynamicLocalityAnalysisLogger<>(distancesFilePS, genotypeDistances, phenotypeDistances, Collections.EMPTY_MAP);
+            } else {
+              distanceFileLogger.setConstants(constants);
+            }
             List<EvolutionListener<BitsGenotype, String>> listeners = new ArrayList<>();
             listeners.add(new ScreenGenerationLogger<BitsGenotype, String>("%8.1f", 8, problem.getPhenotypePrinter(), problem.getGeneralizationFitnessComputer(), constants));
-            listeners.add(new StreamGenerationLogger<BitsGenotype, String>(generationFilePS, problem.getGeneralizationFitnessComputer(), constants));
-            listeners.add(new DynamicLocalityAnalysisLogger<>(distancesFilePS, genotypeDistances, phenotypeDistances, constants));
+            listeners.add(generationFileLogger);
+            listeners.add(distanceFileLogger);
             System.out.println(constants);
             evolver.go(listeners);
             System.out.println();
