@@ -27,9 +27,9 @@ import java.util.Set;
  */
 public abstract class AbstractGenerationLogger<G extends Genotype, T> implements EvolutionListener<G, T> {
 
-  private FitnessComputer<T> generalizationFitnessComputer;
+  private final FitnessComputer<T> generalizationFitnessComputer;
   protected final Set<Class<? extends EvolutionEvent>> eventClasses;
-  private Map<String, Object> constants;
+  private final Map<String, Object> constants;
 
   public AbstractGenerationLogger(FitnessComputer<T> generalizationFitnessComputer, Map<String, Object> constants) {
     this.generalizationFitnessComputer = generalizationFitnessComputer;
@@ -100,23 +100,13 @@ public abstract class AbstractGenerationLogger<G extends Genotype, T> implements
     indexes.put("bestPhenotypeLenght", bestIndividual.getPhenotype().leaves().size());
     indexes.put("bestFitness", bestIndividual.getFitness().getValue());
     indexes.put("meanFitness", avgFitness/validFitnessCount);
-    if (generalizationFitnessComputer!=null) {
-      indexes.put("generalizationFitness", bestGeneralizationFitness.getValue());
-    }
+    indexes.put("generalizationFitness", (generalizationFitnessComputer!=null)?bestGeneralizationFitness.getValue():null);
     return indexes;
   }
 
   @Override
   public Set<Class<? extends EvolutionEvent>> getEventClasses() {
     return eventClasses;
-  }
-
-  public void setConstants(Map<String, Object> constants) {
-    this.constants = constants;
-  }    
-
-  public void setGeneralizationFitnessComputer(FitnessComputer<T> generalizationFitnessComputer) {
-    this.generalizationFitnessComputer = generalizationFitnessComputer;
   }
 
 }

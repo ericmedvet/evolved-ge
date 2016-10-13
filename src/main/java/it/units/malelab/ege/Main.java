@@ -23,6 +23,7 @@ import it.units.malelab.ege.evolver.listener.EvolutionListener;
 import it.units.malelab.ege.evolver.listener.ScreenGenerationLogger;
 import it.units.malelab.ege.evolver.listener.StreamGenerationLogger;
 import it.units.malelab.ege.evolver.operator.BitsSGECrossover;
+import it.units.malelab.ege.evolver.operator.OnePointCrossover;
 import it.units.malelab.ege.evolver.selector.TournamentSelector;
 import it.units.malelab.ege.evolver.operator.ProbabilisticMutation;
 import it.units.malelab.ege.evolver.operator.TwoPointsCrossover;
@@ -73,18 +74,17 @@ public class Main {
     PrintStream distancesFilePS = new PrintStream(args[1].replace("DATE", dateForFile()));
     //prepare problems
     Map<String, BenchmarkProblems.Problem> problems = new LinkedHashMap<>();
-    //Sproblems.put("harmonic", BenchmarkProblems.harmonicCurveProblem());
-    //problems.put("poly4", BenchmarkProblems.classic4PolynomialProblem());
+    problems.put("harmonic", BenchmarkProblems.harmonicCurveProblem());
+    problems.put("poly4", BenchmarkProblems.classic4PolynomialProblem());
     //problems.put("max", BenchmarkProblems.max());
     problems.put("santaFe", BenchmarkProblems.santaFe());
     problems.put("text", BenchmarkProblems.text("Hello world!"));
-    AbstractGenerationLogger<BitsGenotype, String> generationFileLogger = null;
-    DynamicLocalityAnalysisLogger<BitsGenotype, String> distanceFileLogger = null;
+    boolean writeHeader = true;
     for (String problemName : problems.keySet()) {
       BenchmarkProblems.Problem problem = problems.get(problemName);
       for (int r = 0; r < 30; r++) {
         Random random = new Random(r);
-        for (int m = 0; m < 5; m++) {
+        for (int m = 0; m < 4; m++) {
           for (int genotypeSize : Arrays.asList(1024)) {
             Configuration<BitsGenotype, String> configuration = defaultConfiguration(problem, random);
             Grammar<String> grammar = problems.get(problemName).getGrammar();
@@ -121,21 +121,11 @@ public class Main {
             constants.put("mapper", configuration.getMapper().getClass().getSimpleName());
             constants.put("initGenoSize", genotypeSize);
             constants.put("run", r);
-            if (generationFileLogger==null) {
-              generationFileLogger = new StreamGenerationLogger<BitsGenotype, String>(generationFilePS, null, Collections.EMPTY_MAP);             
-            } else {
-              generationFileLogger.setConstants(constants);
-              generationFileLogger.setGeneralizationFitnessComputer(problem.getGeneralizationFitnessComputer());              
-            }
-            if (distanceFileLogger==null) {
-              distanceFileLogger = new DynamicLocalityAnalysisLogger<>(distancesFilePS, genotypeDistances, phenotypeDistances, Collections.EMPTY_MAP);
-            } else {
-              distanceFileLogger.setConstants(constants);
-            }
             List<EvolutionListener<BitsGenotype, String>> listeners = new ArrayList<>();
             listeners.add(new ScreenGenerationLogger<BitsGenotype, String>("%8.1f", 8, problem.getPhenotypePrinter(), problem.getGeneralizationFitnessComputer(), constants));
-            listeners.add(generationFileLogger);
-            listeners.add(distanceFileLogger);
+            listeners.add(new StreamGenerationLogger<BitsGenotype, String>(generationFilePS, null, constants, writeHeader));
+            listeners.add(new DynamicLocalityAnalysisLogger<>(distancesFilePS, genotypeDistances, phenotypeDistances, constants, writeHeader));
+            writeHeader = false;
             System.out.println(constants);
             evolver.go(listeners);
             System.out.println();
@@ -161,7 +151,7 @@ public class Main {
             .initGenotypeValidator(new AnyValidator<BitsGenotype>())
             .mapper(new StandardGEMapper<>(8, 5, problem.getGrammar()))
             .operators(Arrays.asList(
-                            new Configuration.GeneticOperatorConfiguration<>(new TwoPointsCrossover(random), new TournamentSelector(5, random), 0.8d),
+                            new Configuration.GeneticOperatorConfiguration<>(new OnePointCrossover(random), new TournamentSelector(5, random), 0.8d),
                             new Configuration.GeneticOperatorConfiguration<>(new ProbabilisticMutation(random, 0.01), new TournamentSelector(5, random), 0.2d)
                     ))
             .fitnessComputer(problem.getFitnessComputer())

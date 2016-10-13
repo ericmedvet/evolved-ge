@@ -11,7 +11,6 @@ import it.units.malelab.ege.evolver.event.EvolutionEvent;
 import it.units.malelab.ege.evolver.event.OperatorApplicationEvent;
 import it.units.malelab.ege.evolver.genotype.Genotype;
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,7 +28,9 @@ public class DynamicLocalityAnalysisLogger<G extends Genotype, T> implements Evo
   private final PrintStream ps;
   private final Map<String, Distance<G>> genotypeDistances;
   private final Map<String, Distance<Node<T>>> phenotypeDistances;
-  private Map<String, Object> constants;
+  private final Map<String, Object> constants;
+  private final boolean writeHeader;
+  
   private boolean headerWritten;
   private final Set<Class<? extends EvolutionEvent>> eventClasses;
   private final List<String> genotypeDistanceNames;
@@ -38,11 +39,12 @@ public class DynamicLocalityAnalysisLogger<G extends Genotype, T> implements Evo
   
   private final static int PS_BUFFER = 100*100;
 
-  public DynamicLocalityAnalysisLogger(PrintStream ps, Map<String, Distance<G>> genotypeDistances, Map<String, Distance<Node<T>>> phenotypeDistances, Map<String, Object> constants) {
+  public DynamicLocalityAnalysisLogger(PrintStream ps, Map<String, Distance<G>> genotypeDistances, Map<String, Distance<Node<T>>> phenotypeDistances, Map<String, Object> constants, boolean writeHeader) {
     this.ps = new PrintStream(new BufferedOutputStream(ps, PS_BUFFER));
     this.genotypeDistances = genotypeDistances;
     this.phenotypeDistances = phenotypeDistances;
     this.constants = constants;
+    this.writeHeader = writeHeader;
     eventClasses = new LinkedHashSet<>();
     eventClasses.add(OperatorApplicationEvent.class);
     genotypeDistanceNames = Collections.synchronizedList(new ArrayList<>(genotypeDistances.keySet()));
@@ -53,22 +55,9 @@ public class DynamicLocalityAnalysisLogger<G extends Genotype, T> implements Evo
   @Override
   public void listen(EvolutionEvent<G, T> event) {
     StringBuilder sb = new StringBuilder();
-    if (!headerWritten) {
-      sb.append("generation");
-      sb.append(";p0genoSize;p1genoSize;p0phenoSize;p1phenoSize");
-      sb.append(";c0genoSize;c0phenoSize");
-      for (String name : genotypeDistanceNames) {
-        sb.append(String.format(";pc00genoDist%s;pc10genoDist%s", name, name));
-      }
-      for (String name : phenotypeDistanceNames) {
-        sb.append(String.format(";pc00phenoDist%s;pc10phenoDist%s", name, name));
-      }
-      sb.append(";operator");
-      for (String name : constantNames) {
-        sb.append(String.format(";%s", name));
-      }
-      sb.append("\n");
-      headerWritten = true;
+    printHeader();
+    for (String name : constantNames) {
+      sb.append(String.format("%s;", constants.get(name)));
     }
     OperatorApplicationEvent<G, T> e = ((OperatorApplicationEvent) event);
     //assume 1 child and 1 or 2 parents
@@ -93,9 +82,6 @@ public class DynamicLocalityAnalysisLogger<G extends Genotype, T> implements Evo
       sb.append(String.format(";%f;%f", d00, d10));
     }
     sb.append(String.format(";%s", e.getOperator().getClass().getSimpleName()));
-    for (String name : constantNames) {
-      sb.append(String.format(";%s", constants.get(name)));
-    }
     sb.append("\n");
     print(sb.toString());
   }
@@ -103,14 +89,32 @@ public class DynamicLocalityAnalysisLogger<G extends Genotype, T> implements Evo
   private synchronized void print(String string) {
     ps.print(string);
   }
+  
+  private synchronized void printHeader() {
+    if (writeHeader&&!headerWritten) {
+      StringBuilder sb = new StringBuilder();
+      for (String name : constantNames) {
+        sb.append(String.format("%s;", name));
+      }
+      sb.append("generation");
+      sb.append(";p0genoSize;p1genoSize;p0phenoSize;p1phenoSize");
+      sb.append(";c0genoSize;c0phenoSize");
+      for (String name : genotypeDistanceNames) {
+        sb.append(String.format(";pc00genoDist%s;pc10genoDist%s", name, name));
+      }
+      for (String name : phenotypeDistanceNames) {
+        sb.append(String.format(";pc00phenoDist%s;pc10phenoDist%s", name, name));
+      }
+      sb.append(";operator");
+      sb.append("\n");
+      headerWritten = true;
+      print(sb.toString());
+    }    
+  }
 
   @Override
   public Set<Class<? extends EvolutionEvent>> getEventClasses() {
     return eventClasses;
-  }
-
-  public void setConstants(Map<String, Object> constants) {
-    this.constants = constants;
   }
 
 }

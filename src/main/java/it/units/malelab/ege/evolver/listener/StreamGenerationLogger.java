@@ -22,13 +22,15 @@ import java.util.Map;
 public class StreamGenerationLogger<G extends Genotype, T> extends AbstractGenerationLogger<G, T> {
 
   private final PrintStream ps;
+  private final boolean writeHeader;
 
   private boolean headerWritten;
   private final List<String> columnNames;
 
-  public StreamGenerationLogger(PrintStream ps, FitnessComputer<T> generalizationFitnessComputer, Map<String, Object> constants) {
+  public StreamGenerationLogger(PrintStream ps, FitnessComputer<T> generalizationFitnessComputer, Map<String, Object> constants, boolean writeHeader) {
     super(generalizationFitnessComputer, constants);
     this.ps = ps;
+    this.writeHeader = writeHeader;
     columnNames = new ArrayList<>();
   }
 
@@ -37,8 +39,10 @@ public class StreamGenerationLogger<G extends Genotype, T> extends AbstractGener
     int generation = ((GenerationEvent) event).getGeneration();
     List<Individual<G, T>> population = new ArrayList<>(((GenerationEvent) event).getPopulation());
     Map<String, Object> indexes = computeIndexes(generation, population);
-    if (!headerWritten) {
+    if (columnNames.isEmpty()) {
       columnNames.addAll(indexes.keySet());
+    }
+    if (writeHeader&&!headerWritten) {
       headerWritten = true;
       for (String columnName : columnNames) {
         ps.print(columnName);
