@@ -67,16 +67,16 @@ public class TestDistances {
                 return editDistance.d(s1, s2);
             }
         }));
-        //phenotypeDistances.put("TreeEdit", new CachedDistance<>(new TreeEditDistance<String>()));
+        phenotypeDistances.put("TreeEdit", new CachedDistance<>(new TreeEditDistance<String>()));
         //prepare file
         PrintStream distancesFilePS = new PrintStream("dist" + dateForFile() + ".csv");
         distancesFilePS.println("Distance;Problem;Mapper;Operator;GenoSize;ChildSize;p1-c_G;p1-c_P;p1-c_F;p2-c_G;p2-c_P;p2-c_F;p1-p2_G;p1-p2_P;p1-p2_F;c_PSize;c_PDepth;c_PLength;p1_PSize;p1_PDepth;p1_PLength;p2_PSize;p2_PDepth;p2_PLength");
         //prepare problems
         Map<String, BenchmarkProblems.Problem> problems = new LinkedHashMap<>();
-        //problems.put("harmonic", BenchmarkProblems.harmonicCurveProblem());
-        //problems.put("poly4", BenchmarkProblems.classic4PolynomialProblem());
-        //problems.put("max", BenchmarkProblems.max());
-        //problems.put("text", BenchmarkProblems.text("Hello world!"));
+        problems.put("harmonic", BenchmarkProblems.harmonicCurveProblem());
+        problems.put("poly4", BenchmarkProblems.classic4PolynomialProblem());
+        problems.put("max", BenchmarkProblems.max());
+        problems.put("text", BenchmarkProblems.text("Hello world!"));
         problems.put("santafe", BenchmarkProblems.santaFe());
         Mapper mapper;
         AbstractOperator operator;
