@@ -80,10 +80,10 @@ public class TestDistances {
         problems.put("santafe", BenchmarkProblems.santaFe());
         Mapper mapper;
         AbstractOperator operator;
-        int n_individuals = 100;
+        int n_individuals = 300;
         List[] genosSet1 = new List[5];
         List[] genosSet2 = new List[5];
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < genosSet1.length; i++) {
             genosSet1[i] = (new RandomInitializer<>(new Random(i), new BitsGenotypeFactory((int) (128 * Math.pow(2, i))))).getGenotypes(n_individuals, new AnyValidator());
             genosSet2[i] = (new RandomInitializer<>(new Random(i + 5), new BitsGenotypeFactory((int) (128 * Math.pow(2, i))))).getGenotypes(n_individuals, new AnyValidator());
         }
@@ -158,9 +158,10 @@ public class TestDistances {
                         }
                         if (operator != null && mapper != null) {
                             for (int i = 0; i < genosSet1.length; i++) {
+                                //System.out.println(((BitsGenotype)genosSet1[i].get(0)).size());
                                 calcDistances(genosSet1[i], genosSet2[i], mapper, operator, distancesFilePS, genotypeDistances.get("BitsEdit"), phenotypeDistances.get(distancePName), problem, descriptions);
                             }
-                            System.out.printf("%s %s %s %s\n",descriptions.get("distanceName"), descriptions.get("problemName"), descriptions.get("mapperName"), descriptions.get("operatorName"));
+                            System.out.printf("%s %s %s %s\n", descriptions.get("distanceName"), descriptions.get("problemName"), descriptions.get("mapperName"), descriptions.get("operatorName"));
                         }
                     }
                 }
@@ -203,12 +204,13 @@ public class TestDistances {
         BitsGenotype cG, p1G, p2G;
         Node cP, p1P, p2P;
         Double[] distArray;
-        int[] sizes;
+        Integer[] sizes;
+        //System.out.println(p1Set.size());
         if (operator instanceof AbstractMutation) {
             for (int i = 0; i < p1Set.size(); i++) {
                 try {
                     distArray = new Double[9];
-                    sizes = new int[9];
+                    sizes = new Integer[9];
                     /* array with the distances:
                                                 |     p1-c    |    p2-c     |    p1-p2    |
                                                 |  G   P   F  |  G   P   F  |  G   P   F  |
@@ -231,15 +233,16 @@ public class TestDistances {
                     }
                     distArray[1] = distPhenoCalc(phenoDist, p1P, cP);
                     distArray[2] = distFitCalc(problem.getFitnessComputer(), p1P, cP);
-                    out.printf("%s;%s;%s;%s;%d;%d;%f;%f;%f;%f;%f;%f;%f;%f;%f;%d;%d;%d;%d;%d;%d;%d;%d;%d\n",
+                    //out.printf("%s\n%s\n%s\n%s\n",p1G.toInt(),cG.toInt(),p1P.leaves().toString(),cP.leaves().toString());
+                    out.printf("%s;%s;%s;%s;%d;%d;%f;%f;%f;%s;%s;%s;%s;%s;%s;%d;%d;%d;%d;%d;%d;%s;%s;%s\n",
                             descr.get("distanceName"),
                             descr.get("problemName"),
                             descr.get("mapperName"),
                             descr.get("operatorName"),
                             p1G.size(),
                             cG.size(),
-                            distArray[0], distArray[1], distArray[2], distArray[3], distArray[4], distArray[5], distArray[6], distArray[7], distArray[8],
-                            sizes[0], sizes[1], sizes[2], sizes[3], sizes[4], sizes[5], sizes[6], sizes[7], sizes[8]
+                            distArray[0], distArray[1], distArray[2], "", "", "", "", "", "",
+                            sizes[0], sizes[1], sizes[2], sizes[3], sizes[4], sizes[5], "", "", ""
                     );
                 } catch (ArrayIndexOutOfBoundsException ex) {
                     System.out.println(ex.toString());
@@ -249,7 +252,7 @@ public class TestDistances {
             for (int i = 0; i < p1Set.size(); i++) {
                 try {
                     distArray = new Double[9];
-                    sizes = new int[9];
+                    sizes = new Integer[9];
                     /* array with the distances:
                                                 |     p1-c    |    p2-c     |    p1-p2    |
                                                 |  G   P   F  |  G   P   F  |  G   P   F  |
@@ -285,6 +288,7 @@ public class TestDistances {
                     distArray[2] = distFitCalc(problem.getFitnessComputer(), p1P, cP);
                     distArray[5] = distFitCalc(problem.getFitnessComputer(), p2P, cP);
                     distArray[8] = distFitCalc(problem.getFitnessComputer(), p1P, p2P);
+                    //out.printf("%s\n%s\n%s\n%s\n%s\n%s\n",p1G.toInt(),p2G.toInt(),cG.toInt(),p1P.leaves().toString(),p2P.leaves().toString(),cP.leaves().toString());
                     out.printf("%s;%s;%s;%s;%d;%d;%f;%f;%f;%f;%f;%f;%f;%f;%f;%d;%d;%d;%d;%d;%d;%d;%d;%d\n",
                             descr.get("distanceName"),
                             descr.get("problemName"),

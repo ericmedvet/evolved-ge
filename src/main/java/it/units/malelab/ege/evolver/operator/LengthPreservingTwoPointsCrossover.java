@@ -31,8 +31,8 @@ public class LengthPreservingTwoPointsCrossover extends TwoPointsCrossover {
     int endIndex1 = startIndex1+crossoverSize;
     int endIndex2 = startIndex2+crossoverSize;
     return children(
-            parent1, Range.openClosed(startIndex1, endIndex1),
-            parent2, Range.openClosed(startIndex2, endIndex2));
+            parent1, Range.closedOpen(startIndex1, endIndex1),
+            parent2, Range.closedOpen(startIndex2, endIndex2));
   }
   
 }
