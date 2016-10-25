@@ -25,45 +25,29 @@ public class TwoPointsCrossover extends AbstractCrossover<BitsGenotype> {
     public List<BitsGenotype> apply(List<BitsGenotype> parents) {
         BitsGenotype parent1 = parents.get(0);
         BitsGenotype parent2 = parents.get(1);
-        /*  
-            La precedente selezione casuale non è uniforme. Nella scelta di endIndex, infatti,
-            con una probabilità pari a startIndex/parent.size si ricade nel valore startIndex+1.
-            In questo modo spesso avviene uno scambio di 1 bit, e ciò portava ad una generazione
-            di un genotipo figlio identico ad uno dei due genitori con una probabilità del 50%
-         */
         /*
         int startIndex1 = Math.min(Math.max(1, random.nextInt(parent1.size())), parent1.size()-2);
         int startIndex2 = Math.min(Math.max(1, random.nextInt(parent2.size())), parent2.size()-2);
         int endIndex1 = Math.min(Math.max(startIndex1+1, random.nextInt(parent1.size())), parent1.size());
         int endIndex2 = Math.min(Math.max(startIndex2+1, random.nextInt(parent2.size())), parent2.size());
          */
-        int pivot1 = 0, pivot2 = 0;
+        int pivot1, pivot2;
         int startIndex1, startIndex2, endIndex1, endIndex2;
+        
         pivot1 = 1 + random.nextInt(parent1.size() - 1);
         do {
             pivot2 = 1 + random.nextInt(parent1.size() - 1);
         } while (pivot1 == pivot2);
-        if (pivot1 > pivot2) {
-            endIndex1 = pivot1;
-            startIndex1 = pivot2;
-        } else {
-            endIndex1 = pivot2;
-            startIndex1 = pivot1;
-        }
-        pivot1 = 0;
-        pivot2 = 0;
+        startIndex1 = Math.min(pivot2, pivot1);
+        endIndex1 = Math.max(pivot2, pivot1);
+        
         pivot1 = 1 + random.nextInt(parent2.size() - 1);
         do {
             pivot2 = 1 + random.nextInt(parent2.size() - 1);
         } while (pivot1 == pivot2);
-        if (pivot1 > pivot2) {
-            endIndex2 = pivot1;
-            startIndex2 = pivot2;
-        } else {
-            endIndex2 = pivot2;
-            startIndex2 = pivot1;
-        }
-        //System.out.printf("[%d,%d[ -- [%d,%d[\n",startIndex1,endIndex1,startIndex2,endIndex2);
+        startIndex2 = Math.min(pivot2, pivot1);
+        endIndex2 = Math.max(pivot2, pivot1);
+        
         return children(
                 parent1, Range.closedOpen(startIndex1, endIndex1),
                 parent2, Range.closedOpen(startIndex2, endIndex2));
