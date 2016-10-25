@@ -9,6 +9,7 @@ import it.units.malelab.ege.distance.BitsGenotypeEditDistance;
 import it.units.malelab.ege.distance.CachedDistance;
 import it.units.malelab.ege.distance.Distance;
 import it.units.malelab.ege.distance.EditDistance;
+import it.units.malelab.ege.distance.SGEGenotypeHammingDistance;
 import it.units.malelab.ege.distance.TreeEditDistance;
 import it.units.malelab.ege.evolver.genotype.BitsGenotype;
 import it.units.malelab.ege.evolver.validator.AnyValidator;
@@ -17,6 +18,8 @@ import it.units.malelab.ege.evolver.Evolver;
 import it.units.malelab.ege.evolver.initializer.RandomInitializer;
 import it.units.malelab.ege.evolver.StandardEvolver;
 import it.units.malelab.ege.evolver.genotype.BitsGenotypeFactory;
+import it.units.malelab.ege.evolver.genotype.SGEGenotype;
+import it.units.malelab.ege.evolver.genotype.SGEGenotypeFactory;
 import it.units.malelab.ege.evolver.listener.AbstractGenerationLogger;
 import it.units.malelab.ege.evolver.listener.DynamicLocalityAnalysisLogger;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
@@ -26,6 +29,8 @@ import it.units.malelab.ege.evolver.operator.BitsSGECrossover;
 import it.units.malelab.ege.evolver.operator.OnePointCrossover;
 import it.units.malelab.ege.evolver.selector.TournamentSelector;
 import it.units.malelab.ege.evolver.operator.ProbabilisticMutation;
+import it.units.malelab.ege.evolver.operator.SGECrossover;
+import it.units.malelab.ege.evolver.operator.SGEMutation;
 import it.units.malelab.ege.evolver.operator.TwoPointsCrossover;
 import it.units.malelab.ege.grammar.Grammar;
 import it.units.malelab.ege.mapper.BitsSGEMapper;
@@ -33,6 +38,7 @@ import it.units.malelab.ege.mapper.BreathFirstMapper;
 import it.units.malelab.ege.mapper.HierarchicalMapper;
 import it.units.malelab.ege.mapper.MappingException;
 import it.units.malelab.ege.mapper.PiGEMapper;
+import it.units.malelab.ege.mapper.SGEMapper;
 import it.units.malelab.ege.mapper.StandardGEMapper;
 import it.units.malelab.ege.mapper.WeightedHierarchicalMapper;
 import java.io.IOException;
@@ -54,7 +60,7 @@ import java.util.concurrent.ExecutionException;
  */
 public class Main {
 
-  public static void main(String[] args) throws IOException, ExecutionException, InterruptedException, MappingException {
+  public static void mainBits(String[] args) throws IOException, ExecutionException, InterruptedException, MappingException {
     //define distances
     Map<String, Distance<BitsGenotype>> genotypeDistances = new LinkedHashMap<>();
     genotypeDistances.put("BitsEdit", new CachedDistance<>(new BitsGenotypeEditDistance()));
@@ -137,6 +143,70 @@ public class Main {
     phenotypeDistances.clear();
   }
 
+  public static void main(String[] args) throws IOException, ExecutionException, InterruptedException, MappingException {
+    //define distances
+    Map<String, Distance<SGEGenotype<String>>> genotypeDistances = new LinkedHashMap<>();
+    genotypeDistances.put("BitsEdit", new CachedDistance<>(new SGEGenotypeHammingDistance<String>()));
+    Map<String, Distance<Node<String>>> phenotypeDistances = new LinkedHashMap<>();
+    final EditDistance<String> editDistance = new EditDistance<>();
+    phenotypeDistances.put("LeavesEdit", new CachedDistance<>(new Distance<Node<String>>() {
+      @Override
+      public double d(Node<String> t1, Node<String> t2) {
+        List<String> s1 = Node.EMPTY_TREE.equals(t1) ? Collections.EMPTY_LIST : Utils.contents(t1.leaves());
+        List<String> s2 = Node.EMPTY_TREE.equals(t2) ? Collections.EMPTY_LIST : Utils.contents(t2.leaves());
+        return editDistance.d(s1, s2);
+      }
+    }));
+    phenotypeDistances.put("TreeEdit", new CachedDistance<>(new TreeEditDistance<String>()));
+    //prepare file
+    PrintStream generationFilePS = new PrintStream(args[0].replace("DATE", dateForFile()));
+    PrintStream distancesFilePS = new PrintStream(args[1].replace("DATE", dateForFile()));
+    //prepare problems
+    Map<String, BenchmarkProblems.Problem> problems = new LinkedHashMap<>();
+    problems.put("harmonic", BenchmarkProblems.harmonicCurveProblem());
+    problems.put("poly4", BenchmarkProblems.classic4PolynomialProblem());
+    //problems.put("max", BenchmarkProblems.max());
+    problems.put("santaFe", BenchmarkProblems.santaFe());
+    problems.put("text", BenchmarkProblems.text("Hello world!"));
+    boolean writeHeader = true;
+    for (String problemName : problems.keySet()) {
+      BenchmarkProblems.Problem problem = problems.get(problemName);
+      for (int r = 0; r < 30; r++) {
+        Random random = new Random(r);
+        SGEMapper<String> mapper = new SGEMapper<>(6, problem.getGrammar());
+        Configuration<SGEGenotype<String>, String> configuration = new Configuration<>();
+        configuration
+            .populationSize(500)
+            .numberOfGenerations(50)
+            .mapper(mapper)
+            .populationInitializer(new RandomInitializer<>(random, new SGEGenotypeFactory<>(mapper)))
+            .initGenotypeValidator(new AnyValidator<SGEGenotype<String>>())
+            .operators((List)Arrays.asList(
+                            new Configuration.GeneticOperatorConfiguration<>(new SGECrossover<>(random), new TournamentSelector(5, random), 0.8d),
+                            new Configuration.GeneticOperatorConfiguration<>(new SGEMutation<>(mapper, random), new TournamentSelector(5, random), 0.2d)
+                    ))
+            .fitnessComputer(problem.getFitnessComputer())
+            .generationStrategy(Configuration.GenerationStrategy.ADD_OLD_FIRST);
+        Evolver<SGEGenotype<String>, String> evolver = new StandardEvolver<>(Runtime.getRuntime().availableProcessors() - 1, configuration);
+        Map<String, Object> constants = new LinkedHashMap<>();
+        constants.put("problem", problemName);
+        constants.put("mapper", configuration.getMapper().getClass().getSimpleName());
+        constants.put("initGenoSize", 0);
+        constants.put("run", r);
+        List<EvolutionListener<SGEGenotype<String>, String>> listeners = new ArrayList<>();
+        listeners.add(new ScreenGenerationLogger<SGEGenotype<String>, String>("%8.1f", 8, problem.getPhenotypePrinter(), problem.getGeneralizationFitnessComputer(), constants));
+        listeners.add(new StreamGenerationLogger<SGEGenotype<String>, String>(generationFilePS, null, constants, writeHeader));
+        listeners.add(new DynamicLocalityAnalysisLogger<>(distancesFilePS, genotypeDistances, phenotypeDistances, constants, writeHeader));
+        writeHeader = false;
+        System.out.println(constants);
+        evolver.go(listeners);
+        System.out.println();
+      }
+    }
+    generationFilePS.close();
+    phenotypeDistances.clear();
+  }
+  
   private static String dateForFile() {
     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyMMddHHmm");
     return simpleDateFormat.format(new Date());

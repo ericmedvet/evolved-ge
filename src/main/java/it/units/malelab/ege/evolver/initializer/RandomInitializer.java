@@ -6,8 +6,6 @@
 package it.units.malelab.ege.evolver.initializer;
 
 import it.units.malelab.ege.evolver.validator.GenotypeValidator;
-import it.units.malelab.ege.evolver.genotype.BitsGenotype;
-import it.units.malelab.ege.Utils;
 import it.units.malelab.ege.evolver.genotype.Factory;
 import it.units.malelab.ege.evolver.genotype.Genotype;
 import java.util.ArrayList;
