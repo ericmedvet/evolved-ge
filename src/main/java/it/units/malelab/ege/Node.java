@@ -8,6 +8,7 @@ package it.units.malelab.ege;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  *
@@ -94,6 +95,32 @@ public class Node<T> {
       size = size+child.size();
     }
     return size+1;
+  }
+
+  @Override
+  public int hashCode() {
+    int hash = 3;
+    hash = 53 * hash + Objects.hashCode(this.content);
+    hash = 53 * hash + Objects.hashCode(this.children);
+    return hash;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    final Node<?> other = (Node<?>) obj;
+    if (!Objects.equals(this.content, other.content)) {
+      return false;
+    }
+    if (!Objects.equals(this.children, other.children)) {
+      return false;
+    }
+    return true;
   }
     
 }

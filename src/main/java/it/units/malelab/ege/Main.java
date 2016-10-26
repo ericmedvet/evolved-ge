@@ -26,12 +26,14 @@ import it.units.malelab.ege.evolver.listener.EvolutionListener;
 import it.units.malelab.ege.evolver.listener.ScreenGenerationLogger;
 import it.units.malelab.ege.evolver.listener.StreamGenerationLogger;
 import it.units.malelab.ege.evolver.operator.BitsSGECrossover;
+import it.units.malelab.ege.evolver.operator.Copy;
 import it.units.malelab.ege.evolver.operator.OnePointCrossover;
 import it.units.malelab.ege.evolver.selector.TournamentSelector;
 import it.units.malelab.ege.evolver.operator.ProbabilisticMutation;
 import it.units.malelab.ege.evolver.operator.SGECrossover;
 import it.units.malelab.ege.evolver.operator.SGEMutation;
 import it.units.malelab.ege.evolver.operator.TwoPointsCrossover;
+import it.units.malelab.ege.evolver.selector.BestSelector;
 import it.units.malelab.ege.grammar.Grammar;
 import it.units.malelab.ege.mapper.BitsSGEMapper;
 import it.units.malelab.ege.mapper.BreathFirstMapper;
@@ -171,42 +173,44 @@ public class Main {
     boolean writeHeader = true;
     for (String problemName : problems.keySet()) {
       BenchmarkProblems.Problem problem = problems.get(problemName);
-      for (int r = 0; r < 30; r++) {
-        Random random = new Random(r);
-        SGEMapper<String> mapper = new SGEMapper<>(6, problem.getGrammar());
-        Configuration<SGEGenotype<String>, String> configuration = new Configuration<>();
-        configuration
-            .populationSize(500)
-            .numberOfGenerations(50)
-            .mapper(mapper)
-            .populationInitializer(new RandomInitializer<>(random, new SGEGenotypeFactory<>(mapper)))
-            .initGenotypeValidator(new AnyValidator<SGEGenotype<String>>())
-            .operators((List)Arrays.asList(
-                            new Configuration.GeneticOperatorConfiguration<>(new SGECrossover<>(random), new TournamentSelector(5, random), 0.8d),
-                            new Configuration.GeneticOperatorConfiguration<>(new SGEMutation<>(mapper, random), new TournamentSelector(5, random), 0.2d)
-                    ))
-            .fitnessComputer(problem.getFitnessComputer())
-            .generationStrategy(Configuration.GenerationStrategy.ADD_OLD_FIRST);
-        Evolver<SGEGenotype<String>, String> evolver = new StandardEvolver<>(Runtime.getRuntime().availableProcessors() - 1, configuration);
-        Map<String, Object> constants = new LinkedHashMap<>();
-        constants.put("problem", problemName);
-        constants.put("mapper", configuration.getMapper().getClass().getSimpleName());
-        constants.put("initGenoSize", 0);
-        constants.put("run", r);
-        List<EvolutionListener<SGEGenotype<String>, String>> listeners = new ArrayList<>();
-        listeners.add(new ScreenGenerationLogger<SGEGenotype<String>, String>("%8.1f", 8, problem.getPhenotypePrinter(), problem.getGeneralizationFitnessComputer(), constants));
-        listeners.add(new StreamGenerationLogger<SGEGenotype<String>, String>(generationFilePS, null, constants, writeHeader));
-        listeners.add(new DynamicLocalityAnalysisLogger<>(distancesFilePS, genotypeDistances, phenotypeDistances, constants, writeHeader));
-        writeHeader = false;
-        System.out.println(constants);
-        evolver.go(listeners);
-        System.out.println();
+      for (int d : new int[]{6, 10}) {
+        for (int r = 0; r < 30; r++) {
+          Random random = new Random(r);
+          SGEMapper<String> mapper = new SGEMapper<>(d, problem.getGrammar());
+          Configuration<SGEGenotype<String>, String> configuration = new Configuration<>();
+          configuration
+                  .populationSize(500)
+                  .numberOfGenerations(50)
+                  .mapper(mapper)
+                  .populationInitializer(new RandomInitializer<>(random, new SGEGenotypeFactory<>(mapper)))
+                  .initGenotypeValidator(new AnyValidator<SGEGenotype<String>>())
+                  .operators((List) Arrays.asList(
+                                  new Configuration.GeneticOperatorConfiguration<>(new SGECrossover<>(random), new TournamentSelector(5, random), 0.8d),
+                                  new Configuration.GeneticOperatorConfiguration<>(new SGEMutation<>(0.02d, mapper, random), new TournamentSelector(5, random), 0.2d)
+                          ))
+                  .fitnessComputer(problem.getFitnessComputer())
+                  .generationStrategy(Configuration.GenerationStrategy.ADD_NEW_FIRST);
+          Evolver<SGEGenotype<String>, String> evolver = new StandardEvolver<>(Runtime.getRuntime().availableProcessors() - 1, configuration);
+          Map<String, Object> constants = new LinkedHashMap<>();
+          constants.put("problem", problemName);
+          constants.put("mapper", configuration.getMapper().getClass().getSimpleName()+"-"+d);
+          constants.put("initGenoSize", 0);
+          constants.put("run", r);
+          List<EvolutionListener<SGEGenotype<String>, String>> listeners = new ArrayList<>();
+          listeners.add(new ScreenGenerationLogger<SGEGenotype<String>, String>("%8.1f", 8, problem.getPhenotypePrinter(), problem.getGeneralizationFitnessComputer(), constants));
+          //listeners.add(new StreamGenerationLogger<SGEGenotype<String>, String>(generationFilePS, null, constants, writeHeader));
+          //listeners.add(new DynamicLocalityAnalysisLogger<>(distancesFilePS, genotypeDistances, phenotypeDistances, constants, writeHeader));
+          writeHeader = false;
+          System.out.println(constants);
+          evolver.go(listeners);
+          System.out.println();
+        }
       }
     }
     generationFilePS.close();
     phenotypeDistances.clear();
   }
-  
+
   private static String dateForFile() {
     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyMMddHHmm");
     return simpleDateFormat.format(new Date());

@@ -56,9 +56,9 @@ public class SGEMapper<T> extends AbstractMapper<SGEGenotype<T>, T> {
       }
       //get codon
       List<Integer> values = genotype.getGenes().get(nodeToBeReplaced.getContent());
-      int value = values.get(expandedSymbols.count(nodeToBeReplaced.getContent()) % values.size());
+      int value = values.get(expandedSymbols.count(nodeToBeReplaced.getContent()));
       List<List<Pair<T, Integer>>> options = nonRecursiveGrammar.getRules().get(nodeToBeReplaced.getContent());
-      int optionIndex = value % options.size();
+      int optionIndex = value;
       //add children
       for (Pair<T, Integer> symbol : options.get(optionIndex)) {
         Node<Pair<T, Integer>> newChild = new Node<>(symbol);

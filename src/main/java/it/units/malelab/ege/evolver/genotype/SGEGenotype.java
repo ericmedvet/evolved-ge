@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  *
@@ -46,6 +47,28 @@ public class SGEGenotype<T> implements Genotype {
       size = size+gene.size();
     }
     return size;
+  }
+
+  @Override
+  public int hashCode() {
+    int hash = 3;
+    hash = 31 * hash + Objects.hashCode(this.genes);
+    return hash;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    final SGEGenotype<?> other = (SGEGenotype<?>) obj;
+    if (!Objects.equals(this.genes, other.genes)) {
+      return false;
+    }
+    return true;
   }
   
 }
