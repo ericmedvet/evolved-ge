@@ -56,7 +56,7 @@ import java.util.concurrent.ExecutionException;
  *
  * @author Danny
  */
-public class TestDistances_constant_valid {
+public class TestDistancesConstantValid {
 
     public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
         Map<String, Distance> genotypeDistances = new LinkedHashMap<>();
