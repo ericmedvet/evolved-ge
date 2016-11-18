@@ -56,7 +56,7 @@ import java.util.concurrent.ExecutionException;
  *
  * @author Danny
  */
-public class Test_constant_valid {
+public class TestDistances_constant_valid {
 
     public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
         Map<String, Distance> genotypeDistances = new LinkedHashMap<>();
@@ -103,8 +103,10 @@ public class Test_constant_valid {
                 Grammar<String> grammar = problem.getGrammar();
                 switch (m) {
                     case 0:
-                        descriptions.put("mapperName", "StdGE");
-                        mapper = new StandardGEMapper<>(8, 5, grammar);
+                        descriptions.put("mapperName", "SGE");
+                        mapper = new SGEMapper<>(6, grammar);
+                        genosSet1 = (new RandomInitializer<>(new Random(1), new SGEGenotypeFactory((SGEMapper) mapper))).getGenotypes(20*n_valid_exp, new AnyValidator());
+                        genosSet2 = (new RandomInitializer<>(new Random(2), new SGEGenotypeFactory((SGEMapper) mapper))).getGenotypes(20*n_valid_exp, new AnyValidator());
                         break;
                     case 1:
                         descriptions.put("mapperName", "BreathFirst");
@@ -119,10 +121,8 @@ public class Test_constant_valid {
                         mapper = new BitsSGEMapper<>(6, grammar);
                         break;
                     case 4:
-                        descriptions.put("mapperName", "SGE");
-                        mapper = new SGEMapper<>(6, grammar);
-                        genosSet1 = (new RandomInitializer<>(new Random(1), new SGEGenotypeFactory((SGEMapper) mapper))).getGenotypes(20*n_valid_exp, new AnyValidator());
-                        genosSet2 = (new RandomInitializer<>(new Random(2), new SGEGenotypeFactory((SGEMapper) mapper))).getGenotypes(20*n_valid_exp, new AnyValidator());
+                        descriptions.put("mapperName", "StdGE");
+                        mapper = new StandardGEMapper<>(8, 5, grammar);
                         break;
                     case 5:
                         descriptions.put("mapperName", "Hier");
