@@ -12,7 +12,8 @@ import it.units.malelab.ege.evolver.fitness.FitnessComputer;
 import it.units.malelab.ege.evolver.selector.Selector;
 import it.units.malelab.ege.mapper.Mapper;
 import it.units.malelab.ege.evolver.operator.GeneticOperator;
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  *
@@ -25,40 +26,12 @@ public class Configuration<G extends Genotype, T> {
   private PopulationInitializer<G> populationInitializer;
   private GenotypeValidator<G> initGenotypeValidator;
   private Mapper<G, T> mapper;
-  private List<GeneticOperatorConfiguration<G>> operators;
+  private Map<GeneticOperator<G>, Double> operators;
   private FitnessComputer<T> fitnessComputer;
-  private GenerationStrategy generationStrategy;
-  
-  public static enum GenerationStrategy {
-    ADD_NEW_FIRST, ADD_OLD_FIRST, REPLACE;
-  }
-
-  public static class GeneticOperatorConfiguration<G extends Genotype> {
-
-    private final GeneticOperator<G> operator;
-    private final Selector selector;
-    private final double rate;
-
-    public GeneticOperatorConfiguration(GeneticOperator<G> operator, Selector selector, double rate) {
-      this.operator = operator;
-      this.selector = selector;
-      this.rate = rate;
-    }
-
-    public GeneticOperator<G> getOperator() {
-      return operator;
-    }
-
-    public Selector getSelector() {
-      return selector;
-    }
-
-    public double getRate() {
-      return rate;
-    }
-
-  }
-  
+  private Selector parentSelector;
+  private Selector survivalSelector;  
+  private int offspringSize;
+    
   public Configuration<G, T> copy() {
     Configuration<G, T> copy = new Configuration<>();
     copy.populationSize = populationSize;
@@ -68,7 +41,9 @@ public class Configuration<G extends Genotype, T> {
     copy.mapper = mapper;
     copy.operators = operators;
     copy.fitnessComputer = fitnessComputer;
-    copy.generationStrategy = generationStrategy;
+    copy.survivalSelector = survivalSelector;
+    copy.parentSelector = parentSelector;
+    copy.offspringSize = offspringSize;
     return copy;
   }
 
@@ -92,16 +67,8 @@ public class Configuration<G extends Genotype, T> {
     return mapper;
   }
 
-  public List<GeneticOperatorConfiguration<G>> getOperators() {
-    return operators;
-  }
-
   public FitnessComputer<T> getFitnessComputer() {
     return fitnessComputer;
-  }
-
-  public GenerationStrategy getGenerationStrategy() {
-    return generationStrategy;
   }
 
   public Configuration<G, T> populationSize(int populationSize) {
@@ -129,19 +96,53 @@ public class Configuration<G extends Genotype, T> {
     return this;
   }
 
-  public Configuration<G, T> operators(List<GeneticOperatorConfiguration<G>> operators) {
-    this.operators = operators;
-    return this;
-  }
-
   public Configuration<G, T> fitnessComputer(FitnessComputer<T> fitnessComputer) {
     this.fitnessComputer = fitnessComputer;
     return this;
   }
-  
-  public Configuration<G, T> generationStrategy(GenerationStrategy generationStrategy) {
-    this.generationStrategy = generationStrategy;
+
+  public Selector getParentSelector() {
+    return parentSelector;
+  }
+
+  public Selector getSurvivalSelector() {
+    return survivalSelector;
+  }
+
+  public int getOffspringSize() {
+    return offspringSize;
+  }
+
+  public Configuration<G, T> parentSelector(Selector parentSelector) {
+    this.parentSelector = parentSelector;
     return this;
   }
 
+  public Configuration<G, T> survivalSelector(Selector survivalSelector) {
+    this.survivalSelector = survivalSelector;
+    return this;
+  }
+
+  public Configuration<G, T> offspringSize(int offspringSize) {
+    this.offspringSize = offspringSize;
+    return this;
+  }
+
+  public Map<GeneticOperator<G>, Double> getOperators() {
+    return operators;
+  }
+
+  public Configuration<G, T> operators(Map<GeneticOperator<G>, Double> operators) {
+    this.operators = operators;
+    return this;
+  }    
+
+  public Configuration<G, T> operator(GeneticOperator<G> operator, double rate) {
+    if (operators==null) {
+      operators = new LinkedHashMap<>();
+    }
+    operators.put(operator, rate);
+    return this;
+  }    
+  
 }

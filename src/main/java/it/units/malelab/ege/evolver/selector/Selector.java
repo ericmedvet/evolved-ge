@@ -13,8 +13,8 @@ import java.util.List;
  *
  * @author eric
  */
-public interface Selector<G extends Genotype, T> {
+public interface Selector {
   
-  public Individual<G, T> select(List<Individual<G, T>> population);
+  public Individual select(List<Individual> population, boolean reverse);
   
 }

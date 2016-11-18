@@ -20,20 +20,21 @@ import it.units.malelab.ege.evolver.StandardEvolver;
 import it.units.malelab.ege.evolver.genotype.BitsGenotypeFactory;
 import it.units.malelab.ege.evolver.genotype.SGEGenotype;
 import it.units.malelab.ege.evolver.genotype.SGEGenotypeFactory;
-import it.units.malelab.ege.evolver.listener.AbstractGenerationLogger;
 import it.units.malelab.ege.evolver.listener.DynamicLocalityAnalysisLogger;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
 import it.units.malelab.ege.evolver.listener.ScreenGenerationLogger;
 import it.units.malelab.ege.evolver.listener.StreamGenerationLogger;
 import it.units.malelab.ege.evolver.operator.BitsSGECrossover;
-import it.units.malelab.ege.evolver.operator.Copy;
+import it.units.malelab.ege.evolver.operator.LengthPreservingOnePointCrossover;
+import it.units.malelab.ege.evolver.operator.LengthPreservingTwoPointsCrossover;
+import it.units.malelab.ege.evolver.operator.LocalizedTwoPointsCrossover;
 import it.units.malelab.ege.evolver.operator.OnePointCrossover;
 import it.units.malelab.ege.evolver.selector.TournamentSelector;
 import it.units.malelab.ege.evolver.operator.ProbabilisticMutation;
 import it.units.malelab.ege.evolver.operator.SGECrossover;
 import it.units.malelab.ege.evolver.operator.SGEMutation;
-import it.units.malelab.ege.evolver.operator.TwoPointsCrossover;
 import it.units.malelab.ege.evolver.selector.BestSelector;
+import it.units.malelab.ege.evolver.selector.IndividualComparator;
 import it.units.malelab.ege.grammar.Grammar;
 import it.units.malelab.ege.mapper.BitsSGEMapper;
 import it.units.malelab.ege.mapper.BreathFirstMapper;
@@ -61,6 +62,10 @@ import java.util.concurrent.ExecutionException;
  * @author eric
  */
 public class Main {
+  
+  public static void main(String[] args) throws IOException, ExecutionException, InterruptedException, MappingException {
+    mainComparison(args);
+  }
 
   public static void mainBits(String[] args) throws IOException, ExecutionException, InterruptedException, MappingException {
     //define distances
@@ -110,10 +115,8 @@ public class Main {
                 BitsSGEMapper<String> sgeMapper = new BitsSGEMapper<>(6, grammar);
                 configuration
                         .mapper(sgeMapper)
-                        .operators(Arrays.asList(
-                                        new Configuration.GeneticOperatorConfiguration<>(new BitsSGECrossover(sgeMapper, random), new TournamentSelector(5, random), 0.8d),
-                                        new Configuration.GeneticOperatorConfiguration<>(new ProbabilisticMutation(random, 0.01), new TournamentSelector(5, random), 0.2d)
-                                ));
+                        .operator(new BitsSGECrossover(sgeMapper, random), 0.8d)
+                        .operator(new ProbabilisticMutation(random, 0.01), 0.2d);
                 break;
               case 4:
                 configuration.mapper(new HierarchicalMapper<>(grammar));
@@ -123,7 +126,7 @@ public class Main {
                 break;
             }
             configuration.populationInitializer(new RandomInitializer<>(random, new BitsGenotypeFactory(genotypeSize)));
-            Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(Runtime.getRuntime().availableProcessors() - 1, configuration);
+            Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(Runtime.getRuntime().availableProcessors() - 1, configuration, random);
             Map<String, Object> constants = new LinkedHashMap<>();
             constants.put("problem", problemName);
             constants.put("mapper", configuration.getMapper().getClass().getSimpleName());
@@ -145,7 +148,7 @@ public class Main {
     phenotypeDistances.clear();
   }
 
-  public static void main(String[] args) throws IOException, ExecutionException, InterruptedException, MappingException {
+  public static void mainWithDistances(String[] args) throws IOException, ExecutionException, InterruptedException, MappingException {
     //define distances
     Map<String, Distance<SGEGenotype<String>>> genotypeDistances = new LinkedHashMap<>();
     genotypeDistances.put("BitsEdit", new CachedDistance<>(new SGEGenotypeHammingDistance<String>()));
@@ -184,13 +187,10 @@ public class Main {
                   .mapper(mapper)
                   .populationInitializer(new RandomInitializer<>(random, new SGEGenotypeFactory<>(mapper)))
                   .initGenotypeValidator(new AnyValidator<SGEGenotype<String>>())
-                  .operators((List) Arrays.asList(
-                                  new Configuration.GeneticOperatorConfiguration<>(new SGECrossover<>(random), new TournamentSelector(5, random), 0.8d),
-                                  new Configuration.GeneticOperatorConfiguration<>(new SGEMutation<>(0.02d, mapper, random), new TournamentSelector(5, random), 0.2d)
-                          ))
-                  .fitnessComputer(problem.getFitnessComputer())
-                  .generationStrategy(Configuration.GenerationStrategy.ADD_NEW_FIRST);
-          Evolver<SGEGenotype<String>, String> evolver = new StandardEvolver<>(Runtime.getRuntime().availableProcessors() - 1, configuration);
+                  .operator(new SGECrossover<String>(random), 0.8d)
+                  .operator(new SGEMutation<>(0.02d, mapper, random), 0.8d)
+                  .fitnessComputer(problem.getFitnessComputer());
+          Evolver<SGEGenotype<String>, String> evolver = new StandardEvolver<>(Runtime.getRuntime().availableProcessors() - 1, configuration, random);
           Map<String, Object> constants = new LinkedHashMap<>();
           constants.put("problem", problemName);
           constants.put("mapper", configuration.getMapper().getClass().getSimpleName()+"-"+d);
@@ -211,6 +211,57 @@ public class Main {
     phenotypeDistances.clear();
   }
 
+  public static void mainComparison(String[] args) throws IOException, ExecutionException, InterruptedException, MappingException {
+    //prepare file
+    //PrintStream generationFilePS = new PrintStream(args[0].replace("DATE", dateForFile()));
+    //prepare problems
+    Map<String, BenchmarkProblems.Problem> problems = new LinkedHashMap<>();
+    problems.put("harmonic", BenchmarkProblems.harmonicCurveProblem());
+    problems.put("poly4", BenchmarkProblems.classic4PolynomialProblem());
+    //problems.put("max", BenchmarkProblems.max());
+    problems.put("santaFe", BenchmarkProblems.santaFe());
+    problems.put("text", BenchmarkProblems.text("Hello world!"));
+    boolean writeHeader = true;
+    for (String problemName : problems.keySet()) {
+      BenchmarkProblems.Problem problem = problems.get(problemName);
+      for (int r = 0; r < 1; r++) {
+        Random random = new Random(r);
+        for (int m = 0; m < 4; m++) {
+          Configuration<BitsGenotype, String> configuration = defaultConfiguration(problem, random);
+          Grammar<String> grammar = problems.get(problemName).getGrammar();
+          switch (m) {
+            case 0:
+              configuration.mapper(new StandardGEMapper<>(8, 5, grammar));
+              break;
+            case 1:
+              configuration.mapper(new PiGEMapper<>(16, 5, grammar));
+              break;
+            case 2:
+              configuration.mapper(new HierarchicalMapper<>(grammar));
+              break;
+            case 3:
+              configuration.mapper(new WeightedHierarchicalMapper<>(6, grammar));
+              break;
+          }
+          //Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(Runtime.getRuntime().availableProcessors() - 1, configuration, random);
+          Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(1, configuration, random);
+          Map<String, Object> constants = new LinkedHashMap<>();
+          constants.put("problem", problemName);
+          constants.put("mapper", configuration.getMapper().getClass().getSimpleName());
+          constants.put("run", r);
+          List<EvolutionListener<BitsGenotype, String>> listeners = new ArrayList<>();
+          listeners.add(new ScreenGenerationLogger<BitsGenotype, String>("%8.1f", 8, problem.getPhenotypePrinter(), problem.getGeneralizationFitnessComputer(), constants));
+          //listeners.add(new StreamGenerationLogger<BitsGenotype, String>(generationFilePS, null, constants, writeHeader));
+          writeHeader = false;
+          System.out.println(constants);
+          evolver.go(listeners);
+          System.out.println();
+        }
+      }
+    }
+    //generationFilePS.close();
+  }
+
   private static String dateForFile() {
     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyMMddHHmm");
     return simpleDateFormat.format(new Date());
@@ -220,16 +271,17 @@ public class Main {
     Configuration<BitsGenotype, String> configuration = new Configuration<>();
     configuration
             .populationSize(500)
+            .offspringSize(400)
             .numberOfGenerations(50)
             .populationInitializer(new RandomInitializer<>(random, new BitsGenotypeFactory(1024)))
             .initGenotypeValidator(new AnyValidator<BitsGenotype>())
             .mapper(new StandardGEMapper<>(8, 5, problem.getGrammar()))
-            .operators(Arrays.asList(
-                            new Configuration.GeneticOperatorConfiguration<>(new OnePointCrossover(random), new TournamentSelector(5, random), 0.8d),
-                            new Configuration.GeneticOperatorConfiguration<>(new ProbabilisticMutation(random, 0.01), new TournamentSelector(5, random), 0.2d)
-                    ))
-            .fitnessComputer(problem.getFitnessComputer())
-            .generationStrategy(Configuration.GenerationStrategy.ADD_OLD_FIRST);
+            .parentSelector(new TournamentSelector(3, random, new IndividualComparator(0)))
+            .survivalSelector(new BestSelector(new IndividualComparator(0)))
+            .operator(new LocalizedTwoPointsCrossover(random), 0.8d)
+            //.operator(new LengthPreservingOnePointCrossover(random), 0.8d)
+            .operator(new ProbabilisticMutation(random, 0.01), 0.2d)
+            .fitnessComputer(problem.getFitnessComputer());
     return configuration;
   }
 

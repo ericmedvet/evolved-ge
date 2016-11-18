@@ -13,11 +13,11 @@ import it.units.malelab.ege.evolver.Individual;
  *
  * @author eric
  */
-public class FitnessComputationEvent<G extends  Genotype, T> extends TimeEvent<G, T> {
+public class BirthEvent<G extends  Genotype, T> extends TimeEvent<G, T> {
   
   private final Individual<G, T> individual;
 
-  public FitnessComputationEvent(Individual<G, T> individual, long elapsedNanos, int generation, Evolver<G, T> evolver) {
+  public BirthEvent(Individual<G, T> individual, long elapsedNanos, int generation, Evolver<G, T> evolver) {
     super(elapsedNanos, generation, evolver);
     this.individual = individual;
   }

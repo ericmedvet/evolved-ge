@@ -7,7 +7,7 @@ package it.units.malelab.ege.evolver;
 
 import it.units.malelab.ege.evolver.fitness.Fitness;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
-import it.units.malelab.ege.evolver.event.FitnessComputationEvent;
+import it.units.malelab.ege.evolver.event.BirthEvent;
 import it.units.malelab.ege.evolver.event.GenerationEvent;
 import it.units.malelab.ege.evolver.event.EvolutionEndEvent;
 import it.units.malelab.ege.evolver.event.MappingEvent;
@@ -19,15 +19,20 @@ import com.google.common.cache.LoadingCache;
 import it.units.malelab.ege.evolver.genotype.Genotype;
 import it.units.malelab.ege.Node;
 import it.units.malelab.ege.Utils;
+import it.units.malelab.ege.evolver.operator.GeneticOperator;
+import it.units.malelab.ege.evolver.selector.Selector;
 import it.units.malelab.ege.mapper.MappingException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import sun.rmi.server.Util;
 
 /**
  *
@@ -39,10 +44,12 @@ public class StandardEvolver<G extends Genotype, T> implements Evolver<G, T> {
 
   private final Configuration<G, T> configuration;
   private final ExecutorService executor;
+  private final Random random;
 
-  public StandardEvolver(int numberOfThreads, Configuration<G, T> configuration) {
+  public StandardEvolver(int numberOfThreads, Configuration<G, T> configuration, Random random) {
     this.configuration = configuration;
     executor = Executors.newFixedThreadPool(numberOfThreads);
+    this.random = random;
   }
 
   @Override
@@ -55,41 +62,44 @@ public class StandardEvolver<G extends Genotype, T> implements Evolver<G, T> {
     LoadingCache<G, Node<T>> mappingCache = CacheBuilder.newBuilder().maximumSize(CACHE_SIZE).build(getMappingCacheLoader());
     LoadingCache<Node<T>, Fitness> fitnessCache = CacheBuilder.newBuilder().maximumSize(CACHE_SIZE).build(getFitnessCacheLoader());
     //initialize population
+    int births = 0;
     List<Callable<List<Individual<G, T>>>> tasks = new ArrayList<>();
     for (G genotype : configuration.getPopulationInitializer().getGenotypes(configuration.getPopulationSize(), configuration.getInitGenotypeValidator())) {
-      tasks.add(individualFromGenotypeCallable(genotype, 0, mappingCache, fitnessCache, listeners));
+      tasks.add(individualFromGenotypeCallable(genotype, 0, mappingCache, fitnessCache, listeners, null, null));
+      births = births+1;
     }
     List<Individual<G, T>> population = new ArrayList<>(Utils.getAll(executor.invokeAll(tasks)));
-    Utils.broadcast(new GenerationEvent<>(population, 0, this), listeners);
-    //iterate over generation
-    for (int generation = 1; generation < configuration.getNumberOfGenerations(); generation++) {
+    int lastBroadcastGeneration = (int)Math.floor(births/configuration.getPopulationSize());
+    Utils.broadcast(new GenerationEvent<>(population, lastBroadcastGeneration, this), listeners);
+    //iterate
+    while (Math.round(births/configuration.getPopulationSize())<configuration.getNumberOfGenerations()) {
+      int currentGeneration = (int)Math.floor(births/configuration.getPopulationSize());
       tasks.clear();
-      for (Configuration.GeneticOperatorConfiguration<G> operator : configuration.getOperators()) {
-        int numberOfApplications = (int) Math.round((double) population.size() * operator.getRate() / (double) operator.getOperator().getChildrenArity());
-        for (int i = 0; i < numberOfApplications; i++) {
-          tasks.add(operatorApplicationCallable(population, operator, generation, mappingCache, fitnessCache, listeners));
-        }
+      //produce offsprings
+      for (int i = 0; i<configuration.getOffspringSize(); i++) {
+        GeneticOperator<G> operator = Utils.selectRandom(configuration.getOperators(), random);
+        tasks.add(operatorApplicationCallable(population, operator, configuration.getParentSelector(), currentGeneration, mappingCache, fitnessCache, listeners));
       }
       List<Individual<G, T>> newPopulation = new ArrayList<>(Utils.getAll(executor.invokeAll(tasks)));
-      if (configuration.getGenerationStrategy().equals(Configuration.GenerationStrategy.REPLACE)) {
-        population = newPopulation;
-      } else if (configuration.getGenerationStrategy().equals(Configuration.GenerationStrategy.ADD_OLD_FIRST)) {
-        population.addAll(newPopulation);
+      births = births+newPopulation.size();
+      //select survivals
+      population.addAll(newPopulation);
+      while (population.size()>configuration.getPopulationSize()) {
+        Individual<G, T> individual = configuration.getSurvivalSelector().select((List)population, true);
+        population.remove(individual);
+      }
+      if ((int)Math.floor(births/configuration.getPopulationSize())>lastBroadcastGeneration) {
+        lastBroadcastGeneration = (int)Math.floor(births/configuration.getPopulationSize());
         Utils.sortByFitness(population);
-        population = population.subList(0, configuration.getPopulationSize());
-      } else if (configuration.getGenerationStrategy().equals(Configuration.GenerationStrategy.ADD_NEW_FIRST)) {
-        newPopulation.addAll(population);
-        population = newPopulation;
-        Utils.sortByFitness(population);
-        population = population.subList(0, configuration.getPopulationSize());
-      } 
-      Utils.broadcast(new GenerationEvent<>(population, generation, this), listeners);
+        Utils.broadcast(new GenerationEvent<>(population, lastBroadcastGeneration, this), listeners);
+      }
     }
+    Utils.sortByFitness(population);
     //end
     Utils.broadcast(new EvolutionEndEvent<>(population, configuration.getNumberOfGenerations(), this), listeners);
     executor.shutdown();
   }
-
+  
   private CacheLoader<G, Node<T>> getMappingCacheLoader() {
     return new CacheLoader<G, Node<T>>() {
       @Override
@@ -122,7 +132,9 @@ public class StandardEvolver<G extends Genotype, T> implements Evolver<G, T> {
           final int generation,
           final LoadingCache<G, Node<T>> mappingCache,
           final LoadingCache<Node<T>, Fitness> fitnessCache,
-          final List<EvolutionListener<G, T>> listeners) {
+          final List<EvolutionListener<G, T>> listeners,
+          final GeneticOperator<G> operator,
+          final List<Individual<G, T>> parents) {
     final Evolver<G, T> evolver = this;
     return new Callable<List<Individual<G, T>>>() {
       @Override
@@ -134,8 +146,8 @@ public class StandardEvolver<G extends Genotype, T> implements Evolver<G, T> {
         stopwatch.reset().start();
         Fitness fitness = fitnessCache.getUnchecked(phenotype);
         elapsed = stopwatch.stop().elapsed(TimeUnit.NANOSECONDS);
-        Individual<G, T> individual = new Individual<>(genotype, phenotype, fitness);
-        Utils.broadcast(new FitnessComputationEvent<>(individual, elapsed, generation, evolver), listeners);
+        Individual<G, T> individual = new Individual<>(genotype, phenotype, fitness, generation, operator, parents);
+        Utils.broadcast(new BirthEvent<>(individual, elapsed, generation, evolver), listeners);
         return Collections.singletonList(individual);
       }
     };
@@ -143,7 +155,8 @@ public class StandardEvolver<G extends Genotype, T> implements Evolver<G, T> {
 
   private Callable<List<Individual<G, T>>> operatorApplicationCallable(
           final List<Individual<G, T>> population,
-          final Configuration.GeneticOperatorConfiguration<G> operator,
+          final GeneticOperator<G> operator,
+          final Selector selector,
           final int generation,
           final LoadingCache<G, Node<T>> mappingCache,
           final LoadingCache<Node<T>, Fitness> fitnessCache,
@@ -153,26 +166,25 @@ public class StandardEvolver<G extends Genotype, T> implements Evolver<G, T> {
     return new Callable<List<Individual<G, T>>>() {
       @Override
       public List<Individual<G, T>> call() throws Exception {
-        List<Individual<G, T>> parents = new ArrayList<>(operator.getOperator().getParentsArity());
-        for (int p = 0; p < operator.getOperator().getParentsArity(); p++) {
-          parents.add(operator.getSelector().select(population));
+        List<Individual<G, T>> parents = new ArrayList<>(operator.getParentsArity());
+        for (int p = 0; p < operator.getParentsArity(); p++) {
+          parents.add(selector.select((List)population, false));
         }
-        List<Individual<G, T>> children = new ArrayList<>(operator.getOperator().getChildrenArity());
-        List<G> parentGenotypes = new ArrayList<>(operator.getOperator().getParentsArity());
+        List<Individual<G, T>> children = new ArrayList<>(operator.getChildrenArity());
+        List<G> parentGenotypes = new ArrayList<>(operator.getParentsArity());
         for (Individual<G, T> parent : parents) {
           parentGenotypes.add(parent.getGenotype());
         }
         Stopwatch stopwatch = Stopwatch.createStarted();
-        List<G> childGenotypes = operator.getOperator().apply(parentGenotypes).subList(0, operator.getOperator().getChildrenArity());
+        List<G> childGenotypes = operator.apply(parentGenotypes).subList(0, operator.getChildrenArity());
         long elapsed = stopwatch.elapsed(TimeUnit.NANOSECONDS);
         for (G childGenotype : childGenotypes) {
-          children.addAll(individualFromGenotypeCallable(childGenotype, generation, mappingCache, fitnessCache, listeners).call());
+          children.addAll(individualFromGenotypeCallable(childGenotype, generation, mappingCache, fitnessCache, listeners, operator, parents).call());
         }
-        Utils.broadcast(new OperatorApplicationEvent<>(parents, children, operator.getOperator(), elapsed, generation, evolver), listeners);
+        Utils.broadcast(new OperatorApplicationEvent<>(parents, children, operator, elapsed, generation, evolver), listeners);
         return children;
       }
     };
   }
-;
 
 }

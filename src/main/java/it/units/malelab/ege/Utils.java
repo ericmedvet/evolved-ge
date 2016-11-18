@@ -6,7 +6,6 @@
 package it.units.malelab.ege;
 
 import it.units.malelab.ege.evolver.genotype.Genotype;
-import it.units.malelab.ege.evolver.genotype.BitsGenotype;
 import it.units.malelab.ege.evolver.Individual;
 import it.units.malelab.ege.grammar.Grammar;
 import it.units.malelab.ege.mapper.Mapper;
@@ -17,12 +16,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -249,6 +246,21 @@ public class Utils {
       results.addAll(future.get());
     }
     return results;
+  }
+  
+  public static <T> T selectRandom(Map<T, Double> options, Random random) {
+    double sum = 0;
+    for (Double rate : options.values()) {
+      sum = sum+rate;
+    }
+    double d = random.nextDouble()*sum;
+    for (Map.Entry<T, Double> option : options.entrySet()) {
+      if (d<option.getValue()) {
+        return option.getKey();
+      }
+      d = d-option.getValue();
+    }
+    return (T)options.keySet().toArray()[0];
   }
   
 }
