@@ -96,10 +96,10 @@ public class BitsGenotype implements Genotype {
       throw new ArrayIndexOutOfBoundsException(String.format("from=%d >= to=%d", fromIndex, toIndex));
     }
     if (fromIndex<0) {
-      throw new ArrayIndexOutOfBoundsException(String.format("to=%d < 0", fromIndex));
+      throw new ArrayIndexOutOfBoundsException(String.format("from=%d < 0", fromIndex));
     }
     if (toIndex>size) {
-      throw new ArrayIndexOutOfBoundsException(String.format("from=%d > size=%d", toIndex, size));
+      throw new ArrayIndexOutOfBoundsException(String.format("to=%d > size=%d", toIndex, size));
     }
   }
   

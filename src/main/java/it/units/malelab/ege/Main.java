@@ -304,8 +304,8 @@ public class Main {
               constants.put("strategy", "over-0.8");
               break;
           }
-          //Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(Runtime.getRuntime().availableProcessors() - 1, configuration, random);
-          Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(1, configuration, random);
+          Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(Runtime.getRuntime().availableProcessors() - 1, configuration, random);
+          //Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(1, configuration, random);
           List<EvolutionListener<BitsGenotype, String>> listeners = new ArrayList<>();
           listeners.add(new ScreenGenerationLogger<BitsGenotype, String>("%8.1f", 8, problem.getPhenotypePrinter(), problem.getGeneralizationFitnessComputer(), constants));
           listeners.add(new StreamGenerationLogger<BitsGenotype, String>(generationFilePS, null, constants, writeHeader));
