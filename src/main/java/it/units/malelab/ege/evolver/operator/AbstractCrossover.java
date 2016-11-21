@@ -25,7 +25,7 @@ public abstract class AbstractCrossover<G extends Genotype> extends AbstractOper
 
   @Override
   public int getChildrenArity() {
-    return 1;
+    return 2;
   }
   
   

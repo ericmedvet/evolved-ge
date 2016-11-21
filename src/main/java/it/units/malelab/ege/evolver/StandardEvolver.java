@@ -76,14 +76,27 @@ public class StandardEvolver<G extends Genotype, T> implements Evolver<G, T> {
       int currentGeneration = (int)Math.floor(births/configuration.getPopulationSize());
       tasks.clear();
       //produce offsprings
-      for (int i = 0; i<configuration.getOffspringSize(); i++) {
+      int i = 0;
+      while (i<configuration.getOffspringSize()) {
         GeneticOperator<G> operator = Utils.selectRandom(configuration.getOperators(), random);
         tasks.add(operatorApplicationCallable(population, operator, configuration.getParentSelector(), currentGeneration, mappingCache, fitnessCache, listeners));
+        i = i+operator.getChildrenArity();
       }
       List<Individual<G, T>> newPopulation = new ArrayList<>(Utils.getAll(executor.invokeAll(tasks)));
       births = births+newPopulation.size();
+      //build new population
+      if (configuration.isOverlapping()) {
+        population.addAll(newPopulation);
+      } else {
+        if (newPopulation.size()>=population.size()) {
+          population = newPopulation;
+        } else {
+          Utils.sortByFitness(population);
+          population = population.subList(0, population.size()-newPopulation.size());
+          population.addAll(newPopulation);
+        }
+      }
       //select survivals
-      population.addAll(newPopulation);
       while (population.size()>configuration.getPopulationSize()) {
         Individual<G, T> individual = configuration.getSurvivalSelector().select((List)population, true);
         population.remove(individual);

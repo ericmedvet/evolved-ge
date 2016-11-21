@@ -31,6 +31,7 @@ public class Configuration<G extends Genotype, T> {
   private Selector parentSelector;
   private Selector survivalSelector;  
   private int offspringSize;
+  private boolean overlapping;
     
   public Configuration<G, T> copy() {
     Configuration<G, T> copy = new Configuration<>();
@@ -39,11 +40,13 @@ public class Configuration<G extends Genotype, T> {
     copy.populationInitializer = populationInitializer;
     copy.initGenotypeValidator = initGenotypeValidator;
     copy.mapper = mapper;
-    copy.operators = operators;
+    copy.operators = new LinkedHashMap<>();
+    copy.operators.putAll(operators);
     copy.fitnessComputer = fitnessComputer;
     copy.survivalSelector = survivalSelector;
     copy.parentSelector = parentSelector;
     copy.offspringSize = offspringSize;
+    copy.overlapping = overlapping;
     return copy;
   }
 
@@ -143,6 +146,17 @@ public class Configuration<G extends Genotype, T> {
     }
     operators.put(operator, rate);
     return this;
-  }    
+  }
+
+  public boolean isOverlapping() {
+    return overlapping;
+  }
+
+  public Configuration<G, T> overlapping(boolean overlapping) {
+    this.overlapping = overlapping;
+    return this;
+  }
+  
+  
   
 }

@@ -14,11 +14,11 @@ import java.util.Random;
  *
  * @author eric
  */
-public class PortionEnlarger extends AbstractMutation<BitsGenotype> {
+public class LengthChanger extends AbstractMutation<BitsGenotype> {
   
   private final double maxRatio;
 
-  public PortionEnlarger(Random random, double maxRatio) {
+  public LengthChanger(Random random, double maxRatio) {
     super(random);
     this.maxRatio = maxRatio;
   }
@@ -27,13 +27,19 @@ public class PortionEnlarger extends AbstractMutation<BitsGenotype> {
   public List<BitsGenotype> apply(List<BitsGenotype> parents) {
     BitsGenotype parent = parents.get(0);
     int newBits = (int)Math.round((double)parent.size()*random.nextDouble()*maxRatio);
-    BitsGenotype child = new BitsGenotype(parent.size()+newBits);
-    int index = random.nextInt(parent.size()-newBits);
-    child.set(0, parent.slice(0, index));
-    child.set(index, parent.slice(index, index+newBits));
-    child.set(index+newBits, parent.slice(index, parent.size()));
+    boolean shorter = random.nextBoolean();
+    int index = random.nextInt(parent.size());
+    BitsGenotype child;
+    if (shorter) {
+      child = new BitsGenotype(parent.size()-newBits);
+      child.set(0, parent.slice(0, index));
+      child.set(index-newBits, parent.slice(index, parent.size()));
+    } else {
+      child = new BitsGenotype(parent.size()+newBits);
+      child.set(0, parent.slice(0, index));
+      child.set(index+newBits, parent.slice(index, parent.size()));
+    }
     return Collections.singletonList(child);
-
   }  
   
 }

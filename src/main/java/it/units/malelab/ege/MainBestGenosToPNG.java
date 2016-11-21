@@ -18,9 +18,12 @@ import it.units.malelab.ege.evolver.genotype.BitsGenotypeFactory;
 import it.units.malelab.ege.evolver.listener.BestGenosImageGenerator;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
 import it.units.malelab.ege.evolver.operator.BitsSGECrossover;
+import it.units.malelab.ege.evolver.operator.LengthPreservingTwoPointsCrossover;
 import it.units.malelab.ege.evolver.operator.OnePointCrossover;
 import it.units.malelab.ege.evolver.selector.TournamentSelector;
 import it.units.malelab.ege.evolver.operator.ProbabilisticMutation;
+import it.units.malelab.ege.evolver.selector.BestSelector;
+import it.units.malelab.ege.evolver.selector.IndividualComparator;
 import it.units.malelab.ege.grammar.Grammar;
 import it.units.malelab.ege.mapper.BitsSGEMapper;
 import it.units.malelab.ege.mapper.BreathFirstMapper;
@@ -78,16 +81,15 @@ public class MainBestGenosToPNG {
                 break;
               case 5:
                 BitsSGEMapper<String> sgeMapper = new BitsSGEMapper<>(6, grammar);
+                configuration.getOperators().clear();
                 configuration
                         .mapper(sgeMapper)
-                        .operators(Arrays.asList(
-                                        new Configuration.GeneticOperatorConfiguration<>(new BitsSGECrossover(sgeMapper, random), new TournamentSelector(5, random), 0.8d),
-                                        new Configuration.GeneticOperatorConfiguration<>(new ProbabilisticMutation(random, 0.01), new TournamentSelector(5, random), 0.2d)
-                                ));
+                        .operator(new BitsSGECrossover(sgeMapper, random), 0.8d)
+                        .operator(new ProbabilisticMutation(random, 0.01), 0.2d);
                 break;
             }
             configuration.populationInitializer(new RandomInitializer<>(random, new BitsGenotypeFactory(genotypeSize)));
-            Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(Runtime.getRuntime().availableProcessors() - 1, configuration);
+            Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(Runtime.getRuntime().availableProcessors() - 1, configuration, random);
             Map<String, Object> constants = new LinkedHashMap<>();
             constants.put("problem", problemName);
             constants.put("mapper", configuration.getMapper().getClass().getSimpleName());
@@ -113,17 +115,18 @@ public class MainBestGenosToPNG {
   private static Configuration<BitsGenotype, String> defaultConfiguration(BenchmarkProblems.Problem problem, Random random) {
     Configuration<BitsGenotype, String> configuration = new Configuration<>();
     configuration
-            .populationSize(200)
+            .populationSize(500)
+            .offspringSize(1)
+            .overlapping(true)
             .numberOfGenerations(50)
             .populationInitializer(new RandomInitializer<>(random, new BitsGenotypeFactory(1024)))
             .initGenotypeValidator(new AnyValidator<BitsGenotype>())
             .mapper(new StandardGEMapper<>(8, 5, problem.getGrammar()))
-            .operators(Arrays.asList(
-                            new Configuration.GeneticOperatorConfiguration<>(new OnePointCrossover(random), new TournamentSelector(5, random), 0.8d),
-                            new Configuration.GeneticOperatorConfiguration<>(new ProbabilisticMutation(random, 0.01), new TournamentSelector(5, random), 0.2d)
-                    ))
-            .fitnessComputer(problem.getFitnessComputer())
-            .generationStrategy(Configuration.GenerationStrategy.REPLACE);
+            .parentSelector(new TournamentSelector(5, random, new IndividualComparator(0)))
+            .survivalSelector(new BestSelector(new IndividualComparator(0)))
+            .operator(new LengthPreservingTwoPointsCrossover(random), 0.8d)
+            .operator(new ProbabilisticMutation(random, 0.01), 0.2d)
+            .fitnessComputer(problem.getFitnessComputer());
     return configuration;
   }
 
