@@ -10,7 +10,7 @@ import it.units.malelab.ege.distance.CachedDistance;
 import it.units.malelab.ege.distance.Distance;
 import it.units.malelab.ege.evolver.genotype.BitsGenotype;
 import it.units.malelab.ege.evolver.validator.AnyValidator;
-import it.units.malelab.ege.evolver.Configuration;
+import it.units.malelab.ege.evolver.StandardConfiguration;
 import it.units.malelab.ege.evolver.Evolver;
 import it.units.malelab.ege.evolver.initializer.RandomInitializer;
 import it.units.malelab.ege.evolver.StandardEvolver;
@@ -20,9 +20,9 @@ import it.units.malelab.ege.evolver.listener.EvolutionListener;
 import it.units.malelab.ege.evolver.operator.BitsSGECrossover;
 import it.units.malelab.ege.evolver.operator.LengthPreservingTwoPointsCrossover;
 import it.units.malelab.ege.evolver.operator.OnePointCrossover;
-import it.units.malelab.ege.evolver.selector.TournamentSelector;
+import it.units.malelab.ege.evolver.selector.Tournament;
 import it.units.malelab.ege.evolver.operator.ProbabilisticMutation;
-import it.units.malelab.ege.evolver.selector.BestSelector;
+import it.units.malelab.ege.evolver.selector.Best;
 import it.units.malelab.ege.evolver.selector.IndividualComparator;
 import it.units.malelab.ege.grammar.Grammar;
 import it.units.malelab.ege.mapper.BitsSGEMapper;
@@ -61,7 +61,7 @@ public class MainBestGenosToPNG {
         Random random = new Random(r);
         for (int m = 0; m < 6; m++) {
           for (int genotypeSize : Arrays.asList(128)) {
-            Configuration<BitsGenotype, String> configuration = defaultConfiguration(problem, random);
+            StandardConfiguration<BitsGenotype, String> configuration = defaultConfiguration(problem, random);
             Grammar<String> grammar = problems.get(problemName).getGrammar();
             switch (m) {
               case 0:
@@ -89,7 +89,7 @@ public class MainBestGenosToPNG {
                 break;
             }
             configuration.populationInitializer(new RandomInitializer<>(random, new BitsGenotypeFactory(genotypeSize)));
-            Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(Runtime.getRuntime().availableProcessors() - 1, configuration, random);
+            Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(Runtime.getRuntime().availableProcessors() - 1, configuration, random, false);
             Map<String, Object> constants = new LinkedHashMap<>();
             constants.put("problem", problemName);
             constants.put("mapper", configuration.getMapper().getClass().getSimpleName());
@@ -112,8 +112,8 @@ public class MainBestGenosToPNG {
     }
   }
 
-  private static Configuration<BitsGenotype, String> defaultConfiguration(BenchmarkProblems.Problem problem, Random random) {
-    Configuration<BitsGenotype, String> configuration = new Configuration<>();
+  private static StandardConfiguration<BitsGenotype, String> defaultConfiguration(BenchmarkProblems.Problem problem, Random random) {
+    StandardConfiguration<BitsGenotype, String> configuration = new StandardConfiguration<>();
     configuration
             .populationSize(500)
             .offspringSize(1)
@@ -122,8 +122,8 @@ public class MainBestGenosToPNG {
             .populationInitializer(new RandomInitializer<>(random, new BitsGenotypeFactory(1024)))
             .initGenotypeValidator(new AnyValidator<BitsGenotype>())
             .mapper(new StandardGEMapper<>(8, 5, problem.getGrammar()))
-            .parentSelector(new TournamentSelector(5, random, new IndividualComparator(0)))
-            .survivalSelector(new BestSelector(new IndividualComparator(0)))
+            .parentSelector(new Tournament(5, random, new IndividualComparator(IndividualComparator.Attribute.FITNESS)))
+            .unsurvivalSelector(new Best(new IndividualComparator(IndividualComparator.Attribute.FITNESS)))
             .operator(new LengthPreservingTwoPointsCrossover(random), 0.8d)
             .operator(new ProbabilisticMutation(random, 0.01), 0.2d)
             .fitnessComputer(problem.getFitnessComputer());

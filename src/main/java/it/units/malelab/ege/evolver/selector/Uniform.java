@@ -6,13 +6,23 @@
 package it.units.malelab.ege.evolver.selector;
 
 import java.util.List;
+import java.util.Random;
 
 /**
  *
  * @author eric
  */
-public interface Selector<T> {
+public class Uniform<T> implements Selector<T> {
   
-  public T select(List<T> ts);
+  private final Random random;
+
+  public Uniform(Random random) {
+    this.random = random;
+  }
+
+  @Override
+  public T select(List<T> ts) {
+    return ts.get(random.nextInt(ts.size()));
+  }
   
 }

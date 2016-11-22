@@ -16,7 +16,7 @@ import java.util.concurrent.ExecutionException;
  */
 public interface Evolver<G extends Genotype,T> {
   
-  public Configuration<G, T> getConfiguration();
+  public StandardConfiguration<G, T> getConfiguration();
   public void go(List<EvolutionListener<G, T>> listeners) throws InterruptedException, ExecutionException;
   
 }
