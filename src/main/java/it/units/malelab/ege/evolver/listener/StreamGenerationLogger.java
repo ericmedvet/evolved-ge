@@ -12,6 +12,7 @@ import it.units.malelab.ege.evolver.fitness.FitnessComputer;
 import it.units.malelab.ege.evolver.genotype.Genotype;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -38,7 +39,11 @@ public class StreamGenerationLogger<G extends Genotype, T> extends AbstractGener
   public synchronized void listen(EvolutionEvent<G, T> event) {
     int generation = ((GenerationEvent) event).getGeneration();
     List<Individual<G, T>> population = new ArrayList<>(((GenerationEvent) event).getPopulation());
-    Map<String, Object> indexes = computeIndexes(generation, population);
+    Map<String, Object> indexes = new LinkedHashMap<>();
+    if (event.getData()!=null) {
+      indexes.putAll(event.getData());
+    }
+    indexes.putAll(computeIndexes(generation, population));
     if (columnNames.isEmpty()) {
       columnNames.addAll(indexes.keySet());
     }

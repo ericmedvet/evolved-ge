@@ -7,6 +7,7 @@ package it.units.malelab.ege.evolver.event;
 
 import it.units.malelab.ege.evolver.genotype.Genotype;
 import it.units.malelab.ege.evolver.Evolver;
+import java.util.Map;
 
 /**
  *
@@ -16,8 +17,8 @@ public class TimeEvent<G extends Genotype, T> extends EvolutionEvent<G, T> {
   
   private final long elapsedNanos;
 
-  public TimeEvent(long elapsedNanos, int generation, Evolver<G, T> evolver) {
-    super(generation, evolver);
+  public TimeEvent(long elapsedNanos, int generation, Evolver<G, T> evolver, Map<String, Object> data) {
+    super(generation, evolver, data);
     this.elapsedNanos = elapsedNanos;
   }
 

@@ -10,6 +10,7 @@ import it.units.malelab.ege.evolver.Evolver;
 import it.units.malelab.ege.evolver.Individual;
 import it.units.malelab.ege.evolver.operator.GeneticOperator;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -21,8 +22,8 @@ public class OperatorApplicationEvent<G extends Genotype, T> extends TimeEvent<G
   private final List<Individual<G, T>> children;
   private final GeneticOperator operator;
 
-  public OperatorApplicationEvent(List<Individual<G, T>> parents, List<Individual<G, T>> children, GeneticOperator operator, long elapsedNanos, int generation, Evolver<G, T> evolver) {
-    super(elapsedNanos, generation, evolver);
+  public OperatorApplicationEvent(List<Individual<G, T>> parents, List<Individual<G, T>> children, GeneticOperator operator, long elapsedNanos, int generation, Evolver<G, T> evolver, Map<String, Object> data) {
+    super(elapsedNanos, generation, evolver, data);
     this.parents = parents;
     this.children = children;
     this.operator = operator;

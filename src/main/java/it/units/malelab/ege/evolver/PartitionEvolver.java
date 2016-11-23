@@ -23,6 +23,7 @@ import it.units.malelab.ege.evolver.selector.Selector;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -64,7 +65,7 @@ public class PartitionEvolver<G extends Genotype, T> extends StandardEvolver<G, 
       addToPartition(partitionedPopulation, individual);
     }
     int lastBroadcastGeneration = (int) Math.floor(births / configuration.getPopulationSize());
-    Utils.broadcast(new GenerationEvent<>(representers(partitionedPopulation), lastBroadcastGeneration, this), listeners);
+    broadcastGenerationEvent(partitionedPopulation, lastBroadcastGeneration, listeners);
     //iterate
     while (Math.round(births / configuration.getPopulationSize()) < configuration.getNumberOfGenerations()) {
       int currentGeneration = (int) Math.floor(births / configuration.getPopulationSize());
@@ -115,19 +116,17 @@ public class PartitionEvolver<G extends Genotype, T> extends StandardEvolver<G, 
       }
       if ((int) Math.floor(births / configuration.getPopulationSize()) > lastBroadcastGeneration) {
         lastBroadcastGeneration = (int) Math.floor(births / configuration.getPopulationSize());
-        List<Individual<G, T>> representers = representers(partitionedPopulation);
-        Utils.sortByFitness(representers);
-        Utils.broadcast(new GenerationEvent<>(representers, lastBroadcastGeneration, this), listeners);
-        List<Individual<G, T>> all = all(partitionedPopulation);
-        Utils.sortByFitness(all);
-        Utils.broadcast(new GenerationEvent<>(all, lastBroadcastGeneration, this), listeners);
+        broadcastGenerationEvent(partitionedPopulation, lastBroadcastGeneration, listeners);
       }
     }
-    List<Individual<G, T>> representers = representers(partitionedPopulation);
-    Utils.sortByFitness(representers);
     //end
-    Utils.broadcast(new EvolutionEndEvent<>(representers, configuration.getNumberOfGenerations(), this), listeners);
+    Utils.broadcast(new EvolutionEndEvent<>(representers(partitionedPopulation), configuration.getNumberOfGenerations(), this, null), listeners);
     executor.shutdown();
+  }
+
+  private void broadcastGenerationEvent(List<List<Individual<G, T>>> partitionedPopulation, int generation, List<EvolutionListener<G, T>> listeners) {
+    Utils.broadcast(new GenerationEvent<>(representers(partitionedPopulation), generation, this, (Map)Collections.singletonMap("pop", "representers")), listeners);
+    Utils.broadcast(new GenerationEvent<>(all(partitionedPopulation), generation, this, (Map)Collections.singletonMap("pop", "all")), listeners);
   }
 
   private void addToPartition(List<List<Individual<G, T>>> partitionedPopulation, Individual<G, T> individual) {

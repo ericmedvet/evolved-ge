@@ -12,6 +12,7 @@ import it.units.malelab.ege.evolver.event.GenerationEvent;
 import it.units.malelab.ege.evolver.fitness.FitnessComputer;
 import it.units.malelab.ege.evolver.genotype.Genotype;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -52,7 +53,8 @@ public class ScreenGenerationLogger<G extends Genotype, T> extends AbstractGener
               "Best phenotype"
       );
     }
-    Map<String, Object> indexes = computeIndexes(generation, population);
+    Map<String, Object> indexes = new LinkedHashMap<>();
+    indexes.putAll(computeIndexes(generation, population));
     if (phenotypePrinter!=null) {
       indexes.put("bestPhenotype", phenotypePrinter.toString(population.get(0).getPhenotype()));
     }

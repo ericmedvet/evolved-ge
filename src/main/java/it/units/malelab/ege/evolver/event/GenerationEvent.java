@@ -9,6 +9,7 @@ import it.units.malelab.ege.evolver.genotype.Genotype;
 import it.units.malelab.ege.evolver.Evolver;
 import it.units.malelab.ege.evolver.Individual;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -18,8 +19,8 @@ public class GenerationEvent<G extends Genotype, T> extends EvolutionEvent<G, T>
   
   private final List<Individual<G, T>> population;
 
-  public GenerationEvent(List<Individual<G, T>> population, int generation, Evolver<G, T> evolver) {
-    super(generation, evolver);
+  public GenerationEvent(List<Individual<G, T>> population, int generation, Evolver<G, T> evolver, Map<String, Object> data) {
+    super(generation, evolver, data);
     this.population = population;
   }
 

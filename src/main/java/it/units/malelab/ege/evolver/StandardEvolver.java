@@ -20,7 +20,6 @@ import it.units.malelab.ege.evolver.genotype.Genotype;
 import it.units.malelab.ege.Node;
 import it.units.malelab.ege.Utils;
 import it.units.malelab.ege.evolver.operator.GeneticOperator;
-import it.units.malelab.ege.evolver.selector.Selector;
 import it.units.malelab.ege.mapper.MappingException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -66,57 +65,58 @@ public class StandardEvolver<G extends Genotype, T> implements Evolver<G, T> {
     List<Callable<List<Individual<G, T>>>> tasks = new ArrayList<>();
     for (G genotype : configuration.getPopulationInitializer().getGenotypes(configuration.getPopulationSize(), configuration.getInitGenotypeValidator())) {
       tasks.add(individualFromGenotypeCallable(genotype, 0, mappingCache, fitnessCache, listeners, null, null));
-      births = births+1;
+      births = births + 1;
     }
     List<Individual<G, T>> population = new ArrayList<>(Utils.getAll(executor.invokeAll(tasks)));
-    int lastBroadcastGeneration = (int)Math.floor(births/configuration.getPopulationSize());
-    Utils.broadcast(new GenerationEvent<>(population, lastBroadcastGeneration, this), listeners);
+    int lastBroadcastGeneration = (int) Math.floor(births / configuration.getPopulationSize());
+    Utils.broadcast(new GenerationEvent<>(population, lastBroadcastGeneration, this, null), listeners);
     //iterate
-    while (Math.round(births/configuration.getPopulationSize())<configuration.getNumberOfGenerations()) {
-      int currentGeneration = (int)Math.floor(births/configuration.getPopulationSize());
+    while (Math.round(births / configuration.getPopulationSize()) < configuration.getNumberOfGenerations()) {
+      int currentGeneration = (int) Math.floor(births / configuration.getPopulationSize());
       tasks.clear();
       //produce offsprings
       int i = 0;
-      while (i<configuration.getOffspringSize()) {
+      while (i < configuration.getOffspringSize()) {
         GeneticOperator<G> operator = Utils.selectRandom(configuration.getOperators(), random);
         List<Individual<G, T>> parents = new ArrayList<>(operator.getParentsArity());
-        for (int j = 0; j<operator.getParentsArity(); j++) {
+        for (int j = 0; j < operator.getParentsArity(); j++) {
           parents.add(configuration.getParentSelector().select(population));
         }
         tasks.add(operatorApplicationCallable(operator, parents, currentGeneration, mappingCache, fitnessCache, listeners));
-        i = i+operator.getChildrenArity();
+        i = i + operator.getChildrenArity();
       }
       List<Individual<G, T>> newPopulation = new ArrayList<>(Utils.getAll(executor.invokeAll(tasks)));
-      births = births+newPopulation.size();
+      births = births + newPopulation.size();
       //build new population
       if (configuration.isOverlapping()) {
         population.addAll(newPopulation);
       } else {
-        if (newPopulation.size()>=configuration.getPopulationSize()) {
+        if (newPopulation.size() >= configuration.getPopulationSize()) {
           population = newPopulation;
         } else {
-          Utils.sortByFitness(population);
-          population = population.subList(0, population.size()-newPopulation.size());
+          int targetSize = population.size() - newPopulation.size();
+          while (population.size() > targetSize) {
+            Individual<G, T> individual = configuration.getUnsurvivalSelector().select(population);
+            population.remove(individual);
+          }
           population.addAll(newPopulation);
         }
       }
       //select survivals
-      while (population.size()>configuration.getPopulationSize()) {
+      while (population.size() > configuration.getPopulationSize()) {
         Individual<G, T> individual = configuration.getUnsurvivalSelector().select(population);
         population.remove(individual);
       }
-      if ((int)Math.floor(births/configuration.getPopulationSize())>lastBroadcastGeneration) {
-        lastBroadcastGeneration = (int)Math.floor(births/configuration.getPopulationSize());
-        Utils.sortByFitness(population);
-        Utils.broadcast(new GenerationEvent<>(population, lastBroadcastGeneration, this), listeners);
+      if ((int) Math.floor(births / configuration.getPopulationSize()) > lastBroadcastGeneration) {
+        lastBroadcastGeneration = (int) Math.floor(births / configuration.getPopulationSize());
+        Utils.broadcast(new GenerationEvent<>(population, lastBroadcastGeneration, this, null), listeners);
       }
     }
-    Utils.sortByFitness(population);
     //end
-    Utils.broadcast(new EvolutionEndEvent<>(population, configuration.getNumberOfGenerations(), this), listeners);
+    Utils.broadcast(new EvolutionEndEvent<>(population, configuration.getNumberOfGenerations(), this, null), listeners);
     executor.shutdown();
   }
-  
+
   protected CacheLoader<G, Node<T>> getMappingCacheLoader() {
     return new CacheLoader<G, Node<T>>() {
       @Override
@@ -159,12 +159,12 @@ public class StandardEvolver<G extends Genotype, T> implements Evolver<G, T> {
         Stopwatch stopwatch = Stopwatch.createStarted();
         Node<T> phenotype = mappingCache.getUnchecked(genotype);
         long elapsed = stopwatch.stop().elapsed(TimeUnit.NANOSECONDS);
-        Utils.broadcast(new MappingEvent<>(genotype, phenotype, elapsed, generation, evolver), listeners);
+        Utils.broadcast(new MappingEvent<>(genotype, phenotype, elapsed, generation, evolver, null), listeners);
         stopwatch.reset().start();
         Fitness fitness = fitnessCache.getUnchecked(phenotype);
         elapsed = stopwatch.stop().elapsed(TimeUnit.NANOSECONDS);
-        Individual<G, T> individual = new Individual<>(genotype, phenotype, fitness, generation, operator, saveGenealogy?parents:null);
-        Utils.broadcast(new BirthEvent<>(individual, elapsed, generation, evolver), listeners);
+        Individual<G, T> individual = new Individual<>(genotype, phenotype, fitness, generation, operator, saveGenealogy ? parents : null);
+        Utils.broadcast(new BirthEvent<>(individual, elapsed, generation, evolver, null), listeners);
         return Collections.singletonList(individual);
       }
     };
@@ -193,7 +193,7 @@ public class StandardEvolver<G extends Genotype, T> implements Evolver<G, T> {
         for (G childGenotype : childGenotypes) {
           children.addAll(individualFromGenotypeCallable(childGenotype, generation, mappingCache, fitnessCache, listeners, operator, parents).call());
         }
-        Utils.broadcast(new OperatorApplicationEvent<>(parents, children, operator, elapsed, generation, evolver), listeners);
+        Utils.broadcast(new OperatorApplicationEvent<>(parents, children, operator, elapsed, generation, evolver, null), listeners);
         return children;
       }
     };

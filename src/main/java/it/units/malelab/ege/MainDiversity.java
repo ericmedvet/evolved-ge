@@ -8,6 +8,7 @@ package it.units.malelab.ege;
 import it.units.malelab.ege.evolver.genotype.BitsGenotype;
 import it.units.malelab.ege.evolver.StandardConfiguration;
 import it.units.malelab.ege.evolver.Evolver;
+import it.units.malelab.ege.evolver.Individual;
 import it.units.malelab.ege.evolver.PartitionConfiguration;
 import it.units.malelab.ege.evolver.PartitionEvolver;
 import it.units.malelab.ege.evolver.StandardEvolver;
@@ -17,6 +18,10 @@ import it.units.malelab.ege.evolver.listener.StreamGenerationLogger;
 import it.units.malelab.ege.evolver.operator.LengthChanger;
 import it.units.malelab.ege.evolver.operator.LocalizedTwoPointsCrossover;
 import it.units.malelab.ege.evolver.operator.ProbabilisticMutation;
+import it.units.malelab.ege.evolver.selector.Best;
+import it.units.malelab.ege.evolver.selector.IndividualComparator;
+import it.units.malelab.ege.evolver.selector.Selector;
+import it.units.malelab.ege.evolver.selector.Uniform;
 import it.units.malelab.ege.grammar.Grammar;
 import it.units.malelab.ege.mapper.HierarchicalMapper;
 import it.units.malelab.ege.mapper.MappingException;
@@ -27,6 +32,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -50,47 +57,75 @@ public class MainDiversity {
     problems.put("max", BenchmarkProblems.max());
     problems.put("santaFe", BenchmarkProblems.santaFe());
     problems.put("text", BenchmarkProblems.text("Hello world!"));
+    Map<String, IndividualComparator.Attribute> diversities = new LinkedHashMap<>();
+    diversities.put("genotype", IndividualComparator.Attribute.GENO);
+    diversities.put("phenotype", IndividualComparator.Attribute.PHENO);
+    diversities.put("fitness", IndividualComparator.Attribute.FITNESS);
+    diversities.put("off", null);
+    List<String> representerSelectors = new ArrayList<>();
+    representerSelectors.add("uniform");
+    representerSelectors.add("youngest");
+    representerSelectors.add("oldest");
+    representerSelectors.add("off");
+    Map<String, Integer> strategies = new LinkedHashMap<>();
+    strategies.put("steady-state", 1);
+    strategies.put("over-0.8", 400);
     boolean writeHeader = true;
     for (String problemName : problems.keySet()) {
       BenchmarkProblems.Problem problem = problems.get(problemName);
-      for (int r = 0; r < 1; r++) {
+      for (int r = 0; r < 30; r++) {
         Random random = new Random(r);
         Map<String, Object> constants = new LinkedHashMap<>();
         constants.put("problem", problemName);
         constants.put("run", r);
-        for (int m = 0; m < 2; m++) {
-          Evolver<BitsGenotype, String> evolver = null;
-          switch (m) {
-            case 0:
-              evolver = new PartitionEvolver<>(Runtime.getRuntime().availableProcessors() - 1,
-                      (PartitionConfiguration) PartitionConfiguration.createDefault(problem, random)
-                      .numberOfGenerations(15)
-                      .mapper(new StandardGEMapper<>(8, 5, problems.get(problemName).getGrammar()))
-                      .offspringSize(400), random, false);
-              constants.put("variant", "GE-8-5");
-              constants.put("strategy", "over-0.8");
-              constants.put("diversity", "on");
-              break;
-            case 1:
-              evolver = new StandardEvolver<>(Runtime.getRuntime().availableProcessors() - 1,
-                      StandardConfiguration.createDefault(problem, random)
-                      .mapper(new StandardGEMapper<>(8, 5, problems.get(problemName).getGrammar()))
-                      .numberOfGenerations(15)
-                      .offspringSize(400), random, false);
-              constants.put("variant", "GE-8-5");
-              constants.put("strategy", "over-0.8");
-              constants.put("diversity", "off");
-              break;
+        constants.put("variant", "GE-8-5");
+        for (String strategyString : strategies.keySet()) {
+          constants.put("strategy", strategyString);
+          for (String diversityString : diversities.keySet()) {
+            constants.put("diversity", diversityString);
+            for (String representerSelectorString : representerSelectors) {
+              constants.put("selector", representerSelectorString);
+              Evolver<BitsGenotype, String> evolver = null;
+              if (diversityString.equals("off")) {
+                if (!representerSelectorString.equals("off")) {
+                  continue;
+                }
+                evolver = new StandardEvolver<>(Runtime.getRuntime().availableProcessors() - 1,
+                        StandardConfiguration.createDefault(problem, random)
+                        .mapper(new StandardGEMapper<>(8, 5, problems.get(problemName).getGrammar()))
+                        .offspringSize(strategies.get(strategyString)), random, false);
+              } else {
+                if (representerSelectorString.equals("off")) {
+                  continue;
+                }
+                Selector<Individual<BitsGenotype, String>> selector = null;
+                if (representerSelectorString.equals("uniform")) {
+                  selector = new Uniform<>(random);
+                } else if (representerSelectorString.equals("youngest")) {
+                  selector = (Selector) new Best<>(new IndividualComparator(IndividualComparator.Attribute.AGE));
+                } else if (representerSelectorString.equals("oldest")) {
+                  selector = (Selector) new Best<>(new IndividualComparator(Collections.singletonMap(IndividualComparator.Attribute.AGE, true)));
+                }
+                evolver = new PartitionEvolver<>(Runtime.getRuntime().availableProcessors() - 1,
+                        (PartitionConfiguration) PartitionConfiguration.createDefault(problem, random)
+                        .partitionerComparator((Comparator) (new IndividualComparator(diversities.get(diversityString))))
+                        .mapper(new StandardGEMapper<>(8, 5, problems.get(problemName).getGrammar()))
+                        .parentSelector(selector)
+                        .offspringSize(strategies.get(strategyString)), random, false);
+              }
+              List<EvolutionListener<BitsGenotype, String>> listeners = new ArrayList<>();
+              listeners.add(new ScreenGenerationLogger<BitsGenotype, String>("%8.1f", 8, problem.getPhenotypePrinter(), problem.getGeneralizationFitnessComputer(), constants));
+              listeners.add(new StreamGenerationLogger<BitsGenotype, String>(generationFilePS, null, constants, writeHeader));
+              writeHeader = false;
+              System.out.println(constants);
+              evolver.go(listeners);
+              System.out.println();
+            }
           }
-          List<EvolutionListener<BitsGenotype, String>> listeners = new ArrayList<>();
-          listeners.add(new ScreenGenerationLogger<BitsGenotype, String>("%8.1f", 8, problem.getPhenotypePrinter(), problem.getGeneralizationFitnessComputer(), constants));
-          listeners.add(new StreamGenerationLogger<BitsGenotype, String>(generationFilePS, null, constants, writeHeader));
-          writeHeader = false;
-          System.out.println(constants);
-          evolver.go(listeners);
-          System.out.println();
         }
+
       }
+
     }
     generationFilePS.close();
   }

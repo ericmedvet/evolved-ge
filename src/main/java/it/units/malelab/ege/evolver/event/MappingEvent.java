@@ -9,6 +9,7 @@ import it.units.malelab.ege.evolver.genotype.BitsGenotype;
 import it.units.malelab.ege.evolver.genotype.Genotype;
 import it.units.malelab.ege.Node;
 import it.units.malelab.ege.evolver.Evolver;
+import java.util.Map;
 
 /**
  *
@@ -19,8 +20,8 @@ public class MappingEvent<G extends Genotype, T> extends TimeEvent<G, T> {
   private final G genotype;
   private final Node<T> phenotype;
 
-  public MappingEvent(G genotype, Node<T> phenotype, long elapsedNanos, int generation, Evolver<G, T> evolver) {
-    super(elapsedNanos, generation, evolver);
+  public MappingEvent(G genotype, Node<T> phenotype, long elapsedNanos, int generation, Evolver<G, T> evolver, Map<String, Object> data) {
+    super(elapsedNanos, generation, evolver, data);
     this.genotype = genotype;
     this.phenotype = phenotype;
   }

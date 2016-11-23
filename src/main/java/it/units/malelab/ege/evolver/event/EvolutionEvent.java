@@ -7,6 +7,7 @@ package it.units.malelab.ege.evolver.event;
 
 import it.units.malelab.ege.evolver.genotype.Genotype;
 import it.units.malelab.ege.evolver.Evolver;
+import java.util.Map;
 
 /**
  *
@@ -16,10 +17,12 @@ public class EvolutionEvent<G extends Genotype, T> {
   
   private final int generation;
   private final Evolver evolver;
+  private final Map<String, Object> data;
 
-  public EvolutionEvent(int generation, Evolver<G, T> evolver) {
+  public EvolutionEvent(int generation, Evolver<G, T> evolver, Map<String, Object> data) {
     this.generation = generation;
     this.evolver = evolver;
+    this.data = data;
   }
 
   public int getGeneration() {
@@ -28,6 +31,10 @@ public class EvolutionEvent<G extends Genotype, T> {
 
   public Evolver<G, T> getEvolver() {
     return evolver;
+  }
+
+  public Map<String, Object> getData() {
+    return data;
   }
   
 }

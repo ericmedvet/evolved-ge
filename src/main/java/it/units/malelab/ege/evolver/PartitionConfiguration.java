@@ -18,6 +18,7 @@ import it.units.malelab.ege.evolver.selector.IndividualComparator;
 import it.units.malelab.ege.evolver.selector.RepresenterBasedListSelector;
 import it.units.malelab.ege.evolver.selector.Selector;
 import it.units.malelab.ege.evolver.selector.Tournament;
+import it.units.malelab.ege.evolver.selector.Uniform;
 import it.units.malelab.ege.evolver.validator.AnyValidator;
 import it.units.malelab.ege.mapper.StandardGEMapper;
 import java.util.Collections;
@@ -40,7 +41,7 @@ public class PartitionConfiguration<G extends Genotype, T> extends StandardConfi
     PartitionConfiguration<BitsGenotype, String> configuration = new PartitionConfiguration<>();
     StandardConfiguration<BitsGenotype, String> standardConfiguration = StandardConfiguration.createDefault(problem, random);
     configuration
-            .partitionSize(100)
+            .partitionSize(20)
             .partitionerComparator((Comparator)(new IndividualComparator(IndividualComparator.Attribute.PHENO)))
             .parentPartitionSelector(new RepresenterBasedListSelector<>(
                     new First<>(),
@@ -51,14 +52,14 @@ public class PartitionConfiguration<G extends Genotype, T> extends StandardConfi
                     new Best(Collections.reverseOrder(new IndividualComparator(IndividualComparator.Attribute.FITNESS)))
             ))
             .unsurvivalSelector(new Best(Collections.reverseOrder(new IndividualComparator(IndividualComparator.Attribute.AGE))))
+            .parentSelector(new Uniform(random))
             .populationSize(standardConfiguration.getPopulationSize())
             .offspringSize(standardConfiguration.getOffspringSize())
             .overlapping(standardConfiguration.isOverlapping())
             .numberOfGenerations(standardConfiguration.getNumberOfGenerations())
-            .populationInitializer(standardConfiguration.getPopulationInitializer())
+            .populationInitializer(new RandomInitializer<>(random, new BitsGenotypeFactory(256)))
             .initGenotypeValidator(standardConfiguration.getInitGenotypeValidator())
             .mapper(standardConfiguration.getMapper())
-            .parentSelector(standardConfiguration.getParentSelector())
             .operators(standardConfiguration.getOperators())
             .fitnessComputer(standardConfiguration.getFitnessComputer());
     return configuration;

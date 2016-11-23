@@ -8,6 +8,7 @@ package it.units.malelab.ege.evolver.event;
 import it.units.malelab.ege.evolver.genotype.Genotype;
 import it.units.malelab.ege.evolver.Evolver;
 import it.units.malelab.ege.evolver.Individual;
+import java.util.Map;
 
 /**
  *
@@ -17,8 +18,8 @@ public class BirthEvent<G extends  Genotype, T> extends TimeEvent<G, T> {
   
   private final Individual<G, T> individual;
 
-  public BirthEvent(Individual<G, T> individual, long elapsedNanos, int generation, Evolver<G, T> evolver) {
-    super(elapsedNanos, generation, evolver);
+  public BirthEvent(Individual<G, T> individual, long elapsedNanos, int generation, Evolver<G, T> evolver, Map<String, Object> data) {
+    super(elapsedNanos, generation, evolver, data);
     this.individual = individual;
   }
 
