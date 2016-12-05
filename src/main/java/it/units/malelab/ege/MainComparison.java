@@ -9,6 +9,7 @@ import it.units.malelab.ege.evolver.genotype.BitsGenotype;
 import it.units.malelab.ege.evolver.StandardConfiguration;
 import it.units.malelab.ege.evolver.Evolver;
 import it.units.malelab.ege.evolver.StandardEvolver;
+import it.units.malelab.ege.evolver.initializer.QuantizedBitsInitializer;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
 import it.units.malelab.ege.evolver.listener.ScreenGenerationLogger;
 import it.units.malelab.ege.evolver.listener.StreamGenerationLogger;

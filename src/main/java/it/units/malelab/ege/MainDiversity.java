@@ -5,6 +5,8 @@
  */
 package it.units.malelab.ege;
 
+import it.units.malelab.ege.distance.Distance;
+import it.units.malelab.ege.distance.EditDistance;
 import it.units.malelab.ege.evolver.genotype.BitsGenotype;
 import it.units.malelab.ege.evolver.StandardConfiguration;
 import it.units.malelab.ege.evolver.Evolver;
@@ -12,26 +14,22 @@ import it.units.malelab.ege.evolver.Individual;
 import it.units.malelab.ege.evolver.PartitionConfiguration;
 import it.units.malelab.ege.evolver.PartitionEvolver;
 import it.units.malelab.ege.evolver.StandardEvolver;
+import it.units.malelab.ege.evolver.genotype.BitsGenotypeFactory;
+import it.units.malelab.ege.evolver.initializer.RandomInitializer;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
 import it.units.malelab.ege.evolver.listener.ScreenGenerationLogger;
 import it.units.malelab.ege.evolver.listener.StreamGenerationLogger;
-import it.units.malelab.ege.evolver.operator.LengthChanger;
-import it.units.malelab.ege.evolver.operator.LocalizedTwoPointsCrossover;
-import it.units.malelab.ege.evolver.operator.ProbabilisticMutation;
 import it.units.malelab.ege.evolver.selector.Best;
 import it.units.malelab.ege.evolver.selector.IndividualComparator;
 import it.units.malelab.ege.evolver.selector.Selector;
 import it.units.malelab.ege.evolver.selector.Uniform;
-import it.units.malelab.ege.grammar.Grammar;
-import it.units.malelab.ege.mapper.HierarchicalMapper;
 import it.units.malelab.ege.mapper.MappingException;
-import it.units.malelab.ege.mapper.PiGEMapper;
 import it.units.malelab.ege.mapper.StandardGEMapper;
-import it.units.malelab.ege.mapper.WeightedHierarchicalMapper;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -58,18 +56,20 @@ public class MainDiversity {
     problems.put("santaFe", BenchmarkProblems.santaFe());
     problems.put("text", BenchmarkProblems.text("Hello world!"));
     Map<String, IndividualComparator.Attribute> diversities = new LinkedHashMap<>();
-    diversities.put("genotype", IndividualComparator.Attribute.GENO);
+    //diversities.put("genotype", IndividualComparator.Attribute.GENO);
     diversities.put("phenotype", IndividualComparator.Attribute.PHENO);
-    diversities.put("fitness", IndividualComparator.Attribute.FITNESS);
-    diversities.put("off", null);
+    //diversities.put("fitness", IndividualComparator.Attribute.FITNESS);
+    //diversities.put("off", null);
     List<String> representerSelectors = new ArrayList<>();
-    representerSelectors.add("uniform");
-    representerSelectors.add("youngest");
-    representerSelectors.add("oldest");
+    //representerSelectors.add("uniform");
+    //representerSelectors.add("youngest");
+    //representerSelectors.add("oldest");
+    representerSelectors.add("smallest");
+    representerSelectors.add("largest");
     representerSelectors.add("off");
     Map<String, Integer> strategies = new LinkedHashMap<>();
     strategies.put("steady-state", 1);
-    strategies.put("over-0.8", 400);
+    //strategies.put("over-0.8", 400);
     boolean writeHeader = true;
     for (String problemName : problems.keySet()) {
       BenchmarkProblems.Problem problem = problems.get(problemName);
@@ -105,12 +105,17 @@ public class MainDiversity {
                   selector = (Selector) new Best<>(new IndividualComparator(IndividualComparator.Attribute.AGE));
                 } else if (representerSelectorString.equals("oldest")) {
                   selector = (Selector) new Best<>(new IndividualComparator(Collections.singletonMap(IndividualComparator.Attribute.AGE, true)));
+                } else if (representerSelectorString.equals("smallest")) {
+                  selector = (Selector) new Best<>(new IndividualComparator(IndividualComparator.Attribute.PHENO_SIZE));
+                } else if (representerSelectorString.equals("largest")) {
+                  selector = (Selector) new Best<>(new IndividualComparator(Collections.singletonMap(IndividualComparator.Attribute.PHENO_SIZE, true)));
                 }
                 evolver = new PartitionEvolver<>(Runtime.getRuntime().availableProcessors() - 1,
                         (PartitionConfiguration) PartitionConfiguration.createDefault(problem, random)
                         .partitionerComparator((Comparator) (new IndividualComparator(diversities.get(diversityString))))
                         .mapper(new StandardGEMapper<>(8, 5, problems.get(problemName).getGrammar()))
                         .parentSelector(selector)
+                        .populationInitializer(new RandomInitializer<>(random, new BitsGenotypeFactory(256)))
                         .offspringSize(strategies.get(strategyString)), random, false);
               }
               List<EvolutionListener<BitsGenotype, String>> listeners = new ArrayList<>();
