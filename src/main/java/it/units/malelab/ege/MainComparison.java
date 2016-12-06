@@ -57,7 +57,8 @@ public class MainComparison {
         Map<String, Object> constants = new LinkedHashMap<>();
         constants.put("problem", problemName);
         constants.put("run", r);
-        for (int m = 0; m < 10; m++) {
+        //for (int m = 0; m < 10; m++) {
+        for (int m : new int[]{10,11}) {
           StandardConfiguration<BitsGenotype, String> configuration = StandardConfiguration.createDefault(problem, random);
           Grammar<String> grammar = problems.get(problemName).getGrammar();
           switch (m) {
@@ -130,12 +131,34 @@ public class MainComparison {
               constants.put("variant", "WHiGE-6-ope");
               constants.put("strategy", "over-0.8");
               break;
+            case 10:
+              configuration
+                      .mapper(new HierarchicalMapper<>(grammar))
+                      .offspringSize(1)
+                      .operator(new LocalizedTwoPointsCrossover(random), 0.8d)
+                      .operator(new ProbabilisticMutation(random, 0.01), 0.1d)
+                      .operator(new LengthChanger(random, 0.1), 0.1d)
+                      .populationInitializer(new QuantizedBitsInitializer(1024));
+              constants.put("variant", "HiGE-ope-qi");
+              constants.put("strategy", "steady-state");
+              break;
+            case 11:
+              configuration
+                      .mapper(new WeightedHierarchicalMapper<>(6, grammar))
+                      .offspringSize(1)
+                      .operator(new LocalizedTwoPointsCrossover(random), 0.8d)
+                      .operator(new ProbabilisticMutation(random, 0.01), 0.1d)
+                      .operator(new LengthChanger(random, 0.1), 0.1d)
+                      .populationInitializer(new QuantizedBitsInitializer(1024));
+              constants.put("variant", "WHiGE-6-ope-qi");
+              constants.put("strategy", "steady-state");
+              break;
           }
           Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(Runtime.getRuntime().availableProcessors() - 1, configuration, random, false);
-          //Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(1, configuration, random);
+          //Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(1, configuration, random, false);
           List<EvolutionListener<BitsGenotype, String>> listeners = new ArrayList<>();
           listeners.add(new ScreenGenerationLogger<BitsGenotype, String>("%8.1f", 8, problem.getPhenotypePrinter(), problem.getGeneralizationFitnessComputer(), constants));
-          listeners.add(new StreamGenerationLogger<BitsGenotype, String>(generationFilePS, null, constants, writeHeader));
+          listeners.add(new StreamGenerationLogger<BitsGenotype, String>(generationFilePS, problem.getGeneralizationFitnessComputer(), constants, writeHeader));
           writeHeader = false;
           System.out.println(constants);
           evolver.go(listeners);

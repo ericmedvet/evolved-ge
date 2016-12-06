@@ -165,7 +165,7 @@ public class HierarchicalMapper<T> extends AbstractMapper<BitsGenotype, T> {
     if (options.size() == 1) {
       return options.get(0);
     }
-    double max = Double.MIN_VALUE;
+    double max = Double.NEGATIVE_INFINITY;
     List<BitsGenotype> slices = genotype.slices(options.size());
     List<Integer> bestOptionIndexes = new ArrayList<>();
     for (int i = 0; i < options.size(); i++) {
@@ -182,6 +182,11 @@ public class HierarchicalMapper<T> extends AbstractMapper<BitsGenotype, T> {
     if (bestOptionIndexes.size()==1) {
       return options.get(bestOptionIndexes.get(0));
     }
+    
+    if (bestOptionIndexes.isEmpty()) {
+      System.out.println("arrgh!");
+    }
+    
     return options.get(bestOptionIndexes.get(genotype.count()%bestOptionIndexes.size()));
   }
 
