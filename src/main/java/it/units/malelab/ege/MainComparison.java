@@ -68,7 +68,7 @@ public class MainComparison {
           constants.put("run", r);
           constants.put("strategy", "steady-state");
           constants.put("initGenotypeSize", initGenoSize);
-          for (int m : new int[]{0,1,2,3,4,5}) {
+          for (int m : new int[]{5}) {
             StandardConfiguration<BitsGenotype, String> configuration = StandardConfiguration.createDefault(problem, random);
             configuration.getOperators().clear();
             configuration
