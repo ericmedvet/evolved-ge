@@ -15,8 +15,7 @@ import java.util.Map;
  * @author eric
  */
 public class IndividualComparator implements Comparator<Individual> {
-  
-  
+    
   public static enum Attribute {
     FITNESS, AGE, GENO_SIZE, PHENO_SIZE, GENO, PHENO;
   }
