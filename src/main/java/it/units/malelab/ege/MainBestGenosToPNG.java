@@ -18,6 +18,7 @@ import it.units.malelab.ege.evolver.genotype.BitsGenotypeFactory;
 import it.units.malelab.ege.evolver.listener.BestGenosImageGenerator;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
 import it.units.malelab.ege.evolver.operator.BitsSGECrossover;
+import it.units.malelab.ege.evolver.operator.LengthPreservingOnePointCrossover;
 import it.units.malelab.ege.evolver.operator.LengthPreservingTwoPointsCrossover;
 import it.units.malelab.ege.evolver.operator.OnePointCrossover;
 import it.units.malelab.ege.evolver.selector.Tournament;
@@ -27,6 +28,7 @@ import it.units.malelab.ege.evolver.selector.IndividualComparator;
 import it.units.malelab.ege.grammar.Grammar;
 import it.units.malelab.ege.mapper.BitsSGEMapper;
 import it.units.malelab.ege.mapper.BreathFirstMapper;
+import it.units.malelab.ege.mapper.DHierarchicalMapper;
 import it.units.malelab.ege.mapper.HierarchicalMapper;
 import it.units.malelab.ege.mapper.MappingException;
 import it.units.malelab.ege.mapper.PiGEMapper;
@@ -52,15 +54,15 @@ public class MainBestGenosToPNG {
     Map<String, BenchmarkProblems.Problem> problems = new LinkedHashMap<>();
     problems.put("harmonic", BenchmarkProblems.harmonicCurveProblem());
     problems.put("poly4", BenchmarkProblems.classic4PolynomialProblem());
-    problems.put("max", BenchmarkProblems.max());
+    //problems.put("max", BenchmarkProblems.max());
     problems.put("santaFe", BenchmarkProblems.santaFe());
     problems.put("text", BenchmarkProblems.text("Hello world!"));
     for (String problemName : problems.keySet()) {
       BenchmarkProblems.Problem problem = problems.get(problemName);
       for (int r = 0; r < 1; r++) {
         Random random = new Random(r);
-        for (int m = 0; m < 6; m++) {
-          for (int genotypeSize : Arrays.asList(128)) {
+        for (int m = 0; m < 5; m++) {
+          for (int genotypeSize : Arrays.asList(512)) {
             StandardConfiguration<BitsGenotype, String> configuration = defaultConfiguration(problem, random);
             Grammar<String> grammar = problems.get(problemName).getGrammar();
             switch (m) {
@@ -74,12 +76,9 @@ public class MainBestGenosToPNG {
                 configuration.mapper(new PiGEMapper<>(16, 5, grammar));
                 break;
               case 3:
-                configuration.mapper(new WeightedHierarchicalMapper<>(6, grammar));
+                configuration.mapper(new DHierarchicalMapper<>(grammar));
                 break;
               case 4:
-                configuration.mapper(new HierarchicalMapper<>(grammar));
-                break;
-              case 5:
                 BitsSGEMapper<String> sgeMapper = new BitsSGEMapper<>(6, grammar);
                 configuration.getOperators().clear();
                 configuration
@@ -124,7 +123,7 @@ public class MainBestGenosToPNG {
             .mapper(new StandardGEMapper<>(8, 5, problem.getGrammar()))
             .parentSelector(new Tournament(5, random, new IndividualComparator(IndividualComparator.Attribute.FITNESS)))
             .unsurvivalSelector(new Best(new IndividualComparator(IndividualComparator.Attribute.FITNESS)))
-            .operator(new LengthPreservingTwoPointsCrossover(random), 0.8d)
+            .operator(new LengthPreservingOnePointCrossover(random), 0.8d)
             .operator(new ProbabilisticMutation(random, 0.01), 0.2d)
             .fitnessComputer(problem.getFitnessComputer());
     return configuration;

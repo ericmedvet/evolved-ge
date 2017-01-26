@@ -74,11 +74,11 @@ public class TestMapper {
     //distancesFilePS.println("Problem;Mapper;Operator;GenoSize;ChildSize;p1-c_G;p1-c_PL;p1-c_PT;p1-c_F;p2-c_G;p2-c_PL;p2-c_PT;p2-c_F;p1-p2_G;p1-p2_PL;p1-p2_PT;p1-p2_F;c_PSize;c_PDepth;c_PLength;p1_PSize;p1_PDepth;p1_PLength;p2_PSize;p2_PDepth;p2_PLength");
     //prepare problems
     Map<String, BenchmarkProblems.Problem> problems = new LinkedHashMap<>();
-    //problems.put("harmonic", BenchmarkProblems.harmonicCurveProblem());
-    //problems.put("poly4", BenchmarkProblems.classic4PolynomialProblem());
-    //problems.put("max", BenchmarkProblems.max());
+    problems.put("harmonic", BenchmarkProblems.harmonicCurveProblem());
+    problems.put("poly4", BenchmarkProblems.classic4PolynomialProblem());
+    problems.put("max", BenchmarkProblems.max());
     problems.put("text", BenchmarkProblems.text("Hello world!"));
-    //problems.put("santafe", BenchmarkProblems.santaFe());
+    problems.put("santafe", BenchmarkProblems.santaFe());
     Mapper mapper;
     AbstractOperator operator;
     int n_individuals = 100;
@@ -102,7 +102,7 @@ public class TestMapper {
             mapper = new StandardGEMapper<>(8, 5, grammar);
             break;
           case 1:
-            descriptions.put("mapperName", "TreeSGE");
+            descriptions.put("mapperName", "DHier");
             mapper = new DHierarchicalMapper<>(grammar);
             break;
           case 2:

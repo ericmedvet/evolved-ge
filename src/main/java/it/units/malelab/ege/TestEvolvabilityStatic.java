@@ -57,7 +57,7 @@ import java.util.concurrent.ExecutionException;
  *
  * @author Danny
  */
-public class TestEvolvibilityStatic {
+public class TestEvolvabilityStatic {
 
   public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
     Map<String, Distance> genotypeDistances = new LinkedHashMap<>();
