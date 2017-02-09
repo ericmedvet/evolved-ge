@@ -5,6 +5,7 @@
  */
 package it.units.malelab.ege.mapper;
 
+import com.google.common.collect.ListMultimap;
 import it.units.malelab.ege.evolver.genotype.BitsGenotype;
 import it.units.malelab.ege.Node;
 import it.units.malelab.ege.grammar.Grammar;
@@ -13,6 +14,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
 
 /**
  *
@@ -163,17 +165,29 @@ public class HierarchicalMapper<T> extends AbstractMapper<BitsGenotype, T> {
     if (options.size() == 1) {
       return options.get(0);
     }
-    int index = 0;
-    double max = Double.MIN_VALUE;
+    double max = Double.NEGATIVE_INFINITY;
     List<BitsGenotype> slices = genotype.slices(options.size());
+    List<Integer> bestOptionIndexes = new ArrayList<>();
     for (int i = 0; i < options.size(); i++) {
       double value = (double) slices.get(i).count() / (double) slices.get(i).size();
-      if (value > max) {
+      if (value == max) {
+        bestOptionIndexes.add(i);
+      } else if (value > max) {
         max = value;
-        index = i;
+        bestOptionIndexes.clear();
+        bestOptionIndexes.add(i);
       }
     }
-    return options.get(index);
+    //for avoiding choosing always the 1st option in case of tie, choose depending on count of 1s in genotype
+    if (bestOptionIndexes.size()==1) {
+      return options.get(bestOptionIndexes.get(0));
+    }
+    
+    if (bestOptionIndexes.isEmpty()) {
+      System.out.println("arrgh!");
+    }
+    
+    return options.get(bestOptionIndexes.get(genotype.count()%bestOptionIndexes.size()));
   }
 
 }

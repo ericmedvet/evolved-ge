@@ -12,12 +12,16 @@ import it.units.malelab.ege.evolver.Individual;
 import it.units.malelab.ege.evolver.PartitionConfiguration;
 import it.units.malelab.ege.evolver.PartitionEvolver;
 import it.units.malelab.ege.evolver.StandardEvolver;
+import it.units.malelab.ege.evolver.genotype.BitsGenotypeFactory;
+import it.units.malelab.ege.evolver.initializer.RandomInitializer;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
 import it.units.malelab.ege.evolver.listener.ScreenGenerationLogger;
 import it.units.malelab.ege.evolver.listener.StreamGenerationLogger;
 import it.units.malelab.ege.evolver.selector.Best;
 import it.units.malelab.ege.evolver.selector.IndividualComparator;
+import it.units.malelab.ege.evolver.selector.RankProportional;
 import it.units.malelab.ege.evolver.selector.Selector;
+import it.units.malelab.ege.evolver.selector.Tournament;
 import it.units.malelab.ege.evolver.selector.Uniform;
 import it.units.malelab.ege.mapper.MappingException;
 import it.units.malelab.ege.mapper.StandardGEMapper;
@@ -56,13 +60,19 @@ public class MainDiversity {
     //diversities.put("fitness", IndividualComparator.Attribute.FITNESS);
     diversities.put("off", null);
     List<String> representerSelectors = new ArrayList<>();
-    representerSelectors.add("uniform");
-    representerSelectors.add("youngest");
-    representerSelectors.add("oldest");
+    //representerSelectors.add("uniform");
+    //representerSelectors.add("youngest");
+    //representerSelectors.add("oldest");
+    //representerSelectors.add("smallest");
+    //representerSelectors.add("largest");
+    representerSelectors.add("youngest-proportional");
+    representerSelectors.add("oldest-proportional");
+    representerSelectors.add("smallest-proportional");
+    representerSelectors.add("largest-proportional");
     representerSelectors.add("off");
     Map<String, Integer> strategies = new LinkedHashMap<>();
     strategies.put("steady-state", 1);
-    strategies.put("over-0.8", 400);
+    //strategies.put("over-0.8", 400);
     boolean writeHeader = true;
     for (String problemName : problems.keySet()) {
       BenchmarkProblems.Problem problem = problems.get(problemName);
@@ -86,6 +96,7 @@ public class MainDiversity {
                 evolver = new StandardEvolver<>(Runtime.getRuntime().availableProcessors() - 1,
                         StandardConfiguration.createDefault(problem, random)
                         .mapper(new StandardGEMapper<>(8, 5, problems.get(problemName).getGrammar()))
+                        .populationInitializer(new RandomInitializer<>(random, new BitsGenotypeFactory(256)))
                         .offspringSize(strategies.get(strategyString)), random, false);
               } else {
                 if (representerSelectorString.equals("off")) {
@@ -98,17 +109,30 @@ public class MainDiversity {
                   selector = (Selector) new Best<>(new IndividualComparator(IndividualComparator.Attribute.AGE));
                 } else if (representerSelectorString.equals("oldest")) {
                   selector = (Selector) new Best<>(new IndividualComparator(Collections.singletonMap(IndividualComparator.Attribute.AGE, true)));
+                } else if (representerSelectorString.equals("smallest")) {
+                  selector = (Selector) new Best<>(new IndividualComparator(IndividualComparator.Attribute.PHENO_SIZE));
+                } else if (representerSelectorString.equals("largest")) {
+                  selector = (Selector) new Best<>(new IndividualComparator(Collections.singletonMap(IndividualComparator.Attribute.PHENO_SIZE, true)));
+                } else if (representerSelectorString.equals("youngest-proportional")) {
+                  selector = (Selector) new RankProportional<>(new IndividualComparator(IndividualComparator.Attribute.AGE), 1.1d, random);
+                } else if (representerSelectorString.equals("oldest-proportional")) {
+                  selector = (Selector) new RankProportional<>(new IndividualComparator(Collections.singletonMap(IndividualComparator.Attribute.AGE, true)), 1.1d, random);
+                } else if (representerSelectorString.equals("smallest-proportional")) {
+                  selector = (Selector) new RankProportional<>(new IndividualComparator(IndividualComparator.Attribute.PHENO_SIZE), 1.1d, random);
+                } else if (representerSelectorString.equals("largest-proportional")) {
+                  selector = (Selector) new RankProportional<>(new IndividualComparator(Collections.singletonMap(IndividualComparator.Attribute.PHENO_SIZE, true)), 1.1d, random);
                 }
                 evolver = new PartitionEvolver<>(Runtime.getRuntime().availableProcessors() - 1,
                         (PartitionConfiguration) PartitionConfiguration.createDefault(problem, random)
                         .partitionerComparator((Comparator) (new IndividualComparator(diversities.get(diversityString))))
                         .mapper(new StandardGEMapper<>(8, 5, problems.get(problemName).getGrammar()))
                         .parentSelector(selector)
+                        .populationInitializer(new RandomInitializer<>(random, new BitsGenotypeFactory(256)))
                         .offspringSize(strategies.get(strategyString)), random, false);
               }
               List<EvolutionListener<BitsGenotype, String>> listeners = new ArrayList<>();
               listeners.add(new ScreenGenerationLogger<BitsGenotype, String>("%8.1f", 8, problem.getPhenotypePrinter(), problem.getGeneralizationFitnessComputer(), constants));
-              listeners.add(new StreamGenerationLogger<BitsGenotype, String>(generationFilePS, null, constants, writeHeader));
+              listeners.add(new StreamGenerationLogger<BitsGenotype, String>(generationFilePS, problem.getGeneralizationFitnessComputer(), constants, writeHeader));
               writeHeader = false;
               System.out.println(constants);
               evolver.go(listeners);
