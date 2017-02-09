@@ -10,16 +10,13 @@ import it.units.malelab.ege.evolver.StandardConfiguration;
 import it.units.malelab.ege.evolver.Evolver;
 import it.units.malelab.ege.evolver.StandardEvolver;
 import it.units.malelab.ege.evolver.genotype.BitsGenotypeFactory;
-import it.units.malelab.ege.evolver.initializer.QuantizedBitsInitializer;
 import it.units.malelab.ege.evolver.initializer.RandomInitializer;
+import it.units.malelab.ege.evolver.listener.ConfigurationSaverListener;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
 import it.units.malelab.ege.evolver.listener.ScreenGenerationLogger;
 import it.units.malelab.ege.evolver.listener.StreamGenerationLogger;
-import it.units.malelab.ege.evolver.operator.LengthChanger;
 import it.units.malelab.ege.evolver.operator.LengthPreservingOnePointCrossover;
-import it.units.malelab.ege.evolver.operator.LengthPreservingTwoPointsCrossover;
 import it.units.malelab.ege.evolver.operator.LocalizedTwoPointsCrossover;
-import it.units.malelab.ege.evolver.operator.OnePointCrossover;
 import it.units.malelab.ege.evolver.operator.ProbabilisticMutation;
 import it.units.malelab.ege.evolver.selector.IndividualComparator;
 import it.units.malelab.ege.evolver.selector.Tournament;
@@ -49,7 +46,8 @@ public class MainComparison {
 
   public static void main(String[] args) throws IOException, ExecutionException, InterruptedException, MappingException {
     //prepare file
-    PrintStream generationFilePS = new PrintStream(args[0].replace("DATE", dateForFile()));
+    PrintStream generationFilePS = new PrintStream(args[0].replace("DATE", dateForFile())+".generation.csv");
+    PrintStream configurationFilePS = new PrintStream(args[0].replace("DATE", dateForFile())+".config.txt");
     //prepare problems
     Map<String, BenchmarkProblems.Problem> problems = new LinkedHashMap<>();
     problems.put("harmonic", BenchmarkProblems.harmonicCurveProblem());
@@ -57,13 +55,15 @@ public class MainComparison {
     //problems.put("max", BenchmarkProblems.max());
     problems.put("santaFe", BenchmarkProblems.santaFe());
     problems.put("text", BenchmarkProblems.text("Hello world!"));
+    int counter = 0;
     boolean writeHeader = true;
-    for (int initGenoSize : new int[]{128, 256, 512, 1024}) {
+    for (int initGenoSize : new int[]{256}) {
       for (String problemName : problems.keySet()) {
         BenchmarkProblems.Problem problem = problems.get(problemName);
-        for (int r = 0; r < 30; r++) {
+        for (int r = 0; r < 2; r++) {
           Random random = new Random(r);
           Map<String, Object> constants = new LinkedHashMap<>();
+          constants.put("key", counter);
           constants.put("problem", problemName);
           constants.put("run", r);
           constants.put("strategy", "steady-state");
@@ -72,43 +72,38 @@ public class MainComparison {
             StandardConfiguration<BitsGenotype, String> configuration = StandardConfiguration.createDefault(problem, random);
             configuration.getOperators().clear();
             configuration
+                    .populationSize(500)
+                    .offspringSize(1)
+                    .overlapping(true)
+                    .numberOfGenerations(5)
                     .parentSelector(new Tournament(3, random, new IndividualComparator(IndividualComparator.Attribute.FITNESS)))
                     .populationInitializer(new RandomInitializer<>(random, new BitsGenotypeFactory(initGenoSize)))
-                    .operator(new LengthPreservingOnePointCrossover(random), 0.8d)
+                    .operator(new LocalizedTwoPointsCrossover(random), 0.8d)
                     .operator(new ProbabilisticMutation(random, 0.01), 0.2d);
             Grammar<String> grammar = problems.get(problemName).getGrammar();
             switch (m) {
               case 0:
-                configuration
-                        .mapper(new StandardGEMapper<>(8, 5, grammar));
+                configuration.mapper(new StandardGEMapper<>(8, 5, grammar));
                 constants.put("variant", "GE-8-5");
                 break;
               case 1:
                 configuration.mapper(new PiGEMapper<>(16, 5, grammar));
                 constants.put("variant", "piGE-16-5");
                 break;
-              case 3:
-                configuration.getOperators().clear();
-                configuration
-                        .mapper(new HierarchicalMapper<>(grammar))
-                        .operator(new LocalizedTwoPointsCrossover(random), 0.8d)
-                        .operator(new ProbabilisticMutation(random, 0.01), 0.2d);
+              case 2:
+                configuration.mapper(new HierarchicalMapper<>(grammar));
                 constants.put("variant", "HiGE");
                 break;
-              case 4:
-                configuration.getOperators().clear();
-                configuration
-                        .mapper(new WeightedHierarchicalMapper<>(6, grammar))
-                        .operator(new LocalizedTwoPointsCrossover(random), 0.8d)
-                        .operator(new ProbabilisticMutation(random, 0.01), 0.2d);
-                constants.put("variant", "WHiGE-6");
+              case 3:
+                configuration.mapper(new WeightedHierarchicalMapper<>(3, grammar));
+                constants.put("variant", "WHiGE-3");
                 break;
-              case 5:
+              case 4:
                 configuration.mapper(new MultiMapper<>(
                         new StandardGEMapper<>(8, 5, grammar),
                         new PiGEMapper<>(16, 5, grammar),
                         new HierarchicalMapper<>(grammar),
-                        new WeightedHierarchicalMapper<>(6, grammar)
+                        new WeightedHierarchicalMapper<>(3, grammar)
                 ));
                 constants.put("variant", "MuMapper-4");
                 break;
@@ -118,15 +113,18 @@ public class MainComparison {
             List<EvolutionListener<BitsGenotype, String>> listeners = new ArrayList<>();
             listeners.add(new ScreenGenerationLogger<BitsGenotype, String>("%8.1f", 8, problem.getPhenotypePrinter(), problem.getGeneralizationFitnessComputer(), constants));
             listeners.add(new StreamGenerationLogger<BitsGenotype, String>(generationFilePS, problem.getGeneralizationFitnessComputer(), constants, writeHeader));
+            listeners.add(new ConfigurationSaverListener<BitsGenotype, String>(Integer.toString(counter), configurationFilePS));
             writeHeader = false;
             System.out.println(constants);
             evolver.go(listeners);
             System.out.println();
+            counter = counter + 1;
           }
         }
       }
     }
     generationFilePS.close();
+    configurationFilePS.close();
   }
 
   private static String dateForFile() {
