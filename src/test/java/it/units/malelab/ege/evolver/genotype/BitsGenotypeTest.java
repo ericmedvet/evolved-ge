@@ -6,11 +6,9 @@
 package it.units.malelab.ege.evolver.genotype;
 
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.List;
 import java.util.Random;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *
@@ -50,16 +48,16 @@ public class BitsGenotypeTest {
             }
             BitsGenotype instance = new BitsGenotype(32);
             List<BitsGenotype> result = instance.slices(l);
-            List<BitsGenotype> expResult = instance.slices2(l);
+            //List<BitsGenotype> expResult = instance.slices2(l);
             System.out.print("input: " + l.toString() + "\nnew lengths: [");
             for (BitsGenotype i : result) {
                 System.out.print(i.size()+", ");
             }
             System.out.println("\b\b]");
             System.out.print("old lengths: [");
-            for (BitsGenotype i : expResult) {
-                System.out.print(i.size()+", ");
-            }
+            //for (BitsGenotype i : expResult) {
+            //    System.out.print(i.size()+", ");
+            //}
             System.out.println("\b\b]\n");       
             //assertEquals("For i=" + i + " ", expResult, result);
         }

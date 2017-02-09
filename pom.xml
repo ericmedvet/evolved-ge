@@ -26,6 +26,13 @@
       <artifactId>commons-math3</artifactId>
       <version>3.6.1</version>
     </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.8.2</version>
+      <scope>test</scope>
+      <type>jar</type>
+    </dependency>
   </dependencies>
   
   <!-- http://www.mkyong.com/maven/create-a-fat-jar-file-maven-shade-plugin/ -->

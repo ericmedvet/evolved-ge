@@ -53,7 +53,7 @@ public class StandardConfiguration<G extends Genotype, T> {
             .offspringSize(1)
             .overlapping(true)
             .numberOfGenerations(50)
-            .populationInitializer(new RandomInitializer<>(random, new BitsGenotypeFactory(1024)))
+            .populationInitializer(new RandomInitializer<>(random, new BitsGenotypeFactory(256)))
             .initGenotypeValidator(new AnyValidator<BitsGenotype>())
             .mapper(new StandardGEMapper<>(8, 5, problem.getGrammar()))
             .parentSelector(new Tournament(5, random, new IndividualComparator(IndividualComparator.Attribute.FITNESS)))
