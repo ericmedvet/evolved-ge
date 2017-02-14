@@ -5,7 +5,10 @@
  */
 package it.units.malelab.ege;
 
-import it.units.malelab.ege.BenchmarkProblems.Problem;
+import it.units.malelab.ege.problems.BenchmarkProblems;
+import it.units.malelab.ege.grammar.Node;
+import it.units.malelab.ege.util.Utils;
+import it.units.malelab.ege.problems.BenchmarkProblems.Problem;
 import it.units.malelab.ege.distance.BitsGenotypeEditDistance;
 import it.units.malelab.ege.distance.CachedDistance;
 import it.units.malelab.ege.distance.Distance;

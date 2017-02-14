@@ -7,9 +7,9 @@ package it.units.malelab.ege.mapper;
 
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
-import it.units.malelab.ege.Node;
-import it.units.malelab.ege.Pair;
-import it.units.malelab.ege.Utils;
+import it.units.malelab.ege.grammar.Node;
+import it.units.malelab.ege.util.Pair;
+import it.units.malelab.ege.util.Utils;
 import it.units.malelab.ege.evolver.genotype.SGEGenotype;
 import it.units.malelab.ege.grammar.Grammar;
 import java.util.ArrayList;

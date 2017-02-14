@@ -1,6 +1,6 @@
 package it.units.malelab.ege.evolver.fitness;
 
-import it.units.malelab.ege.Node;
+import it.units.malelab.ege.grammar.Node;
 import java.util.List;
 
 /**

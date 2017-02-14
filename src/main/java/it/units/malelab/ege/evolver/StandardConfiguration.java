@@ -5,7 +5,7 @@
  */
 package it.units.malelab.ege.evolver;
 
-import it.units.malelab.ege.BenchmarkProblems;
+import it.units.malelab.ege.problems.BenchmarkProblems;
 import it.units.malelab.ege.evolver.genotype.Genotype;
 import it.units.malelab.ege.evolver.initializer.PopulationInitializer;
 import it.units.malelab.ege.evolver.validator.GenotypeValidator;

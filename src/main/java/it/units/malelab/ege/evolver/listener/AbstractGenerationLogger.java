@@ -5,9 +5,9 @@
  */
 package it.units.malelab.ege.evolver.listener;
 
-import it.units.malelab.ege.Node;
+import it.units.malelab.ege.grammar.Node;
 import it.units.malelab.ege.evolver.genotype.Genotype;
-import it.units.malelab.ege.Utils;
+import it.units.malelab.ege.util.Utils;
 import it.units.malelab.ege.evolver.Individual;
 import it.units.malelab.ege.evolver.event.EvolutionEvent;
 import it.units.malelab.ege.evolver.event.GenerationEvent;

@@ -5,13 +5,13 @@
  */
 package it.units.malelab.ege.evolver.listener;
 
-import it.units.malelab.ege.BenchmarkProblems;
-import it.units.malelab.ege.Node;
+import it.units.malelab.ege.problems.BenchmarkProblems;
+import it.units.malelab.ege.grammar.Node;
 import it.units.malelab.ege.distance.Distance;
 import it.units.malelab.ege.evolver.event.EvolutionEvent;
 import it.units.malelab.ege.evolver.event.OperatorApplicationEvent;
 import it.units.malelab.ege.evolver.genotype.Genotype;
-import it.units.malelab.ege.symbolicregression.MathUtils;
+import it.units.malelab.ege.problems.symbolicregression.MathUtils;
 import java.io.BufferedOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;

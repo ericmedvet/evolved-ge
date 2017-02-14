@@ -5,7 +5,7 @@
  */
 package it.units.malelab.ege.evolver.genotype;
 
-import it.units.malelab.ege.Pair;
+import it.units.malelab.ege.util.Pair;
 import it.units.malelab.ege.mapper.SGEMapper;
 import java.util.ArrayList;
 import java.util.List;

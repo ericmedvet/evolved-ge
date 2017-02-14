@@ -7,8 +7,8 @@ package it.units.malelab.ege.evolver;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.LoadingCache;
-import it.units.malelab.ege.Node;
-import it.units.malelab.ege.Utils;
+import it.units.malelab.ege.grammar.Node;
+import it.units.malelab.ege.util.Utils;
 import it.units.malelab.ege.evolver.event.EvolutionEndEvent;
 import it.units.malelab.ege.evolver.event.GenerationEvent;
 import it.units.malelab.ege.evolver.fitness.Fitness;

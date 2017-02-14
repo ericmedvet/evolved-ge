@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege;
+package it.units.malelab.ege.util;
 
+import it.units.malelab.ege.grammar.Node;
 import it.units.malelab.ege.evolver.genotype.Genotype;
 import it.units.malelab.ege.evolver.Individual;
 import it.units.malelab.ege.grammar.Grammar;

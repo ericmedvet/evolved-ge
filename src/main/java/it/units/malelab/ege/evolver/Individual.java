@@ -7,7 +7,7 @@ package it.units.malelab.ege.evolver;
 
 import it.units.malelab.ege.evolver.fitness.Fitness;
 import it.units.malelab.ege.evolver.genotype.Genotype;
-import it.units.malelab.ege.Node;
+import it.units.malelab.ege.grammar.Node;
 import it.units.malelab.ege.evolver.operator.GeneticOperator;
 import java.util.ArrayList;
 import java.util.List;

@@ -3,9 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.symbolicregression;
+package it.units.malelab.ege.problems.symbolicregression;
 
-import it.units.malelab.ege.Node;
+import it.units.malelab.ege.grammar.Node;
 import it.units.malelab.ege.evolver.PhenotypePrinter;
 import java.util.Arrays;
 import java.util.Collections;

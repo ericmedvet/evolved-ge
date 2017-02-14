@@ -5,6 +5,7 @@
  */
 package it.units.malelab.ege;
 
+import it.units.malelab.ege.problems.BenchmarkProblems;
 import it.units.malelab.ege.evolver.genotype.BitsGenotype;
 import it.units.malelab.ege.evolver.StandardConfiguration;
 import it.units.malelab.ege.evolver.Evolver;
@@ -15,7 +16,6 @@ import it.units.malelab.ege.evolver.listener.ConfigurationSaverListener;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
 import it.units.malelab.ege.evolver.listener.ScreenGenerationLogger;
 import it.units.malelab.ege.evolver.listener.StreamGenerationLogger;
-import it.units.malelab.ege.evolver.operator.LengthPreservingOnePointCrossover;
 import it.units.malelab.ege.evolver.operator.LocalizedTwoPointsCrossover;
 import it.units.malelab.ege.evolver.operator.ProbabilisticMutation;
 import it.units.malelab.ege.evolver.selector.IndividualComparator;
@@ -46,8 +46,8 @@ public class MainComparison {
 
   public static void main(String[] args) throws IOException, ExecutionException, InterruptedException, MappingException {
     //prepare file
-    PrintStream generationFilePS = new PrintStream(args[0].replace("DATE", dateForFile())+".generation.csv");
-    PrintStream configurationFilePS = new PrintStream(args[0].replace("DATE", dateForFile())+".config.txt");
+    PrintStream generationFilePS = new PrintStream(args[0].replace("DATE", dateForFile()) + ".generation.csv");
+    PrintStream configurationFilePS = new PrintStream(args[0].replace("DATE", dateForFile()) + ".config.txt");
     //prepare problems
     Map<String, BenchmarkProblems.Problem> problems = new LinkedHashMap<>();
     problems.put("harmonic", BenchmarkProblems.harmonicCurveProblem());

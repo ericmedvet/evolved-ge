@@ -5,7 +5,7 @@
  */
 package it.units.malelab.ege.evolver.listener;
 
-import it.units.malelab.ege.Node;
+import it.units.malelab.ege.grammar.Node;
 import it.units.malelab.ege.evolver.Individual;
 import it.units.malelab.ege.evolver.event.EvolutionEvent;
 import it.units.malelab.ege.evolver.event.GenerationEvent;

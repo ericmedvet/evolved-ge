@@ -5,8 +5,8 @@
  */
 package it.units.malelab.ege.evolver.fitness;
 
-import it.units.malelab.ege.Node;
-import it.units.malelab.ege.Utils;
+import it.units.malelab.ege.grammar.Node;
+import it.units.malelab.ege.util.Utils;
 import it.units.malelab.ege.distance.Distance;
 import java.util.List;
 

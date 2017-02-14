@@ -5,6 +5,7 @@
  */
 package it.units.malelab.ege;
 
+import it.units.malelab.ege.problems.BenchmarkProblems;
 import it.units.malelab.ege.distance.BitsGenotypeEditDistance;
 import it.units.malelab.ege.distance.CachedDistance;
 import it.units.malelab.ege.distance.Distance;

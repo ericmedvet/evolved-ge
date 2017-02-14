@@ -5,9 +5,9 @@
  */
 package it.units.malelab.ege.evolver.fitness;
 
-import it.units.malelab.ege.Node;
-import it.units.malelab.ege.symbolicregression.Element;
-import it.units.malelab.ege.symbolicregression.MathUtils;
+import it.units.malelab.ege.grammar.Node;
+import it.units.malelab.ege.problems.symbolicregression.Element;
+import it.units.malelab.ege.problems.symbolicregression.MathUtils;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;

@@ -5,7 +5,7 @@
  */
 package it.units.malelab.ege.distance;
 
-import it.units.malelab.ege.Pair;
+import it.units.malelab.ege.util.Pair;
 import it.units.malelab.ege.evolver.genotype.SGEGenotype;
 import java.util.List;
 import java.util.Map;

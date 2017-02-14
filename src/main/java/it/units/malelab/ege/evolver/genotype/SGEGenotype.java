@@ -5,7 +5,7 @@
  */
 package it.units.malelab.ege.evolver.genotype;
 
-import it.units.malelab.ege.Pair;
+import it.units.malelab.ege.util.Pair;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
