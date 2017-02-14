@@ -20,6 +20,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -32,6 +33,8 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
@@ -262,6 +265,24 @@ public class Utils {
       d = d-option.getValue();
     }
     return (T)options.keySet().toArray()[0];
+  }
+  
+  public static Node<Pair<String, String>> dissectObject(Object o, String name) {
+    Class<?> c = o.getClass();
+    if (c.isPrimitive()) {
+      return new Node<>(new Pair<>("", o.toString()));
+    }
+    Node<Pair<String, String>> node = new Node<>(new Pair<>(o.getClass().getSimpleName(), name));
+    for (Field field : c.getDeclaredFields()) {
+      try {      
+        node.getChildren().add(dissectObject(field.get(o), field.getName()));
+      } catch (IllegalArgumentException ex) {
+        //ignore
+      } catch (IllegalAccessException ex) {
+        //ignore
+      }
+    }
+    return node;
   }
   
 }

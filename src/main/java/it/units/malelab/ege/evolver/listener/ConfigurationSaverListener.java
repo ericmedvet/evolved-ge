@@ -11,7 +11,6 @@ import it.units.malelab.ege.evolver.genotype.Genotype;
 import java.io.PrintStream;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import org.apache.commons.beanutils.BeanUtils;
 
 /**
  *
@@ -35,7 +34,7 @@ public class ConfigurationSaverListener<G extends Genotype, T> implements Evolut
   public void listen(EvolutionEvent<G, T> event) {
     ps.printf("Key: %s%n", key);
     try {
-      ps.println(BeanUtils.describe(event.getEvolver().getConfiguration()));
+      //ps.println(BeanUtils.describe(event.getEvolver().getConfiguration()));
     } catch (Exception ex) {
       System.err.printf("Cannot write configuration: %s", ex.getMessage());
     }

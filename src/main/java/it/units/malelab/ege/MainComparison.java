@@ -27,6 +27,7 @@ import it.units.malelab.ege.mapper.MultiMapper;
 import it.units.malelab.ege.mapper.PiGEMapper;
 import it.units.malelab.ege.mapper.StandardGEMapper;
 import it.units.malelab.ege.mapper.WeightedHierarchicalMapper;
+import it.units.malelab.ege.util.Utils;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
@@ -45,6 +46,10 @@ import java.util.concurrent.ExecutionException;
 public class MainComparison {
 
   public static void main(String[] args) throws IOException, ExecutionException, InterruptedException, MappingException {
+
+    System.out.println(Utils.dissectObject(StandardConfiguration.createDefault(BenchmarkProblems.max(), new Random(1)), ""));
+    System.exit(0);
+
     //prepare file
     PrintStream generationFilePS = new PrintStream(args[0].replace("DATE", dateForFile()) + ".generation.csv");
     PrintStream configurationFilePS = new PrintStream(args[0].replace("DATE", dateForFile()) + ".config.txt");
