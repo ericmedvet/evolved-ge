@@ -5,7 +5,6 @@
  */
 package it.units.malelab.ege.mapper;
 
-import com.google.common.collect.ListMultimap;
 import it.units.malelab.ege.evolver.genotype.BitsGenotype;
 import it.units.malelab.ege.grammar.Node;
 import it.units.malelab.ege.grammar.Grammar;
@@ -14,7 +13,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedMap;
 
 /**
  *
@@ -104,7 +102,7 @@ public class HierarchicalMapper<T> extends AbstractMapper<BitsGenotype, T> {
   }
 
   @Override
-  public Node<T> map(BitsGenotype genotype) throws MappingException {
+  public Node<T> map(BitsGenotype genotype, Map<String, Object> report) throws MappingException {
     Node<EnhancedSymbol<T>> enhancedTree = new Node<>(new EnhancedSymbol<>(grammar.getStartingSymbol(), genotype));
     while (true) {
       Node<EnhancedSymbol<T>> nodeToBeReplaced = null;

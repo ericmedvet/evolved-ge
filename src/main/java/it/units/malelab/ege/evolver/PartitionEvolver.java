@@ -20,6 +20,7 @@ import it.units.malelab.ege.evolver.selector.First;
 import it.units.malelab.ege.evolver.selector.IndividualComparator;
 import it.units.malelab.ege.evolver.selector.RepresenterBasedListSelector;
 import it.units.malelab.ege.evolver.selector.Selector;
+import it.units.malelab.ege.util.Pair;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -39,8 +40,8 @@ public class PartitionEvolver<G extends Genotype, T> extends StandardEvolver<G, 
   private final Selector<Individual<G, T>> representerSelector;
   private final Selector<List<Individual<G, T>>> bestPartitionSelector;
 
-  public PartitionEvolver(int numberOfThreads, PartitionConfiguration<G, T> configuration, Random random, boolean saveGenealogy) {
-    super(numberOfThreads, configuration, random, saveGenealogy);
+  public PartitionEvolver(int numberOfThreads, PartitionConfiguration<G, T> configuration, Random random, boolean saveAncestry) {
+    super(numberOfThreads, configuration, random, saveAncestry);
     this.configuration = configuration;
     this.representerSelector = new First<>();
     this.bestPartitionSelector = new RepresenterBasedListSelector<>(
@@ -51,7 +52,7 @@ public class PartitionEvolver<G extends Genotype, T> extends StandardEvolver<G, 
 
   @Override
   public void go(List<EvolutionListener<G, T>> listeners) throws InterruptedException, ExecutionException {
-    LoadingCache<G, Node<T>> mappingCache = CacheBuilder.newBuilder().maximumSize(CACHE_SIZE).build(getMappingCacheLoader());
+    LoadingCache<G, Pair<Node<T>, Map<String, Object>>> mappingCache = CacheBuilder.newBuilder().maximumSize(CACHE_SIZE).build(getMappingCacheLoader());
     LoadingCache<Node<T>, Fitness> fitnessCache = CacheBuilder.newBuilder().maximumSize(CACHE_SIZE).build(getFitnessCacheLoader());
     //initialize population
     int births = 0;

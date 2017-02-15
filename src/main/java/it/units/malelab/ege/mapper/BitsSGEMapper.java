@@ -79,7 +79,7 @@ public class BitsSGEMapper<T> extends AbstractMapper<BitsGenotype, T> {
   }
 
   @Override
-  public Node<T> map(BitsGenotype genotype) throws MappingException {
+  public Node<T> map(BitsGenotype genotype, Map<String, Object> report) throws MappingException {
     //transform genotypes in ints
     if (genotype.size() < overallSize) {
       throw new MappingException(String.format("Short genotype (%d<%d)", genotype.size(), overallSize));

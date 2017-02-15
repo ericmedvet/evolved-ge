@@ -218,15 +218,7 @@ public class Utils {
       prettyPrintTree(child, ps);
     }
   }
-  
-  public static <G extends Genotype, T> List<T> safelyMapAndFlat(Mapper<G, T> mapper, G genotype) {
-    try {
-      return contents(mapper.map(genotype).leaves());
-    } catch (MappingException ex) {
-      return Collections.EMPTY_LIST;
-    }
-  }
-  
+    
   public static <G extends Genotype, T> void sortByFitness(List<Individual<G, T>> individuals) {
     Collections.sort(individuals, new Comparator<Individual<G, T>>() {
       @Override
@@ -266,23 +258,4 @@ public class Utils {
     }
     return (T)options.keySet().toArray()[0];
   }
-  
-  public static Node<Pair<String, String>> dissectObject(Object o, String name) {
-    Class<?> c = o.getClass();
-    if (c.isPrimitive()) {
-      return new Node<>(new Pair<>("", o.toString()));
-    }
-    Node<Pair<String, String>> node = new Node<>(new Pair<>(o.getClass().getSimpleName(), name));
-    for (Field field : c.getDeclaredFields()) {
-      try {      
-        node.getChildren().add(dissectObject(field.get(o), field.getName()));
-      } catch (IllegalArgumentException ex) {
-        //ignore
-      } catch (IllegalAccessException ex) {
-        //ignore
-      }
-    }
-    return node;
-  }
-  
 }

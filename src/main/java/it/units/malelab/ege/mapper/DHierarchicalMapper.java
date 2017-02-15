@@ -33,7 +33,7 @@ public class DHierarchicalMapper<T> extends AbstractMapper<BitsGenotype, T> {
   }
 
   @Override
-  public Node<T> map(BitsGenotype genotype) throws MappingException {
+  public Node<T> map(BitsGenotype genotype, Map<String, Object> report) throws MappingException {
     Node<T> n = new Node(this.start);
     construct(this.rules, n, genotype);
     return n;

@@ -10,7 +10,9 @@ import it.units.malelab.ege.evolver.genotype.Genotype;
 import it.units.malelab.ege.grammar.Node;
 import it.units.malelab.ege.evolver.operator.GeneticOperator;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -24,8 +26,9 @@ public class Individual<G extends Genotype, T> {
   private final int birthDate;
   private final GeneticOperator<G> operator;
   private final List<Individual<G, T>> parents;
+  private final Map<String, Object> otherInfo;
 
-  public Individual(G genotype, Node<T> phenotype, Fitness fitness, int birthDate, GeneticOperator<G> operator, List<Individual<G, T>> parents) {
+  public Individual(G genotype, Node<T> phenotype, Fitness fitness, int birthDate, GeneticOperator<G> operator, List<Individual<G, T>> parents, Map<String, Object> otherInfo) {
     this.genotype = genotype;
     this.phenotype = phenotype;
     this.fitness = fitness;
@@ -34,6 +37,10 @@ public class Individual<G extends Genotype, T> {
     this.parents = new ArrayList<>();
     if (parents!=null) {
       this.parents.addAll(parents);
+    }
+    this.otherInfo = new LinkedHashMap<>();
+    if (otherInfo!=null) {
+      this.otherInfo.putAll(otherInfo);
     }
   }
 
@@ -60,5 +67,9 @@ public class Individual<G extends Genotype, T> {
   public List<Individual<G, T>> getParents() {
     return parents;
   }
-  
+
+  public Map<String, Object> getOtherInfo() {
+    return otherInfo;
+  }
+
 }

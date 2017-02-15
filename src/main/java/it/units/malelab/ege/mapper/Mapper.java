@@ -7,6 +7,7 @@ package it.units.malelab.ege.mapper;
 
 import it.units.malelab.ege.evolver.genotype.Genotype;
 import it.units.malelab.ege.grammar.Node;
+import java.util.Map;
 
 /**
  *
@@ -14,6 +15,6 @@ import it.units.malelab.ege.grammar.Node;
  */
 public interface Mapper<G extends Genotype, T> {
   
-  public Node<T> map(G genotype) throws MappingException;
+  public Node<T> map(G genotype, Map<String, Object> report) throws MappingException;
   
 }

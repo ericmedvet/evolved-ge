@@ -23,33 +23,25 @@ import it.units.malelab.ege.evolver.initializer.RandomInitializer;
 import it.units.malelab.ege.evolver.operator.AbstractCrossover;
 import it.units.malelab.ege.evolver.operator.AbstractMutation;
 import it.units.malelab.ege.evolver.operator.AbstractOperator;
-import it.units.malelab.ege.evolver.operator.BitsSGECrossover;
-import it.units.malelab.ege.evolver.operator.CompactFlipMutation;
-import it.units.malelab.ege.evolver.operator.LengthPreservingOnePointCrossover;
-import it.units.malelab.ege.evolver.operator.LengthPreservingTwoPointsCrossover;
 import it.units.malelab.ege.evolver.operator.OnePointCrossover;
 import it.units.malelab.ege.evolver.operator.ProbabilisticMutation;
 import it.units.malelab.ege.evolver.operator.SGECrossover;
 import it.units.malelab.ege.evolver.operator.SGEMutation;
-import it.units.malelab.ege.evolver.operator.TwoPointsCrossover;
 import it.units.malelab.ege.evolver.validator.AnyValidator;
 import it.units.malelab.ege.grammar.Grammar;
-import it.units.malelab.ege.mapper.BitsSGEMapper;
 import it.units.malelab.ege.mapper.BreathFirstMapper;
-import it.units.malelab.ege.mapper.HierarchicalMapper;
 import it.units.malelab.ege.mapper.Mapper;
 import it.units.malelab.ege.mapper.MappingException;
 import it.units.malelab.ege.mapper.PiGEMapper;
 import it.units.malelab.ege.mapper.SGEMapper;
 import it.units.malelab.ege.mapper.StandardGEMapper;
-import it.units.malelab.ege.mapper.DHierarchicalMapper;
-import it.units.malelab.ege.mapper.WeightedHierarchicalMapper;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -175,7 +167,7 @@ public class TestEvolvabilityStatic {
 
   private static Node mapApply(Mapper mapper, Genotype geno) {
     try {
-      return mapper.map(geno);
+      return mapper.map(geno, new HashMap());
     } catch (MappingException ex) {
       return Node.EMPTY_TREE;
     }

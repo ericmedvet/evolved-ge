@@ -39,7 +39,7 @@ public class SGEMapper<T> extends AbstractMapper<SGEGenotype<T>, T> {
     }
   }
 
-  public Node<T> map(SGEGenotype<T> genotype) throws MappingException {
+  public Node<T> map(SGEGenotype<T> genotype, Map<String, Object> report) throws MappingException {
     //map
     Multiset<Pair<T, Integer>> expandedSymbols = LinkedHashMultiset.create();
     Node<Pair<T, Integer>> tree = new Node<>(nonRecursiveGrammar.getStartingSymbol());

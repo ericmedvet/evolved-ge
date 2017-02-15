@@ -50,6 +50,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -210,7 +211,7 @@ public class TestDistances {
 
     private static Node mapApply(Mapper mapper, Genotype geno) {
         try {
-            return mapper.map(geno);
+            return mapper.map(geno, new HashMap());
         } catch (MappingException ex) {
             return Node.EMPTY_TREE;
         }

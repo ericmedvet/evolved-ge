@@ -10,6 +10,7 @@ import it.units.malelab.ege.grammar.Node;
 import it.units.malelab.ege.grammar.Grammar;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -27,7 +28,7 @@ public class PiGEMapper<T> extends AbstractMapper<BitsGenotype, T> {
   }    
 
   @Override
-  public Node<T> map(BitsGenotype genotype) throws MappingException {
+  public Node<T> map(BitsGenotype genotype, Map<String, Object> report) throws MappingException {
     if (genotype.size()<codonLenght) {
       throw new MappingException(String.format("Short genotype (%d<%d)", genotype.size(), codonLenght));
     }

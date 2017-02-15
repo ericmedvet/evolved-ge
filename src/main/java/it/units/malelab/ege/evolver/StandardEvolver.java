@@ -21,9 +21,12 @@ import it.units.malelab.ege.grammar.Node;
 import it.units.malelab.ege.util.Utils;
 import it.units.malelab.ege.evolver.operator.GeneticOperator;
 import it.units.malelab.ege.mapper.MappingException;
+import it.units.malelab.ege.util.Pair;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -42,13 +45,13 @@ public class StandardEvolver<G extends Genotype, T> implements Evolver<G, T> {
   private final StandardConfiguration<G, T> configuration;
   protected final ExecutorService executor;
   protected final Random random;
-  private final boolean saveGenealogy;
+  private final boolean saveAncestry;
 
-  public StandardEvolver(int numberOfThreads, StandardConfiguration<G, T> configuration, Random random, boolean saveGenealogy) {
+  public StandardEvolver(int numberOfThreads, StandardConfiguration<G, T> configuration, Random random, boolean saveAncestry) {
     this.configuration = configuration;
     executor = Executors.newFixedThreadPool(numberOfThreads);
     this.random = random;
-    this.saveGenealogy = saveGenealogy;
+    this.saveAncestry = saveAncestry;
   }
 
   @Override
@@ -58,7 +61,7 @@ public class StandardEvolver<G extends Genotype, T> implements Evolver<G, T> {
 
   @Override
   public void go(List<EvolutionListener<G, T>> listeners) throws InterruptedException, ExecutionException {
-    LoadingCache<G, Node<T>> mappingCache = CacheBuilder.newBuilder().maximumSize(CACHE_SIZE).build(getMappingCacheLoader());
+    LoadingCache<G, Pair<Node<T>, Map<String, Object>>> mappingCache = CacheBuilder.newBuilder().maximumSize(CACHE_SIZE).build(getMappingCacheLoader());
     LoadingCache<Node<T>, Fitness> fitnessCache = CacheBuilder.newBuilder().maximumSize(CACHE_SIZE).build(getFitnessCacheLoader());
     //initialize population
     int births = 0;
@@ -117,17 +120,18 @@ public class StandardEvolver<G extends Genotype, T> implements Evolver<G, T> {
     executor.shutdown();
   }
 
-  protected CacheLoader<G, Node<T>> getMappingCacheLoader() {
-    return new CacheLoader<G, Node<T>>() {
+  protected CacheLoader<G, Pair<Node<T>, Map<String, Object>>> getMappingCacheLoader() {
+    return new CacheLoader<G, Pair<Node<T>, Map<String, Object>>>() {
       @Override
-      public Node<T> load(G genotype) throws Exception {
+      public Pair<Node<T>, Map<String, Object>> load(G genotype) throws Exception {
         Node<T> phenotype = null;
+        Map<String, Object> report = new LinkedHashMap<>();
         try {
-          phenotype = configuration.getMapper().map(genotype);
+          phenotype = configuration.getMapper().map(genotype, report);
         } catch (MappingException ex) {
           phenotype = Node.EMPTY_TREE;
         }
-        return phenotype;
+        return new Pair<>(phenotype, report);
       }
     };
   }
@@ -147,7 +151,7 @@ public class StandardEvolver<G extends Genotype, T> implements Evolver<G, T> {
   protected Callable<List<Individual<G, T>>> individualFromGenotypeCallable(
           final G genotype,
           final int generation,
-          final LoadingCache<G, Node<T>> mappingCache,
+          final LoadingCache<G, Pair<Node<T>, Map<String, Object>>> mappingCache,
           final LoadingCache<Node<T>, Fitness> fitnessCache,
           final List<EvolutionListener<G, T>> listeners,
           final GeneticOperator<G> operator,
@@ -157,13 +161,14 @@ public class StandardEvolver<G extends Genotype, T> implements Evolver<G, T> {
       @Override
       public List<Individual<G, T>> call() throws Exception {
         Stopwatch stopwatch = Stopwatch.createStarted();
-        Node<T> phenotype = mappingCache.getUnchecked(genotype);
+        Pair<Node<T>, Map<String, Object>> mappingOutcome = mappingCache.getUnchecked(genotype);
+        Node<T> phenotype = mappingOutcome.getFirst();
         long elapsed = stopwatch.stop().elapsed(TimeUnit.NANOSECONDS);
         Utils.broadcast(new MappingEvent<>(genotype, phenotype, elapsed, generation, evolver, null), listeners);
         stopwatch.reset().start();
         Fitness fitness = fitnessCache.getUnchecked(phenotype);
         elapsed = stopwatch.stop().elapsed(TimeUnit.NANOSECONDS);
-        Individual<G, T> individual = new Individual<>(genotype, phenotype, fitness, generation, operator, saveGenealogy ? parents : null);
+        Individual<G, T> individual = new Individual<>(genotype, phenotype, fitness, generation, operator, saveAncestry ? parents : null, mappingOutcome.getSecond());
         Utils.broadcast(new BirthEvent<>(individual, elapsed, generation, evolver, null), listeners);
         return Collections.singletonList(individual);
       }
@@ -174,7 +179,7 @@ public class StandardEvolver<G extends Genotype, T> implements Evolver<G, T> {
           final GeneticOperator<G> operator,
           final List<Individual<G, T>> parents,
           final int generation,
-          final LoadingCache<G, Node<T>> mappingCache,
+          final LoadingCache<G, Pair<Node<T>, Map<String, Object>>> mappingCache,
           final LoadingCache<Node<T>, Fitness> fitnessCache,
           final List<EvolutionListener<G, T>> listeners
   ) {

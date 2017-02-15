@@ -12,10 +12,13 @@ import it.units.malelab.ege.evolver.Evolver;
 import it.units.malelab.ege.evolver.StandardEvolver;
 import it.units.malelab.ege.evolver.genotype.BitsGenotypeFactory;
 import it.units.malelab.ege.evolver.initializer.RandomInitializer;
-import it.units.malelab.ege.evolver.listener.ConfigurationSaverListener;
+import it.units.malelab.ege.evolver.listener.CollectorGenerationLogger;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
 import it.units.malelab.ege.evolver.listener.ScreenGenerationLogger;
 import it.units.malelab.ege.evolver.listener.StreamGenerationLogger;
+import it.units.malelab.ege.evolver.listener.collector.Best;
+import it.units.malelab.ege.evolver.listener.collector.Diversity;
+import it.units.malelab.ege.evolver.listener.collector.MultiMapperInfo;
 import it.units.malelab.ege.evolver.operator.LocalizedTwoPointsCrossover;
 import it.units.malelab.ege.evolver.operator.ProbabilisticMutation;
 import it.units.malelab.ege.evolver.selector.IndividualComparator;
@@ -27,11 +30,11 @@ import it.units.malelab.ege.mapper.MultiMapper;
 import it.units.malelab.ege.mapper.PiGEMapper;
 import it.units.malelab.ege.mapper.StandardGEMapper;
 import it.units.malelab.ege.mapper.WeightedHierarchicalMapper;
-import it.units.malelab.ege.util.Utils;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -46,10 +49,6 @@ import java.util.concurrent.ExecutionException;
 public class MainComparison {
 
   public static void main(String[] args) throws IOException, ExecutionException, InterruptedException, MappingException {
-
-    System.out.println(Utils.dissectObject(StandardConfiguration.createDefault(BenchmarkProblems.max(), new Random(1)), ""));
-    System.exit(0);
-
     //prepare file
     PrintStream generationFilePS = new PrintStream(args[0].replace("DATE", dateForFile()) + ".generation.csv");
     PrintStream configurationFilePS = new PrintStream(args[0].replace("DATE", dateForFile()) + ".config.txt");
@@ -73,14 +72,14 @@ public class MainComparison {
           constants.put("run", r);
           constants.put("strategy", "steady-state");
           constants.put("initGenotypeSize", initGenoSize);
-          for (int m : new int[]{5}) {
+          for (int m : new int[]{4}) {
             StandardConfiguration<BitsGenotype, String> configuration = StandardConfiguration.createDefault(problem, random);
             configuration.getOperators().clear();
             configuration
                     .populationSize(500)
                     .offspringSize(1)
                     .overlapping(true)
-                    .numberOfGenerations(5)
+                    .numberOfGenerations(50)
                     .parentSelector(new Tournament(3, random, new IndividualComparator(IndividualComparator.Attribute.FITNESS)))
                     .populationInitializer(new RandomInitializer<>(random, new BitsGenotypeFactory(initGenoSize)))
                     .operator(new LocalizedTwoPointsCrossover(random), 0.8d)
@@ -116,9 +115,13 @@ public class MainComparison {
             Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(Runtime.getRuntime().availableProcessors() - 1, configuration, random, false);
             //Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(1, configuration, random, false);
             List<EvolutionListener<BitsGenotype, String>> listeners = new ArrayList<>();
-            listeners.add(new ScreenGenerationLogger<BitsGenotype, String>("%8.1f", 8, problem.getPhenotypePrinter(), problem.getGeneralizationFitnessComputer(), constants));
-            listeners.add(new StreamGenerationLogger<BitsGenotype, String>(generationFilePS, problem.getGeneralizationFitnessComputer(), constants, writeHeader));
-            listeners.add(new ConfigurationSaverListener<BitsGenotype, String>(Integer.toString(counter), configurationFilePS));
+            //listeners.add(new ScreenGenerationLogger<BitsGenotype, String>("%8.1f", 8, problem.getPhenotypePrinter(), problem.getGeneralizationFitnessComputer(), constants));
+            //listeners.add(new StreamGenerationLogger<BitsGenotype, String>(generationFilePS, problem.getGeneralizationFitnessComputer(), constants, writeHeader));
+            listeners.add(new CollectorGenerationLogger<>(Collections.EMPTY_MAP, System.out, true, 10, " ", " | ",
+                    new Best<>("%5.2f"),
+                    new Diversity<>(),
+                    new MultiMapperInfo<>(4)
+            ));
             writeHeader = false;
             System.out.println(constants);
             evolver.go(listeners);
