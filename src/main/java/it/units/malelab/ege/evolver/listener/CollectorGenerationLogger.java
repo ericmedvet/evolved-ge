@@ -36,7 +36,8 @@ public class CollectorGenerationLogger<G extends Genotype, T> implements Evoluti
   private final String outerSeparator;
   private final List<PopulationInfoCollector<G, T>> collectors;
 
-  private List<Map<String, String>> formattedNames;
+  private final List<Map<String, String>> formattedNames;
+  private int lines;
 
   public CollectorGenerationLogger(
           Map<String, Object> constants,
@@ -63,13 +64,14 @@ public class CollectorGenerationLogger<G extends Genotype, T> implements Evoluti
       }
       formattedNames.add(localFormattedNames);
     }
+    lines = 0;
   }
 
   @Override
   public void listen(EvolutionEvent<G, T> event) {
     int generation = ((GenerationEvent) event).getGeneration();
     List<Individual<G, T>> population = new ArrayList<>(((GenerationEvent) event).getPopulation());
-    if ((headerInterval >= 0) && ((headerInterval == 0) || ((generation - 1) % headerInterval == 0))) {
+    if ((headerInterval == 0 && lines == 0) || ((headerInterval > 0)&&((generation - 1) % headerInterval == 0))) {
       //print header: generation
       ps.print(format ? "gen" : "generation");
       ps.print(outerSeparator);
@@ -137,6 +139,7 @@ public class CollectorGenerationLogger<G extends Genotype, T> implements Evoluti
       }
     }
     ps.println();
+    lines = lines + 1;
   }
 
   @Override
@@ -162,10 +165,18 @@ public class CollectorGenerationLogger<G extends Genotype, T> implements Evoluti
   }
 
   private String pad(String s, int length) {
-    while (format&&(s.length() < length)) {
+    while (format && (s.length() < length)) {
       s = " " + s;
     }
     return s;
+  }
+
+  public void updateConstants(Map<String, Object> newConstants) {
+    for (String key : constants.keySet()) {
+      if (newConstants.containsKey(key)) {
+        constants.put(key, newConstants.get(key));
+      }
+    }
   }
 
 }

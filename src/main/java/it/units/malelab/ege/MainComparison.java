@@ -14,11 +14,8 @@ import it.units.malelab.ege.evolver.genotype.BitsGenotypeFactory;
 import it.units.malelab.ege.evolver.initializer.RandomInitializer;
 import it.units.malelab.ege.evolver.listener.CollectorGenerationLogger;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
-import it.units.malelab.ege.evolver.listener.ScreenGenerationLogger;
-import it.units.malelab.ege.evolver.listener.StreamGenerationLogger;
 import it.units.malelab.ege.evolver.listener.collector.Best;
 import it.units.malelab.ege.evolver.listener.collector.Diversity;
-import it.units.malelab.ege.evolver.listener.collector.MultiMapperInfo;
 import it.units.malelab.ege.evolver.operator.LocalizedTwoPointsCrossover;
 import it.units.malelab.ege.evolver.operator.ProbabilisticMutation;
 import it.units.malelab.ege.evolver.selector.IndividualComparator;
@@ -30,10 +27,12 @@ import it.units.malelab.ege.mapper.MultiMapper;
 import it.units.malelab.ege.mapper.PiGEMapper;
 import it.units.malelab.ege.mapper.StandardGEMapper;
 import it.units.malelab.ege.mapper.WeightedHierarchicalMapper;
+import it.units.malelab.ege.util.Utils;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -60,7 +59,19 @@ public class MainComparison {
     problems.put("santaFe", BenchmarkProblems.santaFe());
     problems.put("text", BenchmarkProblems.text("Hello world!"));
     int counter = 0;
-    boolean writeHeader = true;
+    List<EvolutionListener<BitsGenotype, String>> listeners = new ArrayList<>();
+    listeners.add(new CollectorGenerationLogger<>(
+            Collections.EMPTY_MAP,
+            System.out, true, 10, " ", " | ",
+            new Best<>("%5.2f"),
+            new Diversity<>()
+    ));
+    listeners.add(new CollectorGenerationLogger<>(
+            (Map)Utils.sameValueMap(null, "key", "problem", "run", "initGenotypeSize", "variant"),
+            generationFilePS, false, 0, ";", ";",
+            new Best<>("%5.2f"),
+            new Diversity<>()
+    ));
     for (int initGenoSize : new int[]{256}) {
       for (String problemName : problems.keySet()) {
         BenchmarkProblems.Problem problem = problems.get(problemName);
@@ -70,7 +81,6 @@ public class MainComparison {
           constants.put("key", counter);
           constants.put("problem", problemName);
           constants.put("run", r);
-          constants.put("strategy", "steady-state");
           constants.put("initGenotypeSize", initGenoSize);
           for (int m : new int[]{4}) {
             StandardConfiguration<BitsGenotype, String> configuration = StandardConfiguration.createDefault(problem, random);
@@ -114,16 +124,12 @@ public class MainComparison {
             }
             Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(Runtime.getRuntime().availableProcessors() - 1, configuration, random, false);
             //Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(1, configuration, random, false);
-            List<EvolutionListener<BitsGenotype, String>> listeners = new ArrayList<>();
-            //listeners.add(new ScreenGenerationLogger<BitsGenotype, String>("%8.1f", 8, problem.getPhenotypePrinter(), problem.getGeneralizationFitnessComputer(), constants));
-            //listeners.add(new StreamGenerationLogger<BitsGenotype, String>(generationFilePS, problem.getGeneralizationFitnessComputer(), constants, writeHeader));
-            listeners.add(new CollectorGenerationLogger<>(Collections.EMPTY_MAP, System.out, true, 10, " ", " | ",
-                    new Best<>("%5.2f"),
-                    new Diversity<>(),
-                    new MultiMapperInfo<>(4)
-            ));
-            writeHeader = false;
             System.out.println(constants);
+            for (EvolutionListener listener : listeners) {
+              if (listener instanceof CollectorGenerationLogger) {
+                ((CollectorGenerationLogger)listener).updateConstants(constants);
+              }
+            }
             evolver.go(listeners);
             System.out.println();
             counter = counter + 1;

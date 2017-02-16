@@ -14,8 +14,6 @@ import it.units.malelab.ege.evolver.genotype.BitsGenotypeFactory;
 import it.units.malelab.ege.evolver.initializer.RandomInitializer;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
 import it.units.malelab.ege.evolver.listener.EvolvabilityFitnessLogger;
-import it.units.malelab.ege.evolver.listener.ScreenGenerationLogger;
-import it.units.malelab.ege.evolver.listener.StreamGenerationLogger;
 import it.units.malelab.ege.evolver.operator.LengthChanger;
 import it.units.malelab.ege.evolver.operator.LengthPreservingOnePointCrossover;
 import it.units.malelab.ege.evolver.operator.LocalizedTwoPointsCrossover;
@@ -101,7 +99,7 @@ public class TestEvolvabilityDynamic {
             Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(Runtime.getRuntime().availableProcessors() - 1, configuration, random, true);
             //Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(1, configuration, random, false);
             List<EvolutionListener<BitsGenotype, String>> listeners = new ArrayList<>();
-            listeners.add(new ScreenGenerationLogger<BitsGenotype, String>("%8.1f", 8, problem.getPhenotypePrinter(), problem.getGeneralizationFitnessComputer(), constants));
+            //listeners.add(new ScreenGenerationLogger<BitsGenotype, String>("%8.1f", 8, problem.getPhenotypePrinter(), problem.getGeneralizationFitnessComputer(), constants));
             listeners.add(new EvolvabilityFitnessLogger<BitsGenotype, String>(generationFilePS, problem.getGeneralizationFitnessComputer(), constants, writeHeader));
             writeHeader = false;
             System.out.println(constants);

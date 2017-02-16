@@ -25,8 +25,6 @@ import it.units.malelab.ege.evolver.genotype.SGEGenotype;
 import it.units.malelab.ege.evolver.genotype.SGEGenotypeFactory;
 import it.units.malelab.ege.evolver.listener.DynamicLocalityAnalysisLogger;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
-import it.units.malelab.ege.evolver.listener.ScreenGenerationLogger;
-import it.units.malelab.ege.evolver.listener.StreamGenerationLogger;
 import it.units.malelab.ege.evolver.operator.BitsSGECrossover;
 import it.units.malelab.ege.evolver.operator.ProbabilisticMutation;
 import it.units.malelab.ege.evolver.operator.SGECrossover;
@@ -133,8 +131,8 @@ public class TestMainDistances1 {
                         constants.put("initGenoSize", genotypeSize);
                         constants.put("run", r);
                         List<EvolutionListener<BitsGenotype, String>> listeners = new ArrayList<>();
-                        listeners.add(new ScreenGenerationLogger<BitsGenotype, String>("%8.1f", 8, problem.getPhenotypePrinter(), problem.getGeneralizationFitnessComputer(), constants));
-                        listeners.add(new StreamGenerationLogger<BitsGenotype, String>(generationFilePS, null, constants, writeHeader));
+                        //listeners.add(new ScreenGenerationLogger<BitsGenotype, String>("%8.1f", 8, problem.getPhenotypePrinter(), problem.getGeneralizationFitnessComputer(), constants));
+                        //listeners.add(new StreamGenerationLogger<BitsGenotype, String>(generationFilePS, null, constants, writeHeader));
                         //listeners.add(new DynamicLocalityAnalysisLogger<>(distancesFilePS, genotypeDistances, phenotypeDistances, constants, writeHeader));
                         writeHeader = false;
                         System.out.println(constants);
@@ -197,7 +195,7 @@ public class TestMainDistances1 {
                     constants.put("initGenoSize", 0);
                     constants.put("run", r);
                     List<EvolutionListener<SGEGenotype<String>, String>> listeners = new ArrayList<>();
-                    listeners.add(new ScreenGenerationLogger<SGEGenotype<String>, String>("%8.1f", 8, problem.getPhenotypePrinter(), problem.getGeneralizationFitnessComputer(), constants));
+                    //listeners.add(new ScreenGenerationLogger<SGEGenotype<String>, String>("%8.1f", 8, problem.getPhenotypePrinter(), problem.getGeneralizationFitnessComputer(), constants));
                     //listeners.add(new StreamGenerationLogger<SGEGenotype<String>, String>(generationFilePS, null, constants, writeHeader));
                     //listeners.add(new DynamicLocalityAnalysisLogger<>(distancesFilePS, genotypeDistances, phenotypeDistances, constants, writeHeader));
                     writeHeader = false;

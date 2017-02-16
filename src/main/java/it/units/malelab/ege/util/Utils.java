@@ -9,8 +9,6 @@ import it.units.malelab.ege.grammar.Node;
 import it.units.malelab.ege.evolver.genotype.Genotype;
 import it.units.malelab.ege.evolver.Individual;
 import it.units.malelab.ege.grammar.Grammar;
-import it.units.malelab.ege.mapper.Mapper;
-import it.units.malelab.ege.mapper.MappingException;
 import it.units.malelab.ege.evolver.event.EvolutionEvent;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
 import java.io.BufferedReader;
@@ -20,7 +18,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -33,8 +30,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
@@ -258,4 +253,13 @@ public class Utils {
     }
     return (T)options.keySet().toArray()[0];
   }
+  
+  public static <K, V> Map<K, V> sameValueMap(V value, K... keys) {
+    Map<K, V> map = new LinkedHashMap<>();
+    for (K key : keys) {
+      map.put(key, value);
+    }
+    return map;
+  }
+  
 }

@@ -15,21 +15,22 @@ import it.units.malelab.ege.evolver.PartitionEvolver;
 import it.units.malelab.ege.evolver.StandardEvolver;
 import it.units.malelab.ege.evolver.genotype.BitsGenotypeFactory;
 import it.units.malelab.ege.evolver.initializer.RandomInitializer;
+import it.units.malelab.ege.evolver.listener.CollectorGenerationLogger;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
-import it.units.malelab.ege.evolver.listener.ScreenGenerationLogger;
-import it.units.malelab.ege.evolver.listener.StreamGenerationLogger;
+import it.units.malelab.ege.evolver.listener.collector.Diversity;
 import it.units.malelab.ege.evolver.selector.Best;
 import it.units.malelab.ege.evolver.selector.IndividualComparator;
 import it.units.malelab.ege.evolver.selector.RankProportional;
 import it.units.malelab.ege.evolver.selector.Selector;
-import it.units.malelab.ege.evolver.selector.Tournament;
 import it.units.malelab.ege.evolver.selector.Uniform;
 import it.units.malelab.ege.mapper.MappingException;
 import it.units.malelab.ege.mapper.StandardGEMapper;
+import it.units.malelab.ege.util.Utils;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -74,7 +75,19 @@ public class MainDiversity {
     Map<String, Integer> strategies = new LinkedHashMap<>();
     strategies.put("steady-state", 1);
     //strategies.put("over-0.8", 400);
-    boolean writeHeader = true;
+    List<EvolutionListener<BitsGenotype, String>> listeners = new ArrayList<>();
+    listeners.add(new CollectorGenerationLogger<>(
+            Collections.EMPTY_MAP,
+            System.out, true, 10, " ", " | ",
+            new it.units.malelab.ege.evolver.listener.collector.Best<>("%5.2f"),
+            new Diversity<>()
+    ));
+    listeners.add(new CollectorGenerationLogger<>(
+            (Map)Utils.sameValueMap(null, "problem", "run", "variant", "strategy", "diversity", "selector"),
+            generationFilePS, false, 0, ";", ";",
+            new it.units.malelab.ege.evolver.listener.collector.Best<>("%5.2f"),
+            new Diversity<>()
+    ));
     for (String problemName : problems.keySet()) {
       BenchmarkProblems.Problem problem = problems.get(problemName);
       for (int r = 0; r < 30; r++) {
@@ -96,9 +109,9 @@ public class MainDiversity {
                 }
                 evolver = new StandardEvolver<>(Runtime.getRuntime().availableProcessors() - 1,
                         StandardConfiguration.createDefault(problem, random)
-                        .mapper(new StandardGEMapper<>(8, 5, problems.get(problemName).getGrammar()))
-                        .populationInitializer(new RandomInitializer<>(random, new BitsGenotypeFactory(256)))
-                        .offspringSize(strategies.get(strategyString)), random, false);
+                                .mapper(new StandardGEMapper<>(8, 5, problems.get(problemName).getGrammar()))
+                                .populationInitializer(new RandomInitializer<>(random, new BitsGenotypeFactory(256)))
+                                .offspringSize(strategies.get(strategyString)), random, false);
               } else {
                 if (representerSelectorString.equals("off")) {
                   continue;
@@ -125,17 +138,18 @@ public class MainDiversity {
                 }
                 evolver = new PartitionEvolver<>(Runtime.getRuntime().availableProcessors() - 1,
                         (PartitionConfiguration) PartitionConfiguration.createDefault(problem, random)
-                        .partitionerComparator((Comparator) (new IndividualComparator(diversities.get(diversityString))))
-                        .mapper(new StandardGEMapper<>(8, 5, problems.get(problemName).getGrammar()))
-                        .parentSelector(selector)
-                        .populationInitializer(new RandomInitializer<>(random, new BitsGenotypeFactory(256)))
-                        .offspringSize(strategies.get(strategyString)), random, false);
+                                .partitionerComparator((Comparator) (new IndividualComparator(diversities.get(diversityString))))
+                                .mapper(new StandardGEMapper<>(8, 5, problems.get(problemName).getGrammar()))
+                                .parentSelector(selector)
+                                .populationInitializer(new RandomInitializer<>(random, new BitsGenotypeFactory(256)))
+                                .offspringSize(strategies.get(strategyString)), random, false);
               }
-              List<EvolutionListener<BitsGenotype, String>> listeners = new ArrayList<>();
-              listeners.add(new ScreenGenerationLogger<BitsGenotype, String>("%8.1f", 8, problem.getPhenotypePrinter(), problem.getGeneralizationFitnessComputer(), constants));
-              listeners.add(new StreamGenerationLogger<BitsGenotype, String>(generationFilePS, problem.getGeneralizationFitnessComputer(), constants, writeHeader));
-              writeHeader = false;
               System.out.println(constants);
+              for (EvolutionListener listener : listeners) {
+                if (listener instanceof CollectorGenerationLogger) {
+                  ((CollectorGenerationLogger) listener).updateConstants(constants);
+                }
+              }
               evolver.go(listeners);
               System.out.println();
             }
