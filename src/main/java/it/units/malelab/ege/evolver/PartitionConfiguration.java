@@ -96,6 +96,11 @@ public class PartitionConfiguration<G extends Genotype, T> extends StandardConfi
     this.partitionSize = partitionSize;
     return this;
   }
+
+  @Override
+  public String toString() {
+    return "PartitionConfiguration{" + "partitionerComparator=" + partitionerComparator + ", parentPartitionSelector=" + parentPartitionSelector + ", unsurvivalPartitionSelector=" + unsurvivalPartitionSelector + ", partitionSize=" + partitionSize + " ("+super.toString()+")}";
+  }
   
   
   

@@ -64,5 +64,10 @@ public class StandardGEMapper<T> extends AbstractMapper<BitsGenotype, T> {
     }
     return tree;
   }
+
+  @Override
+  public String toString() {
+    return "StandardGEMapper{" + "codonLenght=" + codonLenght + ", maxWraps=" + maxWraps + '}';
+  }    
      
 }

@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
  *
  * @author eric
  */
-public class CollectorGenerationLogger<G extends Genotype, T> implements EvolutionListener<G, T> {
+public class CollectorGenerationLogger<G extends Genotype, T> implements EvolutionListener<G, T>, WithConstants {
 
   private final Set<Class<? extends EvolutionEvent>> eventClasses;
   private final Map<String, Object> constants;
@@ -171,6 +171,7 @@ public class CollectorGenerationLogger<G extends Genotype, T> implements Evoluti
     return s;
   }
 
+  @Override
   public void updateConstants(Map<String, Object> newConstants) {
     for (String key : constants.keySet()) {
       if (newConstants.containsKey(key)) {

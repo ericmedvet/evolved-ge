@@ -66,5 +66,10 @@ public class PiGEMapper<T> extends AbstractMapper<BitsGenotype, T> {
     }
     return tree;
   }
+
+  @Override
+  public String toString() {
+    return "PiGEMapper{" + "codonLenght=" + codonLenght + ", maxWraps=" + maxWraps + '}';
+  }  
      
 }

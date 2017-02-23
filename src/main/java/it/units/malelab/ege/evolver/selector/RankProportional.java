@@ -47,5 +47,10 @@ public class RankProportional<T> implements Selector<T> {
     }
     return list.get(index);
   }
+
+  @Override
+  public String toString() {
+    return "RankProportional{" + "comparator=" + comparator + ", k=" + k + '}';
+  }  
   
 }

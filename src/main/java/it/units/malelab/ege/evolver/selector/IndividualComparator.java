@@ -59,5 +59,10 @@ public class IndividualComparator implements Comparator<Individual> {
     }
     return v;
   }
+
+  @Override
+  public String toString() {
+    return "IndividualComparator{" + "attributes=" + attributes + '}';
+  }  
   
 }

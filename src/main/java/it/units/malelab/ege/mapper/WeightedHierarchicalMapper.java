@@ -19,9 +19,11 @@ import java.util.Map;
 public class WeightedHierarchicalMapper<T> extends HierarchicalMapper<T> {
 
   private final Map<T, Integer> weightsMap;
+  private final int maxDepth;
 
   public WeightedHierarchicalMapper(int maxDepth, Grammar<T> grammar) {
     super(grammar);
+    this.maxDepth = maxDepth;
     weightsMap = new HashMap<>();
     for (List<List<T>> options : grammar.getRules().values()) {
       for (List<T> option : options) {
@@ -74,6 +76,11 @@ public class WeightedHierarchicalMapper<T> extends HierarchicalMapper<T> {
       sizes.add((int)Math.floor((double)weightsMap.get(symbol)/(double)overallWeight*(double)genotype.size()));
     }
     return genotype.slices(sizes);
+  }
+
+  @Override
+  public String toString() {
+    return "WeightedHierarchicalMapper{" + "maxDepth=" + maxDepth + '}';
   }
   
 }

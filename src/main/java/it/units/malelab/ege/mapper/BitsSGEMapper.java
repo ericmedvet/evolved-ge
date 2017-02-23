@@ -29,9 +29,11 @@ public class BitsSGEMapper<T> extends AbstractMapper<BitsGenotype, T> {
   private final List<Integer> nonTerminalSizes;
   private final List<Integer> nonTerminalCodonsNumbers;
   private int overallSize;
+  private int maxDepth;
 
   public BitsSGEMapper(int maxDepth, Grammar<T> grammar) {
     super(grammar);
+    this.maxDepth = maxDepth;
     nonRecursiveGrammar = Utils.resolveRecursiveGrammar(grammar, maxDepth);
     Map<Pair<T, Integer>, Range<Integer>> codonsRangesMap = new LinkedHashMap<>();
     int startingIndex = 0;
@@ -134,6 +136,11 @@ public class BitsSGEMapper<T> extends AbstractMapper<BitsGenotype, T> {
 
   public List<Integer> getNonTerminalSizes() {
     return nonTerminalSizes;
+  }
+
+  @Override
+  public String toString() {
+    return "BitsSGEMapper{" + "maxDepth=" + maxDepth + '}';
   }
 
 }

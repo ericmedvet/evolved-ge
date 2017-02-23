@@ -27,7 +27,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  *
@@ -171,7 +170,10 @@ public class StandardConfiguration<G extends Genotype, T> {
     this.overlapping = overlapping;
     return this;
   }
-  
-  
+
+  @Override
+  public String toString() {
+    return "StandardConfiguration{" + "populationSize=" + populationSize + ", numberOfGenerations=" + numberOfGenerations + ", populationInitializer=" + populationInitializer + ", initGenotypeValidator=" + initGenotypeValidator + ", mapper=" + mapper + ", operators=" + operators + ", fitnessComputer=" + fitnessComputer + ", parentSelector=" + parentSelector + ", unsurvivalSelector=" + unsurvivalSelector + ", offspringSize=" + offspringSize + ", overlapping=" + overlapping + '}';
+  }
   
 }

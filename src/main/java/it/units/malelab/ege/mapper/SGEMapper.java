@@ -25,9 +25,11 @@ public class SGEMapper<T> extends AbstractMapper<SGEGenotype<T>, T> {
 
   private final Grammar<Pair<T, Integer>> nonRecursiveGrammar;
   private final Map<Pair<T, Integer>, List<Integer>> genesBound;
+  private final int maxDepth;
 
   public SGEMapper(int maxDepth, Grammar<T> grammar) {
     super(grammar);
+    this.maxDepth = maxDepth;
     nonRecursiveGrammar = Utils.resolveRecursiveGrammar(grammar, maxDepth);
     genesBound = new LinkedHashMap<>();
     for (Map.Entry<Pair<T, Integer>, List<List<Pair<T, Integer>>>> entry : nonRecursiveGrammar.getRules().entrySet()) {
@@ -105,4 +107,9 @@ public class SGEMapper<T> extends AbstractMapper<SGEGenotype<T>, T> {
     return genesBound;
   }
 
+  @Override
+  public String toString() {
+    return "SGEMapper{" + "maxDepth=" + maxDepth + '}';
+  }
+  
 }

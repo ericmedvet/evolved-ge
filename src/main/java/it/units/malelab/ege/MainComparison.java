@@ -13,7 +13,9 @@ import it.units.malelab.ege.evolver.StandardEvolver;
 import it.units.malelab.ege.evolver.genotype.BitsGenotypeFactory;
 import it.units.malelab.ege.evolver.initializer.RandomInitializer;
 import it.units.malelab.ege.evolver.listener.CollectorGenerationLogger;
+import it.units.malelab.ege.evolver.listener.ConfigurationSaverListener;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
+import it.units.malelab.ege.evolver.listener.WithConstants;
 import it.units.malelab.ege.evolver.listener.collector.Best;
 import it.units.malelab.ege.evolver.listener.collector.Diversity;
 import it.units.malelab.ege.evolver.operator.LocalizedTwoPointsCrossover;
@@ -21,6 +23,7 @@ import it.units.malelab.ege.evolver.operator.ProbabilisticMutation;
 import it.units.malelab.ege.evolver.selector.IndividualComparator;
 import it.units.malelab.ege.evolver.selector.Tournament;
 import it.units.malelab.ege.grammar.Grammar;
+import it.units.malelab.ege.mapper.BitsSGEMapper;
 import it.units.malelab.ege.mapper.HierarchicalMapper;
 import it.units.malelab.ege.mapper.MappingException;
 import it.units.malelab.ege.mapper.MultiMapper;
@@ -32,7 +35,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -72,6 +74,10 @@ public class MainComparison {
             new Best<>("%5.2f"),
             new Diversity<>()
     ));
+    listeners.add(new ConfigurationSaverListener<>(
+            (Map)Utils.sameValueMap(null, "key", "problem", "run", "initGenotypeSize", "variant"),
+            configurationFilePS
+    ));
     for (int initGenoSize : new int[]{256}) {
       for (String problemName : problems.keySet()) {
         BenchmarkProblems.Problem problem = problems.get(problemName);
@@ -82,7 +88,7 @@ public class MainComparison {
           constants.put("problem", problemName);
           constants.put("run", r);
           constants.put("initGenotypeSize", initGenoSize);
-          for (int m : new int[]{4}) {
+          for (int m : new int[]{0}) {
             StandardConfiguration<BitsGenotype, String> configuration = StandardConfiguration.createDefault(problem, random);
             configuration.getOperators().clear();
             configuration
@@ -105,8 +111,8 @@ public class MainComparison {
                 constants.put("variant", "piGE-16-5");
                 break;
               case 2:
-                configuration.mapper(new HierarchicalMapper<>(grammar));
-                constants.put("variant", "HiGE");
+                configuration.mapper(new BitsSGEMapper<>(10, grammar));
+                constants.put("variant", "BitSGE");
                 break;
               case 3:
                 configuration.mapper(new WeightedHierarchicalMapper<>(3, grammar));
@@ -116,7 +122,7 @@ public class MainComparison {
                 configuration.mapper(new MultiMapper<>(
                         new StandardGEMapper<>(8, 5, grammar),
                         new PiGEMapper<>(16, 5, grammar),
-                        new HierarchicalMapper<>(grammar),
+                        new BitsSGEMapper<>(10, grammar),
                         new WeightedHierarchicalMapper<>(3, grammar)
                 ));
                 constants.put("variant", "MuMapper-4");
@@ -126,8 +132,8 @@ public class MainComparison {
             //Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(1, configuration, random, false);
             System.out.println(constants);
             for (EvolutionListener listener : listeners) {
-              if (listener instanceof CollectorGenerationLogger) {
-                ((CollectorGenerationLogger)listener).updateConstants(constants);
+              if (listener instanceof WithConstants) {
+                ((WithConstants)listener).updateConstants(constants);
               }
             }
             evolver.go(listeners);

@@ -100,4 +100,9 @@ public class BreathFirstMapper<T> extends AbstractMapper<BitsGenotype, T> {
     return node;
   }
 
+  @Override
+  public String toString() {
+    return "BreathFirstMapper{" + "codonLenght=" + codonLenght + ", maxWraps=" + maxWraps + '}';
+  }
+
 }

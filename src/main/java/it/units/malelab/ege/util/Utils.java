@@ -262,4 +262,22 @@ public class Utils {
     return map;
   }
   
+  public static <G extends Genotype, T> void printIndividualAncestry(Individual<G, T> individual, PrintStream ps) {    
+    printIndividualAncestry(individual, ps, 0);
+  }
+  
+  private static <G extends Genotype, T> void printIndividualAncestry(Individual<G, T> individual, PrintStream ps, int pad) {
+    for (int i = 0; i<pad; i++) {
+      ps.print(" ");
+    }
+    ps.printf("'%20.20s' (%3d w/ %10.10s) f=%5.5s%n",
+            individual.getPhenotype().leaves(),
+            individual.getBirthDate(),
+            individual.getOperator()!=null?individual.getOperator().getClass().getSimpleName():"",
+            individual.getFitness());
+    for (Individual<G, T> parent : individual.getParents()) {
+      printIndividualAncestry(parent, ps, pad+2);
+    }
+  }
+  
 }

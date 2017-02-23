@@ -70,6 +70,6 @@ public class Individual<G extends Genotype, T> {
 
   public Map<String, Object> getOtherInfo() {
     return otherInfo;
-  }
+  }  
 
 }

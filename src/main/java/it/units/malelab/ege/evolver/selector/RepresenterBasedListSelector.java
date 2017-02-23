@@ -32,5 +32,10 @@ public class RepresenterBasedListSelector<T> implements Selector<List<T>> {
     }
     return map.get(outerSelector.select(new ArrayList<T>(map.keySet())));
   }
+
+  @Override
+  public String toString() {
+    return "RepresenterBasedListSelector{" + "innerSelector=" + innerSelector + ", outerSelector=" + outerSelector + '}';
+  }  
   
 }

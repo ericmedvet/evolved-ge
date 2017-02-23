@@ -41,4 +41,9 @@ public class Tournament<T> implements Selector<T> {
     return selectedT;
   }
 
+  @Override
+  public String toString() {
+    return "Tournament{" + "size=" + size + ", comparator=" + comparator + '}';
+  }  
+
 }

@@ -31,4 +31,9 @@ public class Best<T> implements Selector<T> {
     return selectedT;
   }
 
+  @Override
+  public String toString() {
+    return "Best{" + "comparator=" + comparator + '}';
+  }  
+  
 }

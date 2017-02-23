@@ -3,20 +3,16 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.evolver.selector;
+package it.units.malelab.ege.evolver.listener;
 
-import java.util.List;
-import java.util.Random;
+import java.util.Map;
 
 /**
  *
  * @author eric
  */
-public class First<T> implements Selector<T> {
+public interface WithConstants {
   
-  @Override
-  public T select(List<T> ts) {
-    return ts.get(0);
-  }  
+  public void updateConstants(Map<String, Object> newConstants);
   
 }

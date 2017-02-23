@@ -180,11 +180,6 @@ public class HierarchicalMapper<T> extends AbstractMapper<BitsGenotype, T> {
     if (bestOptionIndexes.size()==1) {
       return options.get(bestOptionIndexes.get(0));
     }
-    
-    if (bestOptionIndexes.isEmpty()) {
-      System.out.println("arrgh!");
-    }
-    
     return options.get(bestOptionIndexes.get(genotype.count()%bestOptionIndexes.size()));
   }
 

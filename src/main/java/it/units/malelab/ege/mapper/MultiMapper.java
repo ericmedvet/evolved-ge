@@ -40,5 +40,10 @@ public class MultiMapper<T> implements Mapper<BitsGenotype, T> {
   public List<Mapper<BitsGenotype, T>> getMappers() {
     return mappers;
   }
+
+  @Override
+  public String toString() {
+    return "MultiMapper{" + "mappers=" + mappers + '}';
+  }  
     
 }

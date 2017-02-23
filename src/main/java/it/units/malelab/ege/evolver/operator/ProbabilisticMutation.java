@@ -36,4 +36,9 @@ public class ProbabilisticMutation extends AbstractMutation<BitsGenotype> {
     return Collections.singletonList(child);
   }
 
+  @Override
+  public String toString() {
+    return "ProbabilisticMutation{" + "p=" + p + '}';
+  }
+
 }
