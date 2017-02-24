@@ -18,6 +18,7 @@ import it.units.malelab.ege.evolver.listener.EvolutionListener;
 import it.units.malelab.ege.evolver.listener.WithConstants;
 import it.units.malelab.ege.evolver.listener.collector.Best;
 import it.units.malelab.ege.evolver.listener.collector.Diversity;
+import it.units.malelab.ege.evolver.listener.collector.MultiMapperInfo;
 import it.units.malelab.ege.evolver.operator.LocalizedTwoPointsCrossover;
 import it.units.malelab.ege.evolver.operator.ProbabilisticMutation;
 import it.units.malelab.ege.evolver.selector.IndividualComparator;
@@ -66,36 +67,38 @@ public class MainComparison {
             Collections.EMPTY_MAP,
             System.out, true, 10, " ", " | ",
             new Best<>("%5.2f"),
-            new Diversity<>()
+            new Diversity<>(),
+            new MultiMapperInfo<>(4)
     ));
     listeners.add(new CollectorGenerationLogger<>(
             (Map)Utils.sameValueMap(null, "key", "problem", "run", "initGenotypeSize", "variant"),
             generationFilePS, false, 0, ";", ";",
             new Best<>("%5.2f"),
-            new Diversity<>()
+            new Diversity<>(),
+            new MultiMapperInfo<>(4)
     ));
     listeners.add(new ConfigurationSaverListener<>(
             (Map)Utils.sameValueMap(null, "key", "problem", "run", "initGenotypeSize", "variant"),
             configurationFilePS
     ));
-    for (int initGenoSize : new int[]{256}) {
+    for (int initGenoSize : new int[]{1024}) {
       for (String problemName : problems.keySet()) {
         BenchmarkProblems.Problem problem = problems.get(problemName);
-        for (int r = 0; r < 2; r++) {
+        for (int r = 0; r < 1; r++) {
           Random random = new Random(r);
           Map<String, Object> constants = new LinkedHashMap<>();
           constants.put("key", counter);
           constants.put("problem", problemName);
           constants.put("run", r);
           constants.put("initGenotypeSize", initGenoSize);
-          for (int m : new int[]{0}) {
+          for (int m : new int[]{2,4,5,6,7}) {
             StandardConfiguration<BitsGenotype, String> configuration = StandardConfiguration.createDefault(problem, random);
             configuration.getOperators().clear();
             configuration
                     .populationSize(500)
-                    .offspringSize(1)
+                    .offspringSize(500)
                     .overlapping(true)
-                    .numberOfGenerations(50)
+                    .numberOfGenerations(100)
                     .parentSelector(new Tournament(3, random, new IndividualComparator(IndividualComparator.Attribute.FITNESS)))
                     .populationInitializer(new RandomInitializer<>(random, new BitsGenotypeFactory(initGenoSize)))
                     .operator(new LocalizedTwoPointsCrossover(random), 0.8d)
@@ -111,7 +114,7 @@ public class MainComparison {
                 constants.put("variant", "piGE-16-5");
                 break;
               case 2:
-                configuration.mapper(new BitsSGEMapper<>(10, grammar));
+                configuration.mapper(new BitsSGEMapper<>(6, grammar));
                 constants.put("variant", "BitSGE");
                 break;
               case 3:
@@ -119,13 +122,40 @@ public class MainComparison {
                 constants.put("variant", "WHiGE-3");
                 break;
               case 4:
-                configuration.mapper(new MultiMapper<>(
+                configuration.mapper(new MultiMapper<>(MultiMapper.SelectionCriterion.RESERVED_BITS,
                         new StandardGEMapper<>(8, 5, grammar),
                         new PiGEMapper<>(16, 5, grammar),
                         new BitsSGEMapper<>(10, grammar),
                         new WeightedHierarchicalMapper<>(3, grammar)
                 ));
-                constants.put("variant", "MuMapper-4");
+                constants.put("variant", "MuMapper-ReBi");
+                break;
+              case 5:
+                configuration.mapper(new MultiMapper<>(MultiMapper.SelectionCriterion.ALL_MODULE,
+                        new StandardGEMapper<>(8, 5, grammar),
+                        new PiGEMapper<>(16, 5, grammar),
+                        new BitsSGEMapper<>(10, grammar),
+                        new WeightedHierarchicalMapper<>(3, grammar)
+                ));
+                constants.put("variant", "MuMapper-AlMo");
+                break;
+              case 6:
+                configuration.mapper(new MultiMapper<>(MultiMapper.SelectionCriterion.ALL_MAX,
+                        new StandardGEMapper<>(8, 5, grammar),
+                        new PiGEMapper<>(16, 5, grammar),
+                        new BitsSGEMapper<>(10, grammar),
+                        new WeightedHierarchicalMapper<>(3, grammar)
+                ));
+                constants.put("variant", "MuMapper-AlMa");
+                break;
+              case 7:
+                configuration.mapper(new MultiMapper<>(MultiMapper.SelectionCriterion.ALL_BINARY,
+                        new StandardGEMapper<>(8, 5, grammar),
+                        new PiGEMapper<>(16, 5, grammar),
+                        new BitsSGEMapper<>(10, grammar),
+                        new WeightedHierarchicalMapper<>(3, grammar)
+                ));
+                constants.put("variant", "MuMapper-AlBi");
                 break;
             }
             Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(Runtime.getRuntime().availableProcessors() - 1, configuration, random, false);
