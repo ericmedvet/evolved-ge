@@ -126,8 +126,9 @@ public class PartitionEvolver<G extends Genotype, T> extends StandardEvolver<G, 
   }
 
   private void broadcastGenerationEvent(List<List<Individual<G, T>>> partitionedPopulation, int generation, List<EvolutionListener<G, T>> listeners) {
-    Utils.broadcast(new GenerationEvent<>(representers(partitionedPopulation), generation, this, (Map)Collections.singletonMap("pop", "representers")), listeners);
-    Utils.broadcast(new GenerationEvent<>(all(partitionedPopulation), generation, this, (Map)Collections.singletonMap("pop", "all")), listeners);
+    //Utils.broadcast(new GenerationEvent<>(representers(partitionedPopulation), generation, this, (Map)Collections.singletonMap("pop", "representers")), listeners);
+    //Utils.broadcast(new GenerationEvent<>(all(partitionedPopulation), generation, this, (Map)Collections.singletonMap("pop", "all")), listeners);
+    Utils.broadcast(new GenerationEvent<>(all(partitionedPopulation), generation, this, null), listeners);
   }
 
   private void addToPartition(List<List<Individual<G, T>>> partitionedPopulation, Individual<G, T> individual) {

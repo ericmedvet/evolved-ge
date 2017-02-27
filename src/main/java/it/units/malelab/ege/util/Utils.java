@@ -280,8 +280,17 @@ public class Utils {
       printIndividualAncestry(parent, ps, pad + 2);
     }
   }
+  
+  public static List<Range<Integer>> slices(Range<Integer> range, int pieces) {
+    List<Integer> sizes = new ArrayList<>(pieces);
+    for (int i = 0; i<pieces; i++) {
+      sizes.add(1);
+    }
+    return slices(range, sizes);
+  }
 
-  public static List<Range<Integer>> slices(int length, List<Integer> sizes) {
+  public static List<Range<Integer>> slices(Range<Integer> range, List<Integer> sizes) {
+    int length = range.upperEndpoint()-range.lowerEndpoint();
     int sumOfSizes = 0;
     for (int size : sizes) {
       sumOfSizes = sumOfSizes + size;
@@ -310,7 +319,7 @@ public class Utils {
       missing = missing-1;
     }
     List<Range<Integer>> ranges = new ArrayList<>(sizes.size());
-    int offset = 0;
+    int offset = range.lowerEndpoint();
     for (int i = 0; i < rangeSize.length; i++) {
       ranges.add(Range.closedOpen(offset, offset+rangeSize[i]));
       offset = offset+rangeSize[i];

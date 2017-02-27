@@ -5,6 +5,8 @@
  */
 package it.units.malelab.ege.evolver.genotype;
 
+import com.google.common.collect.Range;
+import it.units.malelab.ege.util.Utils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -47,7 +49,7 @@ public class BitsGenotypeTest {
                 totalnumber += i;
             }
             BitsGenotype instance = new BitsGenotype(32);
-            List<BitsGenotype> result = instance.slices(l);
+            List<BitsGenotype> result = instance.slices(Utils.slices(Range.closedOpen(0, instance.size()), l));
             //List<BitsGenotype> expResult = instance.slices2(l);
             System.out.print("input: " + l.toString() + "\nnew lengths: [");
             for (BitsGenotype i : result) {

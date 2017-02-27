@@ -5,8 +5,9 @@
  */
 package it.units.malelab.ege.mapper;
 
-import it.units.malelab.ege.evolver.genotype.BitsGenotype;
+import com.google.common.collect.Range;
 import it.units.malelab.ege.grammar.Grammar;
+import it.units.malelab.ege.util.Utils;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -59,23 +60,25 @@ public class WeightedHierarchicalMapper<T> extends HierarchicalMapper<T> {
   }
 
   @Override
-  protected List<BitsGenotype> getSlices(BitsGenotype genotype, List<T> symbols) {
-    if (symbols.size()>genotype.size()) {
-      List<BitsGenotype> genotypes = new ArrayList<>(symbols.size());
+  protected List<Range<Integer>> getSlices(Range<Integer> range, List<T> symbols) {
+    List<Range<Integer>> ranges;
+    if (symbols.size()>(range.upperEndpoint()-range.lowerEndpoint())) {
+      ranges = new ArrayList<>(symbols.size());
       for (T symbol : symbols) {
-        genotypes.add(new BitsGenotype(0));
+        ranges.add(Range.closedOpen(range.lowerEndpoint(), range.lowerEndpoint()));
       }
-      return genotypes;
+    } else {
+      List<Integer> sizes = new ArrayList<>(symbols.size());
+      int overallWeight = 0;
+      for (T symbol : symbols) {
+        overallWeight = overallWeight+weightsMap.get(symbol);
+      }
+      for (T symbol : symbols) {
+        sizes.add((int)Math.floor((double)weightsMap.get(symbol)/(double)overallWeight*(double)(range.upperEndpoint()-range.lowerEndpoint())));
+      }
+      ranges = Utils.slices(range, sizes);
     }
-    List<Integer> sizes = new ArrayList<>(symbols.size());
-    int overallWeight = 0;
-    for (T symbol : symbols) {
-      overallWeight = overallWeight+weightsMap.get(symbol);
-    }
-    for (T symbol : symbols) {
-      sizes.add((int)Math.floor((double)weightsMap.get(symbol)/(double)overallWeight*(double)genotype.size()));
-    }
-    return genotype.slices(sizes);
+    return ranges;
   }
 
   @Override

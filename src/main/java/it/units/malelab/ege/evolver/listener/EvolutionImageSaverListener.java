@@ -6,6 +6,7 @@
 package it.units.malelab.ege.evolver.listener;
 
 import it.units.malelab.ege.evolver.Individual;
+import it.units.malelab.ege.evolver.event.EvolutionEndEvent;
 import it.units.malelab.ege.evolver.event.EvolutionEvent;
 import it.units.malelab.ege.evolver.event.GenerationEvent;
 import it.units.malelab.ege.evolver.genotype.BitsGenotype;
@@ -20,8 +21,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 
 /**
@@ -34,13 +33,14 @@ public class EvolutionImageSaverListener<T> implements EvolutionListener<BitsGen
   private final Map<String, Object> constants;
   private final String basePath;
   private final List<Individual<BitsGenotype, T>> bests;
-  private final List<double[]> bestBitDivesities;
+  private final List<double[]> bestBitDivesities;  
 
   public EvolutionImageSaverListener(
           Map<String, Object> constants,
           String basePath) {
     eventClasses = new LinkedHashSet<>();
     eventClasses.add(GenerationEvent.class);
+    eventClasses.add(EvolutionEndEvent.class);
     this.constants = new LinkedHashMap<>(constants);
     this.basePath = basePath;
     bests = new ArrayList<>();
@@ -49,9 +49,29 @@ public class EvolutionImageSaverListener<T> implements EvolutionListener<BitsGen
 
   @Override
   public void listen(EvolutionEvent<BitsGenotype, T> event) {
-    int generation = ((GenerationEvent) event).getGeneration();
     List<Individual<BitsGenotype, T>> population = new ArrayList<>(((GenerationEvent) event).getPopulation());
-    if (generation == 1) {
+    //get best
+    Individual<BitsGenotype, T> best = population.get(0);
+    for (Individual<BitsGenotype, T> individual : population) {
+      if (individual.getFitness().compareTo(best.getFitness()) < 0) {
+        best = individual;
+      }
+    }
+    bests.add(best);
+    //get diversities
+    double[] diversity = new double[best.getGenotype().size()];
+    double[] counts = new double[best.getGenotype().size()];
+    for (Individual<BitsGenotype, T> individual : population) {
+      for (int i = 0; i < Math.min(best.getGenotype().size(), individual.getGenotype().size()); i++) {
+        counts[i] = counts[i] + 1;
+        diversity[i] = diversity[i] + (individual.getGenotype().get(i) ? 1 : 0);
+      }
+    }
+    for (int i = 0; i < diversity.length; i++) {
+      diversity[i] = 1 - Math.abs(diversity[i] / counts[i] - 0.5) * 2;
+    }
+    bestBitDivesities.add(diversity);
+    if (event instanceof EvolutionEndEvent) {
       //save and clear
       if (!bests.isEmpty()) {
         //save
@@ -95,27 +115,6 @@ public class EvolutionImageSaverListener<T> implements EvolutionListener<BitsGen
       bests.clear();
       bestBitDivesities.clear();
     }
-    //get best
-    Individual<BitsGenotype, T> best = population.get(0);
-    for (Individual<BitsGenotype, T> individual : population) {
-      if (individual.getFitness().compareTo(best.getFitness()) < 0) {
-        best = individual;
-      }
-    }
-    bests.add(best);
-    //get diversities
-    double[] diversities = new double[best.getGenotype().size()];
-    double[] counts = new double[best.getGenotype().size()];
-    for (Individual<BitsGenotype, T> individual : population) {
-      for (int i = 0; i < Math.min(best.getGenotype().size(), individual.getGenotype().size()); i++) {
-        counts[i] = counts[i] + 1;
-        diversities[i] = diversities[i] + (individual.getGenotype().get(i) ? 1 : 0);
-      }
-    }
-    for (int i = 0; i < diversities.length; i++) {
-      diversities[i] = 1 - Math.abs(diversities[i] / counts[i] - 0.5) * 2;
-    }
-    bestBitDivesities.add(diversities);
   }
 
   @Override

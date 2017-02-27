@@ -88,29 +88,12 @@ public class BitsSGEMapper<T> extends AbstractMapper<BitsGenotype, T> {
     if (genotype.size() < overallSize) {
       throw new MappingException(String.format("Short genotype (%d<%d)", genotype.size(), overallSize));
     }
-    Map<Pair<T, Integer>, List<Integer>> codons = new LinkedHashMap<>();
-    Map<Pair<T, Integer>, List<Range<Integer>>> codonBoundaries = new LinkedHashMap<>();
-    List<BitsGenotype> nonTerminalGenotypes = genotype.slices(nonTerminalSizes);
-    List<Range<Integer>> nonTerminalRanges = Utils.slices(genotype.size(), nonTerminalSizes);
+    Map<Pair<T, Integer>, List<Range<Integer>>> codonRanges = new LinkedHashMap<>();
+    List<Range<Integer>> nonTerminalRanges = Utils.slices(Range.closedOpen(0, genotype.size()), nonTerminalSizes);
     for (int i = 0; i < nonTerminals.size(); i++) {
-      int codonSize = (int) Math.max(Math.ceil(Math.log10(nonRecursiveGrammar.getRules().get(nonTerminals.get(i)).size()) / Math.log10(2)), 1);
-      List<BitsGenotype> codonGenotypes = nonTerminalGenotypes.get(i).slices(nonTerminalCodonsNumbers.get(i));
-      List<Integer> nonTerminalCodons = new ArrayList<>(nonTerminalCodonsNumbers.get(i));
-      for (int j = 0; j < nonTerminalCodonsNumbers.get(i); j++) {
-        nonTerminalCodons.add(codonGenotypes.get(j).compress(codonSize).toInt());
-      }
-      codons.put(nonTerminals.get(i), nonTerminalCodons);
-      List<Integer> sizes = new ArrayList<>(nonTerminalCodonsNumbers.get(i));
-      for (int j= 0; j<nonTerminalCodonsNumbers.get(i); j++) {
-        sizes.add(1);
-      }
-      List<Range<Integer>> boundaries = Utils.slices(nonTerminalGenotypes.get(i).size(), sizes);
-      for (int j = 0; j<boundaries.size(); j++) {
-        boundaries.set(j, Range.closedOpen(
-                nonTerminalRanges.get(i).lowerEndpoint()+boundaries.get(j).lowerEndpoint(),
-                nonTerminalRanges.get(i).lowerEndpoint()+boundaries.get(j).upperEndpoint()));
-      }
-      codonBoundaries.put(nonTerminals.get(i), boundaries);
+      //int codonSize = (int) Math.max(Math.ceil(Math.log10(nonRecursiveGrammar.getRules().get(nonTerminals.get(i)).size()) / Math.log10(2)), 1);
+      List<Range<Integer>> boundaries = Utils.slices(nonTerminalRanges.get(i), nonTerminalCodonsNumbers.get(i));
+      codonRanges.put(nonTerminals.get(i), boundaries);
     }
     //map
     Multiset<Pair<T, Integer>> expandedSymbols = LinkedHashMultiset.create();
@@ -127,11 +110,12 @@ public class BitsSGEMapper<T> extends AbstractMapper<BitsGenotype, T> {
         break;
       }
       //get codon
-      int codonValue = codons.get(nodeToBeReplaced.getContent()).get(expandedSymbols.count(nodeToBeReplaced.getContent()));
+      Range<Integer> range = codonRanges.get(nodeToBeReplaced.getContent()).get(expandedSymbols.count(nodeToBeReplaced.getContent()));
       List<List<Pair<T, Integer>>> options = nonRecursiveGrammar.getRules().get(nodeToBeReplaced.getContent());
+      int codonSize = (int) Math.max(Math.ceil(Math.log10(options.size()) / Math.log10(2)), 1);
+      int codonValue = genotype.slice(range).compress(codonSize).toInt();
       int optionIndex = codonValue % options.size();
       //update usages
-      Range<Integer> range = codonBoundaries.get(nodeToBeReplaced.getContent()).get(expandedSymbols.count(nodeToBeReplaced.getContent()));
       for (int i = range.lowerEndpoint(); i<range.upperEndpoint(); i++) {
         bitUsages[i] = bitUsages[i]+1;
       }

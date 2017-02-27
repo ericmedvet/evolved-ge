@@ -78,7 +78,7 @@ public class CollectorGenerationLogger<G extends Genotype, T> implements Evoluti
       //print header: constants
       int k = 0;
       for (String name : constants.keySet()) {
-        ps.print(pad(name, constants.get(name).toString().length()));
+        ps.print(pad(name, constants.getOrDefault(name, "").toString().length()));
         if (k != constants.size() - 1) {
           ps.print(innerSeparator);
         }

@@ -9,8 +9,6 @@ import com.google.common.collect.Range;
 import it.units.malelab.ege.util.Utils;
 import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -114,32 +112,26 @@ public class BitsGenotype implements Genotype {
     
   public BitsGenotype compress(int newSize) {
     BitsGenotype compressed = new BitsGenotype(newSize);
-    List<BitsGenotype> slices = slices(newSize);
+    List<BitsGenotype> slices = slices(Utils.slices(Range.closedOpen(0, size), newSize));
     for (int i = 0; i<slices.size(); i++) {
       compressed.bitSet.set(i, slices.get(i).count()>slices.get(i).size()/2);
     }
     return compressed;
   }
     
-  public List<BitsGenotype> slices(final List<Integer> sizes) {
-    List<BitsGenotype> genotypes = new ArrayList<>();
-    List<Range<Integer>> ranges = Utils.slices(size, sizes);
+  public List<BitsGenotype> slices(final List<Range<Integer>> ranges) {
+    List<BitsGenotype> genotypes = new ArrayList<>(ranges.size());
     for (Range<Integer> range : ranges) {
-      if (range.lowerEndpoint()<range.upperEndpoint()) {
-        genotypes.add(slice(range.lowerEndpoint(), range.upperEndpoint()));
-      } else {
-        genotypes.add(new BitsGenotype(0));
-      }
+      genotypes.add(slice(range));
     }
     return genotypes;
   }
   
-  public List<BitsGenotype> slices(int number) {
-    List<Integer> sizes = new ArrayList<>(number);
-    for (int i = 0; i<number; i++) {
-      sizes.add(1);
+  public BitsGenotype slice(Range<Integer> range) {
+    if ((range.upperEndpoint()-range.lowerEndpoint())==0) {
+      return new BitsGenotype(0);
     }
-    return slices(sizes);
+    return slice(range.lowerEndpoint(), range.upperEndpoint());
   }
   
   public BitsGenotype append(BitsGenotype genotype) {

@@ -5,8 +5,10 @@
  */
 package it.units.malelab.ege.evolver.operator;
 
+import com.google.common.collect.Range;
 import it.units.malelab.ege.evolver.genotype.BitsGenotype;
 import it.units.malelab.ege.mapper.BitsSGEMapper;
+import it.units.malelab.ege.util.Utils;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -38,8 +40,8 @@ public class BitsSGECrossover extends AbstractCrossover<BitsGenotype> {
       return parents;
     }
     int nonTerminalIndex = random.nextInt(nonTerminalSizes.size());
-    List<BitsGenotype> parent1Slices = parent1.slices(nonTerminalSizes);
-    List<BitsGenotype> parent2Slices = parent2.slices(nonTerminalSizes);
+    List<BitsGenotype> parent1Slices = parent1.slices(Utils.slices(Range.closedOpen(0, parent1.size()), nonTerminalSizes));
+    List<BitsGenotype> parent2Slices = parent2.slices(Utils.slices(Range.closedOpen(0, parent2.size()), nonTerminalSizes));
     BitsGenotype child1 = new BitsGenotype(0);
     BitsGenotype child2 = new BitsGenotype(0);
     for (int i = 0; i<parent1Slices.size(); i++) {

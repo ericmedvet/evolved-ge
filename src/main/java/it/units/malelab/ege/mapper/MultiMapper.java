@@ -5,8 +5,10 @@
  */
 package it.units.malelab.ege.mapper;
 
+import com.google.common.collect.Range;
 import it.units.malelab.ege.grammar.Node;
 import it.units.malelab.ege.evolver.genotype.BitsGenotype;
+import it.units.malelab.ege.util.Utils;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -37,33 +39,44 @@ public class MultiMapper<T> implements Mapper<BitsGenotype, T> {
   public Node<T> map(BitsGenotype genotype, Map<String, Object> report) throws MappingException {
     int mapperIndex = 0;
     BitsGenotype innerGenotype = genotype;
-    if (selectionCriterion.equals(SelectionCriterion.RESERVED_BITS)) {
-      int mapperBits = (int) Math.ceil(Math.log10(mappers.size()) / Math.log10(2d));
-      mapperIndex = genotype.slice(0, mapperBits).toInt()%mappers.size();
-      innerGenotype = genotype.slice(mapperIndex, genotype.size());
-    } else if (selectionCriterion.equals(SelectionCriterion.ALL_MODULE)) {
-      mapperIndex = genotype.count()%mappers.size();
-    } else if (selectionCriterion.equals(SelectionCriterion.ALL_BINARY)) {
-      int mapperBits = (int) Math.ceil(Math.log10(mappers.size()) / Math.log10(2d));
-      int index = 0;
-      List<BitsGenotype> slices = genotype.slices(mapperBits);
-      for (int i = 0; i<mapperBits; i++) {
-        int value = Math.round(slices.get(i).count()/slices.get(i).size());
-        index = index+value*(int)Math.pow(2, i);
-      }
-      mapperIndex = index%mappers.size();
-    } else if (selectionCriterion.equals(SelectionCriterion.ALL_MAX)) {
-      int maxIndex = 0;
-      double maxValue = Double.NEGATIVE_INFINITY;
-      List<BitsGenotype> slices = genotype.slices(mappers.size());
-      for (int i = 0; i<slices.size(); i++) {
-        double value = slices.get(i).count()/slices.get(i).size();
-        if (value>maxValue) {
-          maxValue = value;
-          maxIndex = i;
+    switch (selectionCriterion) {
+      case RESERVED_BITS:
+        {
+          int mapperBits = (int) Math.ceil(Math.log10(mappers.size()) / Math.log10(2d));
+          mapperIndex = genotype.slice(0, mapperBits).toInt()%mappers.size();
+          innerGenotype = genotype.slice(mapperIndex, genotype.size());
+          break;
         }
-      }
-      mapperIndex = maxIndex;
+      case ALL_MODULE:
+        mapperIndex = genotype.count()%mappers.size();
+        break;
+      case ALL_BINARY:
+        {
+          int mapperBits = (int) Math.ceil(Math.log10(mappers.size()) / Math.log10(2d));
+          int index = 0;
+          List<BitsGenotype> slices = genotype.slices(Utils.slices(Range.closedOpen(0, genotype.size()), mapperBits));
+          for (int i = 0; i<mapperBits; i++) {
+            int value = Math.round(slices.get(i).count()/slices.get(i).size());
+            index = index+value*(int)Math.pow(2, i);
+          }   mapperIndex = index%mappers.size();
+          break;
+        }
+      case ALL_MAX:
+        {
+          int maxIndex = 0;
+          double maxValue = Double.NEGATIVE_INFINITY;
+          List<BitsGenotype> slices = genotype.slices(Utils.slices(Range.closedOpen(0, genotype.size()), mappers.size()));
+          for (int i = 0; i<slices.size(); i++) {
+            double value = slices.get(i).count()/slices.get(i).size();
+            if (value>maxValue) {
+              maxValue = value;
+              maxIndex = i;
+            }
+          }   mapperIndex = maxIndex;
+          break;
+        }
+      default:
+        break;
     }
     report.put(MAPPER_INDEX_NAME, mapperIndex);
     return mappers.get(mapperIndex).map(innerGenotype, report);

@@ -5,8 +5,10 @@
  */
 package it.units.malelab.ege.evolver.initializer;
 
+import com.google.common.collect.Range;
 import it.units.malelab.ege.evolver.genotype.BitsGenotype;
 import it.units.malelab.ege.evolver.validator.GenotypeValidator;
+import it.units.malelab.ege.util.Utils;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,7 +30,7 @@ public class QuantizedBitsInitializer implements PopulationInitializer<BitsGenot
     int pieces = (int)Math.ceil(Math.log(n)/Math.log(2d));
     for (int i = 0; i<n; i++) {
       BitsGenotype genotype = new BitsGenotype(size);
-      List<BitsGenotype> slices = genotype.slices(pieces);
+      List<BitsGenotype> slices = genotype.slices(Utils.slices(Range.closedOpen(0, genotype.size()), pieces));
       int b = 0;
       int v = i;
       for (int j = slices.size()-1; j>=0; j--) {

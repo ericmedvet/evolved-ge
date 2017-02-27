@@ -5,9 +5,11 @@
  */
 package it.units.malelab.ege.mapper;
 
+import com.google.common.collect.Range;
 import it.units.malelab.ege.grammar.Node;
 import it.units.malelab.ege.evolver.genotype.BitsGenotype;
 import it.units.malelab.ege.grammar.Grammar;
+import it.units.malelab.ege.util.Utils;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -47,7 +49,7 @@ public class DHierarchicalMapper<T> extends AbstractMapper<BitsGenotype, T> {
     int partsize = (int) Math.ceil((float) Math.log(choices.size()) / Math.log(2)) + 2;
     int maxvalue = (int) Math.pow(2, partsize);
     int choiceIndex = 0, j = 0;
-    List<BitsGenotype> slices = geno.slices(Math.max(1, Math.floorDiv(geno.size(), partsize)));
+    List<BitsGenotype> slices = geno.slices(Utils.slices(Range.closedOpen(0, geno.size()), Math.max(1, Math.floorDiv(geno.size(), partsize))));
     for (BitsGenotype g : slices) {
       choiceIndex += g.toInt();
     }
@@ -68,7 +70,7 @@ public class DHierarchicalMapper<T> extends AbstractMapper<BitsGenotype, T> {
     //List<T> chosen = choices.get(Math.min(size * choiceIndex / maxvalue, size - 1));
     //System.out.println(" " + choiceIndex + " " + chosen);
     int i = 0;
-    for (BitsGenotype g : geno.slices(chosen.size())) {
+    for (BitsGenotype g : geno.slices(Utils.slices(Range.closedOpen(0, geno.size()), chosen.size()))) {
       Node<T> child = new Node(chosen.get(i));
       parent.getChildren().add(child);
       if (rules.get(chosen.get(i)) == null || g.size() < 3 * rules.get(chosen.get(i)).size()) {

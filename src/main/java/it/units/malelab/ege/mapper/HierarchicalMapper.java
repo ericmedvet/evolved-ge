@@ -5,9 +5,12 @@
  */
 package it.units.malelab.ege.mapper;
 
+import com.google.common.collect.Range;
 import it.units.malelab.ege.evolver.genotype.BitsGenotype;
 import it.units.malelab.ege.grammar.Node;
 import it.units.malelab.ege.grammar.Grammar;
+import static it.units.malelab.ege.mapper.StandardGEMapper.BIT_USAGES_INDEX_NAME;
+import it.units.malelab.ege.util.Utils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -84,26 +87,27 @@ public class HierarchicalMapper<T> extends AbstractMapper<BitsGenotype, T> {
   private class EnhancedSymbol<T> {
 
     private final T symbol;
-    private final BitsGenotype genotype;
+    private final Range<Integer> range;
 
-    public EnhancedSymbol(T symbol, BitsGenotype genotype) {
+    public EnhancedSymbol(T symbol, Range<Integer> range) {
       this.symbol = symbol;
-      this.genotype = genotype;
+      this.range = range;
     }
 
     public T getSymbol() {
       return symbol;
     }
 
-    public BitsGenotype getGenotype() {
-      return genotype;
+    public Range<Integer> getRange() {
+      return range;
     }
 
   }
 
   @Override
   public Node<T> map(BitsGenotype genotype, Map<String, Object> report) throws MappingException {
-    Node<EnhancedSymbol<T>> enhancedTree = new Node<>(new EnhancedSymbol<>(grammar.getStartingSymbol(), genotype));
+    int[] bitUsages = new int[genotype.size()];
+    Node<EnhancedSymbol<T>> enhancedTree = new Node<>(new EnhancedSymbol<>(grammar.getStartingSymbol(), Range.closedOpen(0, genotype.size())));    
     while (true) {
       Node<EnhancedSymbol<T>> nodeToBeReplaced = null;
       for (Node<EnhancedSymbol<T>> node : enhancedTree.leaves()) {
@@ -117,38 +121,48 @@ public class HierarchicalMapper<T> extends AbstractMapper<BitsGenotype, T> {
       }
       //get genotype
       T symbol = nodeToBeReplaced.getContent().getSymbol();
-      BitsGenotype symbolGenotype = nodeToBeReplaced.getContent().getGenotype();
+      Range<Integer> symbolRange = nodeToBeReplaced.getContent().getRange();
       List<List<T>> options = grammar.getRules().get(symbol);
       //get option
       List<T> symbols;
-      if (symbolGenotype.size() < options.size()) {
+      if ((symbolRange.upperEndpoint()-symbolRange.lowerEndpoint()) < options.size()) {
         symbols = options.get(shortestOptionIndexMap.get(symbol));
       } else {
-        symbols = chooseOption(symbolGenotype, options);
+        symbols = chooseOption(genotype, symbolRange, options);
+        for (int i = symbolRange.lowerEndpoint(); i<symbolRange.upperEndpoint(); i++ ) {
+          bitUsages[i] = bitUsages[i]+1;
+        }
       }
       //add children
-      List<BitsGenotype> childGenotypes = getSlices(symbolGenotype, symbols);
+      List<Range<Integer>> childRanges = getSlices(symbolRange, symbols);
       for (int i = 0; i < symbols.size(); i++) {
+        Range<Integer> childRange = childRanges.get(i);
+        if (childRanges.get(i).equals(symbolRange)&&(childRange.upperEndpoint()-childRange.lowerEndpoint()>0)) {
+          childRange = Range.closedOpen(symbolRange.lowerEndpoint(), symbolRange.upperEndpoint()-1);
+        }
         Node<EnhancedSymbol<T>> newChild = new Node<>(new EnhancedSymbol<>(
                 symbols.get(i),
-                childGenotypes.get(i)
+                childRange
         ));
         nodeToBeReplaced.getChildren().add(newChild);
       }
     }
+    report.put(BIT_USAGES_INDEX_NAME, bitUsages);
     //convert
     return extractFromEnhanced(enhancedTree);
   }
 
-  protected List<BitsGenotype> getSlices(BitsGenotype genotype, List<T> symbols) {
-    if (symbols.size()>genotype.size()) {
-      List<BitsGenotype> genotypes = new ArrayList<>(symbols.size());
+  protected List<Range<Integer>> getSlices(Range<Integer> range, List<T> symbols) {
+    List<Range<Integer>> ranges;
+    if (symbols.size()>(range.upperEndpoint()-range.lowerEndpoint())) {
+      ranges = new ArrayList<>(symbols.size());
       for (T symbol : symbols) {
-        genotypes.add(new BitsGenotype(0));
+        ranges.add(Range.closedOpen(range.lowerEndpoint(), range.lowerEndpoint()));
       }
-      return genotypes;
+    } else {
+      ranges = Utils.slices(range, symbols.size());
     }
-    return genotype.slices(symbols.size());
+    return ranges;
   }
 
   private Node<T> extractFromEnhanced(Node<EnhancedSymbol<T>> enhancedNode) {
@@ -159,12 +173,12 @@ public class HierarchicalMapper<T> extends AbstractMapper<BitsGenotype, T> {
     return node;
   }
 
-  private <K> K chooseOption(BitsGenotype genotype, List<K> options) {
+  private <K> K chooseOption(BitsGenotype genotype, Range<Integer> range, List<K> options) {
     if (options.size() == 1) {
       return options.get(0);
     }
     double max = Double.NEGATIVE_INFINITY;
-    List<BitsGenotype> slices = genotype.slices(options.size());
+    List<BitsGenotype> slices = genotype.slices(Utils.slices(range, options.size()));
     List<Integer> bestOptionIndexes = new ArrayList<>();
     for (int i = 0; i < options.size(); i++) {
       double value = (double) slices.get(i).count() / (double) slices.get(i).size();
