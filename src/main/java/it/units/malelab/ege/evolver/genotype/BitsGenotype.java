@@ -5,6 +5,8 @@
  */
 package it.units.malelab.ege.evolver.genotype;
 
+import com.google.common.collect.Range;
+import it.units.malelab.ege.util.Utils;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
@@ -31,6 +33,7 @@ public class BitsGenotype implements Genotype {
     this.bitSet = bitSet.get(0, size);
   }
   
+  @Override
   public int size() {
     return size;
   }
@@ -117,65 +120,15 @@ public class BitsGenotype implements Genotype {
     }
     return compressed;
   }
-  
+    
   public List<BitsGenotype> slices(final List<Integer> sizes) {
     List<BitsGenotype> genotypes = new ArrayList<>();
-    int sumOfAllSizes = 0;
-    for (int localSize : sizes) {
-      sumOfAllSizes = sumOfAllSizes+localSize;
-    }
-    //compute ideal piece sizes
-    List<Integer> pieceSizes = new ArrayList<>(sizes.size());
-    List<Integer> sizeIndexes = new ArrayList<>(sizes.size());
-    int totalSize = 0;
-    for (int i = 0; i<sizes.size(); i++) {
-      int pieceSize = (int)Math.max(1, Math.floor((double) size / (double) sumOfAllSizes));
-      pieceSizes.add(pieceSize);
-      sizeIndexes.add(i);
-      totalSize = totalSize+pieceSize*sizes.get(i);
-    }
-    Collections.sort(sizeIndexes, new Comparator<Integer>() {
-      @Override
-      public int compare(Integer i1, Integer i2) {
-        return -Integer.compare(sizes.get(i1), sizes.get(i2));
-      }
-    });
-    for (int i = 0; i<pieceSizes.size(); i++) {
-      int index = sizeIndexes.get(i);
-      if (totalSize+sizes.get(index)<=size) {
-        pieceSizes.set(index, pieceSizes.get(index)+1);
-        totalSize = totalSize+sizes.get(index);
-      }
-    }
-    int fromIndex;
-    int toIndex = 0;
-    int sumOfUsedSizes = 0;
-    for (int i = 0; i<sizes.size(); i++) {
-      fromIndex = toIndex;
-      toIndex = fromIndex+pieceSizes.get(i)*sizes.get(i);
-      if (i==sizes.size()-1) {
-        toIndex = size;
-      }
-      if (fromIndex==toIndex) {
-        genotypes.add(new BitsGenotype(0));
+    List<Range<Integer>> ranges = Utils.slices(size, sizes);
+    for (Range<Integer> range : ranges) {
+      if (range.lowerEndpoint()<range.upperEndpoint()) {
+        genotypes.add(slice(range.lowerEndpoint(), range.upperEndpoint()));
       } else {
-        genotypes.add(slice(fromIndex, toIndex));
-      }
-      sumOfUsedSizes = sumOfUsedSizes+sizes.get(i);
-    }
-    //check if same genotype and correct
-    int nonZeroSizes = 0;
-    for (BitsGenotype genotype : genotypes) {
-      if (genotype.size>0) {
-        nonZeroSizes = nonZeroSizes+1;
-      }
-    }
-    if (nonZeroSizes==1) {
-      for (int i = 0; i<genotypes.size(); i++) {
-        if (genotypes.get(i).size>0) {
-          genotypes.set(i, new BitsGenotype(genotypes.get(i).size-1, genotypes.get(i).bitSet));
-          break;
-        }
+        genotypes.add(new BitsGenotype(0));
       }
     }
     return genotypes;

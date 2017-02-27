@@ -19,6 +19,8 @@ public class StandardGEMapper<T> extends AbstractMapper<BitsGenotype, T> {
   
   private final int codonLenght;
   private final int maxWraps;
+  
+  public static final String BIT_USAGES_INDEX_NAME = "bitUsages";
 
   public StandardGEMapper(int codonLenght, int maxWraps, Grammar<T> grammar) {
     super(grammar);
@@ -28,6 +30,7 @@ public class StandardGEMapper<T> extends AbstractMapper<BitsGenotype, T> {
 
   @Override
   public Node<T> map(BitsGenotype genotype, Map<String, Object> report) throws MappingException {
+    int[] bitUsages = new int[genotype.size()];
     if (genotype.size()<codonLenght) {
       throw new MappingException(String.format("Short genotype (%d<%d)", genotype.size(), codonLenght));
     }
@@ -55,6 +58,10 @@ public class StandardGEMapper<T> extends AbstractMapper<BitsGenotype, T> {
       }
       List<List<T>> options = grammar.getRules().get(nodeToBeReplaced.getContent());
       int optionIndex = genotype.slice(currentCodonIndex*codonLenght, (currentCodonIndex+1)*codonLenght).toInt()%options.size();
+      //update usages
+      for (int i = currentCodonIndex*codonLenght; i<(currentCodonIndex+1)*codonLenght; i++) {
+        bitUsages[i] = bitUsages[i]+1;
+      }
       //add children
       for (T t : options.get(optionIndex)) {
         Node<T> newChild = new Node<>(t);
@@ -62,6 +69,7 @@ public class StandardGEMapper<T> extends AbstractMapper<BitsGenotype, T> {
       }
       currentCodonIndex = currentCodonIndex+1;
     }
+    report.put(BIT_USAGES_INDEX_NAME, bitUsages);
     return tree;
   }
 

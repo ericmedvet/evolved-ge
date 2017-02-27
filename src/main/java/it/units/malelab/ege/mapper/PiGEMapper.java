@@ -8,6 +8,7 @@ package it.units.malelab.ege.mapper;
 import it.units.malelab.ege.evolver.genotype.BitsGenotype;
 import it.units.malelab.ege.grammar.Node;
 import it.units.malelab.ege.grammar.Grammar;
+import static it.units.malelab.ege.mapper.StandardGEMapper.BIT_USAGES_INDEX_NAME;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,7 @@ public class PiGEMapper<T> extends AbstractMapper<BitsGenotype, T> {
 
   @Override
   public Node<T> map(BitsGenotype genotype, Map<String, Object> report) throws MappingException {
+    int[] bitUsages = new int[genotype.size()];
     if (genotype.size()<codonLenght) {
       throw new MappingException(String.format("Short genotype (%d<%d)", genotype.size(), codonLenght));
     }
@@ -57,6 +59,10 @@ public class PiGEMapper<T> extends AbstractMapper<BitsGenotype, T> {
       Node<T> nodeToBeReplaced = nodesToBeReplaced.get(nodeIndexCodon);
       List<List<T>> options = grammar.getRules().get(nodeToBeReplaced.getContent());
       int optionIndex = genotype.slice(currentCodonIndex*codonLenght+codonLenght/2, (currentCodonIndex+1)*codonLenght).toInt()%options.size();
+      //update usages
+      for (int i = currentCodonIndex*codonLenght; i<(currentCodonIndex+1)*codonLenght; i++) {
+        bitUsages[i] = bitUsages[i]+1;
+      }
       //add children
       for (T t : options.get(optionIndex)) {
         Node<T> newChild = new Node<>(t);
@@ -64,6 +70,7 @@ public class PiGEMapper<T> extends AbstractMapper<BitsGenotype, T> {
       }
       currentCodonIndex = currentCodonIndex+1;
     }
+    report.put(BIT_USAGES_INDEX_NAME, bitUsages);
     return tree;
   }
 

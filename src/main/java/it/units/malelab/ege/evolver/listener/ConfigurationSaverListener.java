@@ -34,8 +34,10 @@ public class ConfigurationSaverListener<G extends Genotype, T> implements Evolut
   public void listen(EvolutionEvent<G, T> event) {
     int generation = ((GenerationEvent) event).getGeneration();
     if (generation==1) {
+      ps.println(constants.hashCode());
       ps.println(constants);
       ps.println(event.getEvolver().getConfiguration());
+      ps.println();
     }
   }
   

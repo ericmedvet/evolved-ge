@@ -14,6 +14,7 @@ import it.units.malelab.ege.evolver.genotype.BitsGenotypeFactory;
 import it.units.malelab.ege.evolver.initializer.RandomInitializer;
 import it.units.malelab.ege.evolver.listener.CollectorGenerationLogger;
 import it.units.malelab.ege.evolver.listener.ConfigurationSaverListener;
+import it.units.malelab.ege.evolver.listener.EvolutionImageSaverListener;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
 import it.units.malelab.ege.evolver.listener.WithConstants;
 import it.units.malelab.ege.evolver.listener.collector.Best;
@@ -32,10 +33,12 @@ import it.units.malelab.ege.mapper.PiGEMapper;
 import it.units.malelab.ege.mapper.StandardGEMapper;
 import it.units.malelab.ege.mapper.WeightedHierarchicalMapper;
 import it.units.malelab.ege.util.Utils;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -51,9 +54,13 @@ import java.util.concurrent.ExecutionException;
 public class MainComparison {
 
   public static void main(String[] args) throws IOException, ExecutionException, InterruptedException, MappingException {
-    //prepare file
-    PrintStream generationFilePS = new PrintStream(args[0].replace("DATE", dateForFile()) + ".generation.csv");
-    PrintStream configurationFilePS = new PrintStream(args[0].replace("DATE", dateForFile()) + ".config.txt");
+    //prepare files
+    PrintStream generationFilePS = new PrintStream(args[0]+File.separator+dateForFile()+"-generation.csv");
+    PrintStream configurationFilePS = new PrintStream(args[0]+File.separator+dateForFile()+"-config.csv");
+    File imagePath = new File(args[0]+File.separator+dateForFile()+"-images");
+    if (!imagePath.exists()) {
+      imagePath.mkdir();
+    }
     //prepare problems
     Map<String, BenchmarkProblems.Problem> problems = new LinkedHashMap<>();
     problems.put("harmonic", BenchmarkProblems.harmonicCurveProblem());
@@ -81,7 +88,11 @@ public class MainComparison {
             (Map)Utils.sameValueMap(null, "key", "problem", "run", "initGenotypeSize", "variant"),
             configurationFilePS
     ));
-    for (int initGenoSize : new int[]{1024}) {
+    listeners.add(new EvolutionImageSaverListener<>(
+            (Map)Utils.sameValueMap(null, "key", "problem", "run", "initGenotypeSize", "variant"),
+            imagePath.getPath()
+    ));
+    for (int initGenoSize : new int[]{256}) {
       for (String problemName : problems.keySet()) {
         BenchmarkProblems.Problem problem = problems.get(problemName);
         for (int r = 0; r < 1; r++) {
@@ -91,7 +102,7 @@ public class MainComparison {
           constants.put("problem", problemName);
           constants.put("run", r);
           constants.put("initGenotypeSize", initGenoSize);
-          for (int m : new int[]{2,4,5,6,7}) {
+          for (int m : new int[]{0,1,2}) {
             StandardConfiguration<BitsGenotype, String> configuration = StandardConfiguration.createDefault(problem, random);
             configuration.getOperators().clear();
             configuration
