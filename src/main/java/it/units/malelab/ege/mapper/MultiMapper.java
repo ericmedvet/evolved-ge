@@ -56,7 +56,7 @@ public class MultiMapper<T> implements Mapper<BitsGenotype, T> {
           int index = 0;
           List<BitsGenotype> slices = genotype.slices(Utils.slices(Range.closedOpen(0, genotype.size()), mapperBits));
           for (int i = 0; i<mapperBits; i++) {
-            int value = Math.round(slices.get(i).count()/slices.get(i).size());
+            int value = (int)Math.round((double)slices.get(i).count()/(double)slices.get(i).size());
             index = index+value*(int)Math.pow(2, i);
           }   mapperIndex = index%mappers.size();
           break;
@@ -67,7 +67,7 @@ public class MultiMapper<T> implements Mapper<BitsGenotype, T> {
           double maxValue = Double.NEGATIVE_INFINITY;
           List<BitsGenotype> slices = genotype.slices(Utils.slices(Range.closedOpen(0, genotype.size()), mappers.size()));
           for (int i = 0; i<slices.size(); i++) {
-            double value = slices.get(i).count()/slices.get(i).size();
+            double value = (double)slices.get(i).count()/(double)slices.get(i).size();
             if (value>maxValue) {
               maxValue = value;
               maxIndex = i;

@@ -97,21 +97,21 @@ public class MainComparison {
             (Map) Utils.sameValueMap("", "key", "problem", "run", "initGenotypeSize", "variant", "pop"),
             configurationFilePS
     ));
-    listeners.add(new EvolutionImageSaverListener<>(
-            (Map)Utils.sameValueMap("", "key", "problem", "run", "initGenotypeSize", "variant"),
-            imagePath.getPath()
-    ));
-    for (int initGenoSize : new int[]{1024}) {
+    //listeners.add(new EvolutionImageSaverListener<>(
+    //        (Map)Utils.sameValueMap("", "key", "problem", "run", "initGenotypeSize", "variant"),
+    //        imagePath.getPath()
+    //));
+    for (int initGenoSize : new int[]{256,512,1024}) {
       for (String problemName : problems.keySet()) {
         BenchmarkProblems.Problem problem = problems.get(problemName);
-        for (int r = 0; r < 1; r++) {
+        for (int r = 0; r < 30; r++) {
           Random random = new Random(r);
           Map<String, Object> constants = new LinkedHashMap<>();
           constants.put("key", counter);
           constants.put("problem", problemName);
           constants.put("run", r);
           constants.put("initGenotypeSize", initGenoSize);
-          for (int m : new int[]{0, 1, 2, 3}) {
+          for (int m : new int[]{4,5,6,7}) {
             StandardConfiguration<BitsGenotype, String> configuration = StandardConfiguration.createDefault(problem, random);
             //PartitionConfiguration<BitsGenotype, String> configuration = PartitionConfiguration.createDefault(problem, random);
             configuration.getOperators().clear();
@@ -170,7 +170,7 @@ public class MainComparison {
                 configuration.mapper(new MultiMapper<>(MultiMapper.SelectionCriterion.ALL_MODULE,
                         new StandardGEMapper<>(8, 5, grammar),
                         new PiGEMapper<>(16, 5, grammar),
-                        new BitsSGEMapper<>(10, grammar),
+                        new BitsSGEMapper<>(6, grammar),
                         new WeightedHierarchicalMapper<>(3, grammar)
                 ));
                 constants.put("variant", "MuMapper-AlMo");
