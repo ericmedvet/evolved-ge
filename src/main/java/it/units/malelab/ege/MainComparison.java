@@ -112,8 +112,8 @@ public class MainComparison {
           constants.put("run", r);
           constants.put("initGenotypeSize", initGenoSize);
           for (int m : new int[]{0,1,2,3}) {
-            //StandardConfiguration<BitsGenotype, String> configuration = StandardConfiguration.createDefault(problem, random);
-            PartitionConfiguration<BitsGenotype, String> configuration = PartitionConfiguration.createDefault(problem, random);
+            StandardConfiguration<BitsGenotype, String> configuration = StandardConfiguration.createDefault(problem, random);
+            //PartitionConfiguration<BitsGenotype, String> configuration = PartitionConfiguration.createDefault(problem, random);
             configuration.getOperators().clear();
             configuration
                     .populationSize(500)
@@ -124,7 +124,7 @@ public class MainComparison {
                     .populationInitializer(new RandomInitializer<>(random, new BitsGenotypeFactory(initGenoSize)))
                     .operator(new LocalizedTwoPointsCrossover(random), 0.8d)
                     .operator(new ProbabilisticMutation(random, 0.01), 0.2d);
-            
+            /*
             configuration
                     .partitionSize(1)
                     .partitionerComparator((Comparator) (new IndividualComparator(IndividualComparator.Attribute.PHENO)))
@@ -133,7 +133,7 @@ public class MainComparison {
                             new Tournament(3, random, new IndividualComparator(IndividualComparator.Attribute.FITNESS))
                     ))
                     .parentSelector((Selector) new it.units.malelab.ege.evolver.selector.Best<>(new IndividualComparator(IndividualComparator.Attribute.AGE)));
-                    
+             */    
             Grammar<String> grammar = problems.get(problemName).getGrammar();
             switch (m) {
               case 0:

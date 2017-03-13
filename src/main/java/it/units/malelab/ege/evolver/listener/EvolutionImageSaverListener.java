@@ -80,7 +80,7 @@ public class EvolutionImageSaverListener<T> implements EvolutionListener<BitsGen
     evolutionDiversities.add(diversities);
     //update usages
     double[] usages = new double[bestBits.length];
-    int count = 0;
+    double count = 0;
     for (Individual<BitsGenotype, T> individual : population) {
       int[] bitUsages = (int[]) individual.getOtherInfo().get(StandardGEMapper.BIT_USAGES_INDEX_NAME);
       if (bitUsages != null) {
@@ -122,9 +122,9 @@ public class EvolutionImageSaverListener<T> implements EvolutionListener<BitsGen
           baseFileName = baseFileName + value.toString() + "-";
         }
         saveCSV(basePath + File.separator + baseFileName + "bestBits.csv", toArray(evolutionBestBits));
-        saveCSV(basePath + File.separator + baseFileName + "bestUsages.csv", toArray(evolutionBestUsages));
-        saveCSV(basePath + File.separator + baseFileName + "usages.csv", toArray(evolutionUsages));
-        saveCSV(basePath + File.separator + baseFileName + "diversities.csv", toArray(evolutionDiversities));
+        saveCSV(basePath + File.separator + baseFileName + "bestUsage.csv", toArray(evolutionBestUsages));
+        saveCSV(basePath + File.separator + baseFileName + "usage.csv", toArray(evolutionUsages));
+        saveCSV(basePath + File.separator + baseFileName + "diversitiy.csv", toArray(evolutionDiversities));
         saveImage(basePath + File.separator + baseFileName + "bestBits.png", toArray(evolutionBestBits));
         saveImage(basePath + File.separator + baseFileName + "diversity.png", toArray(evolutionDiversities));
         saveImage(basePath + File.separator + baseFileName + "usage.png", toArray(evolutionUsages));
