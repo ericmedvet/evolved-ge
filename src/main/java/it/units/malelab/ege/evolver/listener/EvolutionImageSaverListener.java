@@ -121,16 +121,16 @@ public class EvolutionImageSaverListener<T> implements EvolutionListener<BitsGen
         for (Object value : constants.values()) {
           baseFileName = baseFileName + value.toString() + "-";
         }
-        saveCSV(basePath + File.separator + baseFileName + "bestBits.csv", toArray(evolutionBestBits));
-        saveCSV(basePath + File.separator + baseFileName + "bestUsage.csv", toArray(evolutionBestUsages));
+//        saveCSV(basePath + File.separator + baseFileName + "bestBits.csv", toArray(evolutionBestBits));
+//        saveCSV(basePath + File.separator + baseFileName + "bestUsage.csv", toArray(evolutionBestUsages));
         saveCSV(basePath + File.separator + baseFileName + "usage.csv", toArray(evolutionUsages));
         saveCSV(basePath + File.separator + baseFileName + "diversitiy.csv", toArray(evolutionDiversities));
-        saveImage(basePath + File.separator + baseFileName + "bestBits.png", toArray(evolutionBestBits));
-        saveImage(basePath + File.separator + baseFileName + "diversity.png", toArray(evolutionDiversities));
-        saveImage(basePath + File.separator + baseFileName + "usage.png", toArray(evolutionUsages));
-        saveImage(basePath + File.separator + baseFileName + "bestUsage.png", toArray(evolutionBestUsages));
+//        saveImage(basePath + File.separator + baseFileName + "bestBits.png", toArray(evolutionBestBits));
+//        saveImage(basePath + File.separator + baseFileName + "diversity.png", toArray(evolutionDiversities));
+//        saveImage(basePath + File.separator + baseFileName + "usage.png", toArray(evolutionUsages));
+//        saveImage(basePath + File.separator + baseFileName + "bestUsage.png", toArray(evolutionBestUsages));
         saveImage(basePath + File.separator + baseFileName + "diversity_usage.png", toArray(evolutionDiversities), toArray(evolutionUsages));
-        saveImage(basePath + File.separator + baseFileName + "diversity_bestUsage.png", toArray(evolutionDiversities), toArray(evolutionBestUsages));
+//        saveImage(basePath + File.separator + baseFileName + "diversity_bestUsage.png", toArray(evolutionDiversities), toArray(evolutionBestUsages));
       }
       //clear
       evolutionBestBits.clear();
