@@ -6,18 +6,14 @@
 package it.units.malelab.ege.evolver.fitness;
 
 import it.units.malelab.ege.grammar.Node;
-import it.units.malelab.ege.problems.symbolicregression.Element;
 import it.units.malelab.ege.problems.symbolicregression.MathUtils;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
  *
  * @author eric
  */
-public class SymbolicRegressionFitness implements FitnessComputer<String> {
+public class SymbolicRegression implements FitnessComputer<String> {
   
   public static interface TargetFunction {
     public double compute(double... arguments);
@@ -27,7 +23,7 @@ public class SymbolicRegressionFitness implements FitnessComputer<String> {
   private final double[] targetValues;
   private final Map<String, double[]> varValues;
 
-  public SymbolicRegressionFitness(TargetFunction targetFunction, Map<String, double[]> varValues) {
+  public SymbolicRegression(TargetFunction targetFunction, Map<String, double[]> varValues) {
     this.varValues = varValues;
     targetValues = new double[varValues.get((String)varValues.keySet().toArray()[0]).length];
     for (int i = 0; i<targetValues.length; i++) {

@@ -5,8 +5,6 @@
  */
 package it.units.malelab.ege.evolver.fitness;
 
-import it.units.malelab.ege.evolver.fitness.Fitness;
-
 /**
  *
  * @author eric

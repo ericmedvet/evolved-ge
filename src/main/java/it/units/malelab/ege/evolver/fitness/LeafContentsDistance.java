@@ -14,12 +14,12 @@ import java.util.List;
  *
  * @author eric
  */
-public class LeafContentsDistanceFitness<T> implements FitnessComputer<T> {
+public class LeafContentsDistance<T> implements FitnessComputer<T> {
   
   private final List<T> target;
   private final Distance<List<T>> distance;
 
-  public LeafContentsDistanceFitness(List<T> target, Distance<List<T>> distance) {
+  public LeafContentsDistance(List<T> target, Distance<List<T>> distance) {
     this.target = target;
     this.distance = distance;
   }

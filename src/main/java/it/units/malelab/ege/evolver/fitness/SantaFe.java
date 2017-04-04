@@ -7,7 +7,7 @@ import java.util.List;
  *
  * @author Danny
  */
-public class SantaFeFitness implements FitnessComputer<String> {
+public class SantaFe implements FitnessComputer<String> {
 
     static final String IF = "if(food_ahead()){";
     static final String ELSE = "}else{";
@@ -49,15 +49,15 @@ public class SantaFeFitness implements FitnessComputer<String> {
             //Current token
             final String token = phenotype.get(programCounter).getContent();
             //Check else statment and correct depth
-            if (token.equals(SantaFeFitness.ELSE) && depth == 0) {
+            if (token.equals(SantaFe.ELSE) && depth == 0) {
                 found = true; //Found
             } else //If staement increase depth
             {
-                if (token.equals(SantaFeFitness.IF)) {
+                if (token.equals(SantaFe.IF)) {
                     depth++;
                 } else //End of if statemnt decrease depth
                 {
-                    if (token.equals(SantaFeFitness.END_IF)) {
+                    if (token.equals(SantaFe.END_IF)) {
                         depth--;
                     }
                 }
@@ -77,7 +77,7 @@ public class SantaFeFitness implements FitnessComputer<String> {
             //Current token
             final String token = phenotype.get(programCounter).getContent();
             //Check else statment and correct depth
-            if (token.equals(SantaFeFitness.END_IF)) {
+            if (token.equals(SantaFe.END_IF)) {
                 if (depth == 0) {
                     found = true; //Found
                 } else {
@@ -85,7 +85,7 @@ public class SantaFeFitness implements FitnessComputer<String> {
                 }
             } else //If staement increase depth
             {
-                if (token.equals(SantaFeFitness.IF)) {
+                if (token.equals(SantaFe.IF)) {
                     depth++;
                 }
             }
@@ -103,20 +103,20 @@ public class SantaFeFitness implements FitnessComputer<String> {
             final String token = phenotype.get(programCounter).getContent();
             //Increase program counter
             programCounter++;
-            if (token.equals(SantaFeFitness.IF)) {//IF food ahead
+            if (token.equals(SantaFe.IF)) {//IF food ahead
                 if (trail.food_ahead() != 1) {
                     //Find else statement
                     lookAheadElse(phenotype, programCounter);
                 }
-            } else if (token.equals(SantaFeFitness.LEFT)) {//left
+            } else if (token.equals(SantaFe.LEFT)) {//left
                 trail.left();
-            } else if (token.equals(SantaFeFitness.MOVE)) {//move
+            } else if (token.equals(SantaFe.MOVE)) {//move
                 trail.move();
-            } else if (token.equals(SantaFeFitness.RIGHT)) {//right
+            } else if (token.equals(SantaFe.RIGHT)) {//right
                 trail.right();
-            } else if (token.equals(SantaFeFitness.ELSE)) {
+            } else if (token.equals(SantaFe.ELSE)) {
                 lookAheadEndIf(phenotype, programCounter);
-            } else if (!token.equals(SantaFeFitness.END_IF)) {
+            } else if (!token.equals(SantaFe.END_IF)) {
                 throw new IllegalArgumentException("Illegal Terminal symbol:" + token);
             }
             run(phenotype, trail, programCounter);//countinue executing program

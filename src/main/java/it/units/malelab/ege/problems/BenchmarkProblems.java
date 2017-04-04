@@ -11,10 +11,10 @@ import it.units.malelab.ege.distance.EditDistance;
 import it.units.malelab.ege.evolver.PhenotypePrinter;
 import it.units.malelab.ege.evolver.fitness.Fitness;
 import it.units.malelab.ege.evolver.fitness.FitnessComputer;
-import it.units.malelab.ege.evolver.fitness.LeafContentsDistanceFitness;
+import it.units.malelab.ege.evolver.fitness.LeafContentsDistance;
 import it.units.malelab.ege.evolver.fitness.NumericFitness;
-import it.units.malelab.ege.evolver.fitness.SantaFeFitness;
-import it.units.malelab.ege.evolver.fitness.SymbolicRegressionFitness;
+import it.units.malelab.ege.evolver.fitness.SantaFe;
+import it.units.malelab.ege.evolver.fitness.SymbolicRegression;
 import it.units.malelab.ege.grammar.Grammar;
 import it.units.malelab.ege.problems.symbolicregression.MathUtils;
 import java.io.File;
@@ -62,7 +62,7 @@ public class BenchmarkProblems {
     }
 
     public static Problem harmonicCurveProblem() throws IOException {
-        SymbolicRegressionFitness.TargetFunction targetFunction = new SymbolicRegressionFitness.TargetFunction() {
+        SymbolicRegression.TargetFunction targetFunction = new SymbolicRegression.TargetFunction() {
             @Override
             public double compute(double... v) {
                 double s = 0;
@@ -79,10 +79,10 @@ public class BenchmarkProblems {
         };
         return new Problem(
                 Utils.parseFromFile(new File("grammars/symbolic-regression-harmonic.bnf")),
-                new SymbolicRegressionFitness(
+                new SymbolicRegression(
                         targetFunction,
                         new LinkedHashMap<>(MathUtils.varValuesMap("x", MathUtils.uniformSample(1, 50, 1)))),
-                new SymbolicRegressionFitness(
+                new SymbolicRegression(
                         targetFunction,
                         new LinkedHashMap<>(MathUtils.varValuesMap("x", MathUtils.uniformSample(51, 100, 1)))),
                 MathUtils.phenotypePrinter()
@@ -92,7 +92,7 @@ public class BenchmarkProblems {
     public static Problem classic4PolynomialProblem() throws IOException {
         return new Problem(
                 Utils.parseFromFile(new File("grammars/symbolic-regression-classic4.bnf")),
-                new SymbolicRegressionFitness(new SymbolicRegressionFitness.TargetFunction() {
+                new SymbolicRegression(new SymbolicRegression.TargetFunction() {
                     @Override
                     public double compute(double... v) {
                         double x = v[0];
@@ -130,16 +130,16 @@ public class BenchmarkProblems {
     public static Problem text(String target) throws IOException {
         return new Problem(
                 Utils.parseFromFile(new File("grammars/text.bnf")),
-                new LeafContentsDistanceFitness<>(Arrays.asList(target.replace(" ", "_").split("")), new EditDistance<String>()),
+                new LeafContentsDistance<>(Arrays.asList(target.replace(" ", "_").split("")), new EditDistance<String>()),
                 null,
                 new PhenotypePrinter<String>() {
-            @Override
-            public String toString(Node<String> node) {
-                StringBuilder sb = new StringBuilder();
-                for (Node<String> leaf : node.leaves()) {
-                    sb.append(leaf.getContent());
-                }
-                return sb.toString();
+          @Override
+          public String toString(Node<String> node) {
+            StringBuilder sb = new StringBuilder();
+            for (Node<String> leaf : node.leaves()) {
+              sb.append(leaf.getContent());
+            }
+            return sb.toString();
             }
         }
         );
@@ -148,7 +148,7 @@ public class BenchmarkProblems {
     public static Problem santaFe() throws IOException {
         return new Problem(
                 Utils.parseFromFile(new File("grammars/santa-fe.bnf")),
-                new SantaFeFitness(),
+                new SantaFe(),
                 null,
                 new PhenotypePrinter<String>() {
             @Override
