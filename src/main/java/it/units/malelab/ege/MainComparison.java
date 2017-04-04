@@ -8,9 +8,6 @@ package it.units.malelab.ege;
 import it.units.malelab.ege.problems.BenchmarkProblems;
 import it.units.malelab.ege.evolver.genotype.BitsGenotype;
 import it.units.malelab.ege.evolver.Evolver;
-import it.units.malelab.ege.evolver.Individual;
-import it.units.malelab.ege.evolver.PartitionConfiguration;
-import it.units.malelab.ege.evolver.PartitionEvolver;
 import it.units.malelab.ege.evolver.StandardConfiguration;
 import it.units.malelab.ege.evolver.StandardEvolver;
 import it.units.malelab.ege.evolver.genotype.BitsGenotypeFactory;
@@ -28,12 +25,8 @@ import it.units.malelab.ege.evolver.listener.collector.Population;
 import it.units.malelab.ege.evolver.operator.BitsSGECrossover;
 import it.units.malelab.ege.evolver.operator.LocalizedTwoPointsCrossover;
 import it.units.malelab.ege.evolver.operator.ProbabilisticMutation;
-import it.units.malelab.ege.evolver.selector.First;
 import it.units.malelab.ege.evolver.selector.IndividualComparator;
-import it.units.malelab.ege.evolver.selector.RepresenterBasedListSelector;
-import it.units.malelab.ege.evolver.selector.Selector;
 import it.units.malelab.ege.evolver.selector.Tournament;
-import it.units.malelab.ege.evolver.selector.Uniform;
 import it.units.malelab.ege.grammar.Grammar;
 import it.units.malelab.ege.mapper.BitsSGEMapper;
 import it.units.malelab.ege.mapper.MappingException;
@@ -48,7 +41,6 @@ import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -73,10 +65,10 @@ public class MainComparison {
     //prepare problems
     Map<String, BenchmarkProblems.Problem> problems = new LinkedHashMap<>();
     problems.put("harmonic", BenchmarkProblems.harmonicCurveProblem());
-    problems.put("poly4", BenchmarkProblems.classic4PolynomialProblem());
+    //problems.put("poly4", BenchmarkProblems.classic4PolynomialProblem());
     //problems.put("max", BenchmarkProblems.max());
     problems.put("santaFe", BenchmarkProblems.santaFe());
-    problems.put("text", BenchmarkProblems.text("Hello world!"));
+    //problems.put("text", BenchmarkProblems.text("Hello world!"));
     int counter = 0;
     List<EvolutionListener<BitsGenotype, String>> listeners = new ArrayList<>();
     listeners.add(new CollectorGenerationLogger<>(
@@ -103,8 +95,8 @@ public class MainComparison {
             (Map)Utils.sameValueMap("", "key", "problem", "run", "initGenotypeSize", "variant"),
             imagePath.getPath()
     ));
-    listeners.add((EvolutionListener)new PopulationPrinter<>(System.out));
-    for (int initGenoSize : new int[]{100}) {
+    //listeners.add((EvolutionListener)new PopulationPrinter<>(System.out));
+    for (int initGenoSize : new int[]{128}) {
       for (String problemName : problems.keySet()) {
         BenchmarkProblems.Problem problem = problems.get(problemName);
         for (int r = 0; r < 1; r++) {
@@ -114,20 +106,20 @@ public class MainComparison {
           constants.put("problem", problemName);
           constants.put("run", r);
           constants.put("initGenotypeSize", initGenoSize);
-          for (int m : new int[]{0,1,2,3}) {
-            //StandardConfiguration<BitsGenotype, String> configuration = StandardConfiguration.createDefault(problem, random);
-            PartitionConfiguration<BitsGenotype, String> configuration = PartitionConfiguration.createDefault(problem, random);
+          for (int m : new int[]{0}) {
+            StandardConfiguration<BitsGenotype, String> configuration = StandardConfiguration.createDefault(problem, random);
+            //PartitionConfiguration<BitsGenotype, String> configuration = PartitionConfiguration.createDefault(problem, random);
             configuration.getOperators().clear();
             configuration
-                    .populationSize(20)
-                    .offspringSize(20)
+                    .populationSize(500)
+                    .offspringSize(500)
                     .overlapping(true)
                     .numberOfGenerations(100)
                     .parentSelector(new Tournament(3, random, new IndividualComparator(IndividualComparator.Attribute.FITNESS)))
                     .populationInitializer(new RandomInitializer<>(random, new BitsGenotypeFactory(initGenoSize)))
                     .operator(new LocalizedTwoPointsCrossover(random), 0.8d)
                     .operator(new ProbabilisticMutation(random, 0.01), 0.2d);
-            
+            /*
             configuration
                     .partitionSize(1)
                     .partitionerComparator((Comparator) (new IndividualComparator(IndividualComparator.Attribute.PHENO)))
@@ -136,7 +128,7 @@ public class MainComparison {
                             new Tournament(3, random, new IndividualComparator(IndividualComparator.Attribute.FITNESS))
                     ))
                     .parentSelector((Selector) new it.units.malelab.ege.evolver.selector.Best<>(new IndividualComparator(IndividualComparator.Attribute.AGE)));
-                
+            */    
             Grammar<String> grammar = problems.get(problemName).getGrammar();
             switch (m) {
               case 0:
@@ -197,10 +189,10 @@ public class MainComparison {
                 constants.put("variant", "MuMapper-AlBi");
                 break;
             }
-            //Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(Runtime.getRuntime().availableProcessors() - 1, configuration, random, false);
+            Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(Runtime.getRuntime().availableProcessors() - 1, configuration, random, false);
             //Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(1, configuration, random, false);
             //Evolver<BitsGenotype, String> evolver = new PartitionEvolver<>(Runtime.getRuntime().availableProcessors() - 1, configuration, random, false);
-            Evolver<BitsGenotype, String> evolver = new PartitionEvolver<>(1, configuration, random, false);
+            //Evolver<BitsGenotype, String> evolver = new PartitionEvolver<>(1, configuration, random, false);
             System.out.println(constants);
             for (EvolutionListener listener : listeners) {
               if (listener instanceof WithConstants) {

@@ -153,21 +153,21 @@ public class EvolutionImageSaverListener<T> implements EvolutionListener<BitsGen
       }
     }
   }
-  
+
   private double[][] toArray(List<double[]> list) {
     double[][] data = new double[list.size()][];
-    for (int i = 0; i<list.size(); i++) {
+    for (int i = 0; i < list.size(); i++) {
       data[i] = list.get(i);
     }
     return data;
   }
-  
+
   private void saveCSV(String fileName, double[][] data) {
     try (PrintStream ps = new PrintStream(fileName)) {
-      for (int g = 0; g<data.length; g++) {
-        for (int i = 0; i<data[g].length; i++) {
+      for (int g = 0; g < data.length; g++) {
+        for (int i = 0; i < data[g].length; i++) {
           ps.printf("%6.4f", data[g][i]);
-          if (i==data[g].length-1) {
+          if (i == data[g].length - 1) {
             ps.println();
           } else {
             ps.print(";");
@@ -202,6 +202,18 @@ public class EvolutionImageSaverListener<T> implements EvolutionListener<BitsGen
     } catch (IOException ex) {
       System.err.printf("Cannot save file \"%s\": %s", fileName, ex.getMessage());
     }
+  }
+
+  public static void printLegend(String fileName) throws IOException {
+    double n = 200;
+    double d = 5;
+    BufferedImage bi = new BufferedImage((int) n, (int) n, BufferedImage.TYPE_INT_ARGB);
+    for (double x = 0; x < n; x++) {
+      for (double y = 0; y < n; y++) {
+        bi.setRGB((int) x, (int) y, new Color((float) (Math.floor(x / n*d)/d), (float) (Math.floor(y / n*d)/d), 0, 1).getRGB());
+      }
+    }
+    ImageIO.write(bi, "PNG", new File(fileName));
   }
 
 }
