@@ -6,7 +6,7 @@
 package it.units.malelab.ege.evolver.listener.collector;
 
 import it.units.malelab.ege.evolver.Individual;
-import it.units.malelab.ege.evolver.genotype.Genotype;
+import it.units.malelab.ege.ge.genotype.Genotype;
 import java.util.List;
 import java.util.Map;
 

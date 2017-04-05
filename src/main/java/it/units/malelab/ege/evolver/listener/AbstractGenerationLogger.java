@@ -5,15 +5,15 @@
  */
 package it.units.malelab.ege.evolver.listener;
 
-import it.units.malelab.ege.grammar.Node;
-import it.units.malelab.ege.evolver.genotype.Genotype;
+import it.units.malelab.ege.core.grammar.Node;
+import it.units.malelab.ege.ge.genotype.Genotype;
 import it.units.malelab.ege.util.Utils;
 import it.units.malelab.ege.evolver.Individual;
 import it.units.malelab.ege.evolver.event.EvolutionEvent;
 import it.units.malelab.ege.evolver.event.GenerationEvent;
-import it.units.malelab.ege.evolver.fitness.Fitness;
-import it.units.malelab.ege.evolver.fitness.FitnessComputer;
-import it.units.malelab.ege.evolver.fitness.NumericFitness;
+import it.units.malelab.ege.core.fitness.Fitness;
+import it.units.malelab.ege.core.fitness.FitnessComputer;
+import it.units.malelab.ege.core.fitness.NumericFitness;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;

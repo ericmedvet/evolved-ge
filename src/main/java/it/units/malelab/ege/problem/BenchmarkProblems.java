@@ -5,17 +5,17 @@
  */
 package it.units.malelab.ege.problem;
 
-import it.units.malelab.ege.grammar.Node;
+import it.units.malelab.ege.core.grammar.Node;
 import it.units.malelab.ege.util.Utils;
-import it.units.malelab.ege.distance.EditDistance;
+import it.units.malelab.ege.util.distance.EditDistance;
 import it.units.malelab.ege.evolver.PhenotypePrinter;
-import it.units.malelab.ege.evolver.fitness.Fitness;
-import it.units.malelab.ege.evolver.fitness.FitnessComputer;
-import it.units.malelab.ege.evolver.fitness.LeafContentsDistance;
-import it.units.malelab.ege.evolver.fitness.NumericFitness;
-import it.units.malelab.ege.evolver.fitness.SantaFe;
-import it.units.malelab.ege.evolver.fitness.SymbolicRegression;
-import it.units.malelab.ege.grammar.Grammar;
+import it.units.malelab.ege.core.fitness.Fitness;
+import it.units.malelab.ege.core.fitness.FitnessComputer;
+import it.units.malelab.ege.fitness.LeafContentsDistance;
+import it.units.malelab.ege.core.fitness.NumericFitness;
+import it.units.malelab.ege.fitness.SantaFe;
+import it.units.malelab.ege.fitness.SymbolicRegression;
+import it.units.malelab.ege.core.grammar.Grammar;
 import it.units.malelab.ege.problem.symbolicregression.MathUtils;
 import java.io.File;
 import java.io.IOException;

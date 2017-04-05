@@ -5,7 +5,7 @@
  */
 package it.units.malelab.ege.evolver;
 
-import it.units.malelab.ege.grammar.Node;
+import it.units.malelab.ege.core.grammar.Node;
 
 /**
  *

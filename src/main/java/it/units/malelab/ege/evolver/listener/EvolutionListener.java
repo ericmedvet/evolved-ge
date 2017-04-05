@@ -5,7 +5,7 @@
  */
 package it.units.malelab.ege.evolver.listener;
 
-import it.units.malelab.ege.evolver.genotype.Genotype;
+import it.units.malelab.ege.ge.genotype.Genotype;
 import it.units.malelab.ege.evolver.event.EvolutionEvent;
 import java.util.Set;
 

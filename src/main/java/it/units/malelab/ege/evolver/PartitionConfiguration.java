@@ -5,11 +5,12 @@
  */
 package it.units.malelab.ege.evolver;
 
+import it.units.malelab.ege.ge.evolver.StandardConfiguration;
 import it.units.malelab.ege.problem.BenchmarkProblems;
-import it.units.malelab.ege.evolver.genotype.BitsGenotype;
-import it.units.malelab.ege.evolver.genotype.BitsGenotypeFactory;
-import it.units.malelab.ege.evolver.genotype.Genotype;
-import it.units.malelab.ege.evolver.initializer.RandomInitializer;
+import it.units.malelab.ege.ge.genotype.BitsGenotype;
+import it.units.malelab.ege.ge.genotype.BitsGenotypeFactory;
+import it.units.malelab.ege.ge.genotype.Genotype;
+import it.units.malelab.ege.ge.genotype.initializer.RandomInitializer;
 import it.units.malelab.ege.evolver.selector.Best;
 import it.units.malelab.ege.evolver.selector.First;
 import it.units.malelab.ege.evolver.selector.IndividualComparator;

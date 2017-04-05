@@ -5,16 +5,17 @@
  */
 package it.units.malelab.ege.evolver;
 
+import it.units.malelab.ege.ge.evolver.StandardEvolver;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.LoadingCache;
-import it.units.malelab.ege.grammar.Node;
+import it.units.malelab.ege.core.grammar.Node;
 import it.units.malelab.ege.util.Utils;
 import it.units.malelab.ege.evolver.event.EvolutionEndEvent;
 import it.units.malelab.ege.evolver.event.GenerationEvent;
-import it.units.malelab.ege.evolver.fitness.Fitness;
-import it.units.malelab.ege.evolver.genotype.Genotype;
+import it.units.malelab.ege.core.fitness.Fitness;
+import it.units.malelab.ege.ge.genotype.Genotype;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
-import it.units.malelab.ege.evolver.operator.GeneticOperator;
+import it.units.malelab.ege.ge.operator.GeneticOperator;
 import it.units.malelab.ege.evolver.selector.Best;
 import it.units.malelab.ege.evolver.selector.First;
 import it.units.malelab.ege.evolver.selector.IndividualComparator;

@@ -8,7 +8,7 @@ package it.units.malelab.ege.evolver.listener;
 import it.units.malelab.ege.evolver.Individual;
 import it.units.malelab.ege.evolver.event.EvolutionEvent;
 import it.units.malelab.ege.evolver.event.GenerationEvent;
-import it.units.malelab.ege.evolver.genotype.Genotype;
+import it.units.malelab.ege.ge.genotype.Genotype;
 import it.units.malelab.ege.evolver.listener.collector.PopulationInfoCollector;
 import java.io.PrintStream;
 import java.util.ArrayList;

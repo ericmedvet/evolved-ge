@@ -5,10 +5,10 @@
  */
 package it.units.malelab.ege.evolver.event;
 
-import it.units.malelab.ege.evolver.genotype.Genotype;
+import it.units.malelab.ege.ge.genotype.Genotype;
 import it.units.malelab.ege.evolver.Evolver;
 import it.units.malelab.ege.evolver.Individual;
-import it.units.malelab.ege.evolver.operator.GeneticOperator;
+import it.units.malelab.ege.ge.operator.GeneticOperator;
 import java.util.List;
 import java.util.Map;
 

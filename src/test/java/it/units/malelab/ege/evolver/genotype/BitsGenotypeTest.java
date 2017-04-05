@@ -5,6 +5,7 @@
  */
 package it.units.malelab.ege.evolver.genotype;
 
+import it.units.malelab.ege.ge.genotype.BitsGenotype;
 import com.google.common.collect.Range;
 import it.units.malelab.ege.util.Utils;
 import java.util.ArrayList;

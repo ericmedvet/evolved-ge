@@ -6,9 +6,9 @@
 package it.units.malelab.ege.evolver.listener.collector;
 
 import it.units.malelab.ege.evolver.Individual;
-import it.units.malelab.ege.evolver.fitness.Fitness;
-import it.units.malelab.ege.evolver.genotype.Genotype;
-import it.units.malelab.ege.grammar.Node;
+import it.units.malelab.ege.core.fitness.Fitness;
+import it.units.malelab.ege.ge.genotype.Genotype;
+import it.units.malelab.ege.core.grammar.Node;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;

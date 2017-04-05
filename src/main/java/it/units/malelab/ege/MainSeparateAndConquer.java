@@ -5,26 +5,26 @@
  */
 package it.units.malelab.ege;
 
-import it.units.malelab.ege.evolver.genotype.BitsGenotype;
+import it.units.malelab.ege.ge.genotype.BitsGenotype;
 import it.units.malelab.ege.evolver.Evolver;
-import it.units.malelab.ege.evolver.StandardConfiguration;
-import it.units.malelab.ege.evolver.StandardEvolver;
-import it.units.malelab.ege.evolver.fitness.RegexMatch;
-import it.units.malelab.ege.evolver.genotype.BitsGenotypeFactory;
-import it.units.malelab.ege.evolver.initializer.RandomInitializer;
+import it.units.malelab.ege.ge.evolver.StandardConfiguration;
+import it.units.malelab.ege.ge.evolver.StandardEvolver;
+import it.units.malelab.ege.fitness.RegexMatch;
+import it.units.malelab.ege.ge.genotype.BitsGenotypeFactory;
+import it.units.malelab.ege.ge.genotype.initializer.RandomInitializer;
 import it.units.malelab.ege.evolver.listener.CollectorGenerationLogger;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
 import it.units.malelab.ege.evolver.listener.collector.Best;
 import it.units.malelab.ege.evolver.listener.collector.Diversity;
 import it.units.malelab.ege.evolver.listener.collector.MultiMapperInfo;
 import it.units.malelab.ege.evolver.listener.collector.Population;
-import it.units.malelab.ege.evolver.operator.LocalizedTwoPointsCrossover;
-import it.units.malelab.ege.evolver.operator.ProbabilisticMutation;
+import it.units.malelab.ege.ge.operator.LocalizedTwoPointsCrossover;
+import it.units.malelab.ege.ge.operator.ProbabilisticMutation;
 import it.units.malelab.ege.evolver.selector.IndividualComparator;
 import it.units.malelab.ege.evolver.selector.Tournament;
-import it.units.malelab.ege.evolver.validator.AnyValidator;
-import it.units.malelab.ege.mapper.MappingException;
-import it.units.malelab.ege.mapper.WeightedHierarchicalMapper;
+import it.units.malelab.ege.ge.genotype.validator.AnyValidator;
+import it.units.malelab.ege.ge.mapper.MappingException;
+import it.units.malelab.ege.ge.mapper.WeightedHierarchicalMapper;
 import it.units.malelab.ege.util.Utils;
 import java.io.File;
 import java.io.IOException;

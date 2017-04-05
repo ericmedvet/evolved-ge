@@ -5,7 +5,7 @@
  */
 package it.units.malelab.ege.problem.symbolicregression;
 
-import it.units.malelab.ege.grammar.Node;
+import it.units.malelab.ege.core.grammar.Node;
 import it.units.malelab.ege.evolver.PhenotypePrinter;
 import java.util.Arrays;
 import java.util.Collections;

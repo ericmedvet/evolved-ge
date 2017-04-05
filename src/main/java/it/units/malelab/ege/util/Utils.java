@@ -6,12 +6,12 @@
 package it.units.malelab.ege.util;
 
 import com.google.common.collect.Range;
-import it.units.malelab.ege.grammar.Node;
-import it.units.malelab.ege.evolver.genotype.Genotype;
+import it.units.malelab.ege.core.grammar.Node;
+import it.units.malelab.ege.ge.genotype.Genotype;
 import it.units.malelab.ege.evolver.Individual;
-import it.units.malelab.ege.grammar.Grammar;
-import it.units.malelab.ege.evolver.event.EvolutionEvent;
-import it.units.malelab.ege.evolver.listener.EvolutionListener;
+import it.units.malelab.ege.core.grammar.Grammar;
+import it.units.malelab.ege.core.listener.EvolverListener;
+import it.units.malelab.ege.core.listener.event.EvolutionEvent;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -224,8 +224,8 @@ public class Utils {
     });
   }
 
-  public static <G extends Genotype, T> void broadcast(EvolutionEvent<G, T> event, List<EvolutionListener<G, T>> listeners) {
-    for (EvolutionListener<G, T> listener : listeners) {
+  public static void broadcast(EvolutionEvent event, List<EvolverListener> listeners) {
+    for (EvolverListener listener : listeners) {
       if (listener.getEventClasses().contains(event.getClass())) {
         listener.listen(event);
       }
