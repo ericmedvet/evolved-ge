@@ -3,14 +3,16 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.problems.symbolicregression;
+package it.units.malelab.ege.evolver.fitness;
+
+import java.util.List;
 
 /**
  *
  * @author eric
  */
-public interface Element {
+public interface FitnessRanker<F extends Fitness> {
   
-  public String toString();
+  public List<Integer> rank(List<F> fitnesses);
   
 }

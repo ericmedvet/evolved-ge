@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.problems;
+package it.units.malelab.ege.problem;
 
 import it.units.malelab.ege.grammar.Node;
 import it.units.malelab.ege.util.Utils;
@@ -16,7 +16,7 @@ import it.units.malelab.ege.evolver.fitness.NumericFitness;
 import it.units.malelab.ege.evolver.fitness.SantaFe;
 import it.units.malelab.ege.evolver.fitness.SymbolicRegression;
 import it.units.malelab.ege.grammar.Grammar;
-import it.units.malelab.ege.problems.symbolicregression.MathUtils;
+import it.units.malelab.ege.problem.symbolicregression.MathUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;

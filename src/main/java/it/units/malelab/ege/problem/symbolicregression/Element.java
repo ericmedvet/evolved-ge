@@ -3,14 +3,14 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.evolver.fitness;
+package it.units.malelab.ege.problem.symbolicregression;
 
 /**
  *
  * @author eric
  */
-public interface Fitness<T> {
+public interface Element {
   
-  public T getValue();
-    
+  public String toString();
+  
 }

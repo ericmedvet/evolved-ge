@@ -9,8 +9,6 @@ package it.units.malelab.ege.evolver.fitness;
  *
  * @author eric
  */
-public interface Fitness<T> {
+public interface ComparableFitness<T> extends Fitness<T>, Comparable<ComparableFitness<T>> {
   
-  public T getValue();
-    
 }

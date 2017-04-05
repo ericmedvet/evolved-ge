@@ -5,16 +5,15 @@
  */
 package it.units.malelab.ege.evolver.fitness;
 
-import it.units.malelab.ege.evolver.fitness.Fitness;
 import it.units.malelab.ege.grammar.Node;
 
 /**
  *
  * @author eric
  */
-public interface FitnessComputer<T> {
+public interface FitnessComputer<T, F extends Fitness> {
   
-  public Fitness compute(Node<T> phenotype);
-  public Fitness worstValue();
+  public F compute(Node<T> phenotype);
+  public F worstValue();
   
 }

@@ -6,7 +6,7 @@
 package it.units.malelab.ege.evolver.fitness;
 
 import it.units.malelab.ege.grammar.Node;
-import it.units.malelab.ege.problems.symbolicregression.MathUtils;
+import it.units.malelab.ege.problem.symbolicregression.MathUtils;
 import java.util.Map;
 
 /**

@@ -22,7 +22,7 @@ public class MultiObjectiveFitness implements Fitness<Comparable[]> {
     return values;
   }
 
-  @Override
+  // TODO remove
   public int compareTo(Fitness o) {
     //pareto dominance
     if (!(o instanceof MultiObjectiveFitness)) {
