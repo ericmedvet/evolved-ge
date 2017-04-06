@@ -9,7 +9,7 @@ import it.units.malelab.ege.ge.genotype.BitsGenotype;
 import it.units.malelab.ege.evolver.Evolver;
 import it.units.malelab.ege.ge.evolver.StandardConfiguration;
 import it.units.malelab.ege.ge.evolver.StandardEvolver;
-import it.units.malelab.ege.fitness.RegexMatch;
+import it.units.malelab.ege.benchmark.fitness.RegexMatch;
 import it.units.malelab.ege.ge.genotype.BitsGenotypeFactory;
 import it.units.malelab.ege.ge.genotype.initializer.RandomInitializer;
 import it.units.malelab.ege.evolver.listener.CollectorGenerationLogger;

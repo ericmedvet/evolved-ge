@@ -22,30 +22,4 @@ public class MultiObjectiveFitness implements Fitness<Comparable[]> {
     return values;
   }
 
-  // TODO remove
-  public int compareTo(Fitness o) {
-    //pareto dominance
-    if (!(o instanceof MultiObjectiveFitness)) {
-      return -1;
-    }
-    MultiObjectiveFitness mof = (MultiObjectiveFitness)o;
-    if (mof.getValue().length!=values.length) {
-      return -1;
-    }
-    int better = 0;
-    int worse = 0;
-    for (int i = 0; i<values.length; i++) {
-      int outcome = values[i].compareTo(mof.getValue()[i]);
-      better = better+((outcome<0)?1:0);
-      worse = worse+((outcome>0)?1:0);
-    }
-    if (better>0&&worse==0) {
-      return -1;
-    }
-    if (worse>0&&better==0) {
-      return 1;
-    }
-    return 0;
-  }
-  
 }

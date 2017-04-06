@@ -5,6 +5,7 @@
  */
 package it.units.malelab.ege.core;
 
+import it.units.malelab.ege.core.ranker.IndividualRanker;
 import it.units.malelab.ege.evolver.PhenotypePrinter;
 import it.units.malelab.ege.core.fitness.Fitness;
 import it.units.malelab.ege.core.fitness.FitnessComputer;
@@ -42,7 +43,7 @@ public class Problem<T, F extends Fitness> {
     return testingFitnessComputer;
   }
 
-  public IndividualRanker<T, F> getFitnessComparator() {
+  public IndividualRanker<T, F> getIndividualRanker() {
     return individualRanker;
   }
 

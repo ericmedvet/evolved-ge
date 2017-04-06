@@ -3,20 +3,20 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.fitness;
+package it.units.malelab.ege.benchmark.fitness;
 
 import it.units.malelab.ege.core.fitness.FitnessComputer;
 import it.units.malelab.ege.core.fitness.NumericFitness;
 import it.units.malelab.ege.core.fitness.Fitness;
 import it.units.malelab.ege.core.grammar.Node;
-import it.units.malelab.ege.problem.symbolicregression.MathUtils;
+import it.units.malelab.ege.util.symbolicregression.MathUtils;
 import java.util.Map;
 
 /**
  *
  * @author eric
  */
-public class SymbolicRegression implements FitnessComputer<String> {
+public class SymbolicRegression implements FitnessComputer<String, NumericFitness> {
   
   public static interface TargetFunction {
     public double compute(double... arguments);
@@ -39,7 +39,7 @@ public class SymbolicRegression implements FitnessComputer<String> {
   }
 
   @Override
-  public Fitness compute(Node<String> phenotype) {
+  public NumericFitness compute(Node<String> phenotype) {
     double[] computed = MathUtils.compute(MathUtils.transform(phenotype), varValues, targetValues.length);
     double mae = 0;
     for (int i = 0; i<targetValues.length; i++) {
@@ -49,7 +49,7 @@ public class SymbolicRegression implements FitnessComputer<String> {
   }
 
   @Override
-  public Fitness worstValue() {
+  public NumericFitness worstValue() {
     return new NumericFitness(Double.POSITIVE_INFINITY);
   }
   

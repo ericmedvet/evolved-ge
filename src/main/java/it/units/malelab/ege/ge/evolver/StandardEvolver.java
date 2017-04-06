@@ -116,7 +116,7 @@ public class StandardEvolver<G extends Genotype, T, F extends Fitness> implement
         }
       }
       //re-rank
-      // TODO
+      configuration.getProblem().getIndividualRanker().rank((List)population);
       //select survivals
       while (population.size() > configuration.getPopulationSize()) {
         GEIndividual<G, T, F> individual = configuration.getUnsurvivalSelector().select(population);

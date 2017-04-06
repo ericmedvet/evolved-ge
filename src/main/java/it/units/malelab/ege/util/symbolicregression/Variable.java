@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.problem.symbolicregression;
+package it.units.malelab.ege.util.symbolicregression;
 
 import java.util.Objects;
 
@@ -11,11 +11,11 @@ import java.util.Objects;
  *
  * @author eric
  */
-public class Decoration implements Element {
+public class Variable implements Element {
   
   private final String string;
 
-  public Decoration(String string) {
+  public Variable(String string) {
     this.string = string;
   }
 
@@ -26,8 +26,8 @@ public class Decoration implements Element {
 
   @Override
   public int hashCode() {
-    int hash = 7;
-    hash = 29 * hash + Objects.hashCode(this.string);
+    int hash = 5;
+    hash = 37 * hash + Objects.hashCode(this.string);
     return hash;
   }
 
@@ -39,7 +39,7 @@ public class Decoration implements Element {
     if (getClass() != obj.getClass()) {
       return false;
     }
-    final Decoration other = (Decoration) obj;
+    final Variable other = (Variable) obj;
     if (!Objects.equals(this.string, other.string)) {
       return false;
     }

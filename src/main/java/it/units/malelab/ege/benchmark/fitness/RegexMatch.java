@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.fitness;
+package it.units.malelab.ege.benchmark.fitness;
 
+import it.units.malelab.ege.core.fitness.BinaryClassification;
 import it.units.malelab.ege.core.grammar.Node;
 import it.units.malelab.ege.util.Utils;
 import java.util.ArrayList;

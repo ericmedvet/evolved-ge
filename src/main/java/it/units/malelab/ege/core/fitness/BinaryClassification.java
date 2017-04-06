@@ -3,11 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.fitness;
+package it.units.malelab.ege.core.fitness;
 
 import it.units.malelab.ege.core.fitness.FitnessComputer;
 import it.units.malelab.ege.core.fitness.MultiObjectiveFitness;
 import it.units.malelab.ege.core.fitness.Fitness;
+import it.units.malelab.ege.core.grammar.Node;
 import it.units.malelab.ege.core.grammar.Node;
 import java.util.List;
 
@@ -15,7 +16,7 @@ import java.util.List;
  *
  * @author eric
  */
-public abstract class BinaryClassification<I, C> implements FitnessComputer<C> {
+public abstract class BinaryClassification<I, T> implements FitnessComputer<T, MultiObjectiveFitness> {
   
   private final List<I> positives;
   private final List<I> negatives;
@@ -26,7 +27,7 @@ public abstract class BinaryClassification<I, C> implements FitnessComputer<C> {
   }
 
   @Override
-  public Fitness compute(Node<C> phenotype) {
+  public MultiObjectiveFitness compute(Node<T> phenotype) {
     double falsePositives = 0;
     double falseNegatives = 0;
     for (I positive : positives) {
@@ -41,11 +42,11 @@ public abstract class BinaryClassification<I, C> implements FitnessComputer<C> {
   }
 
   @Override
-  public Fitness worstValue() {
+  public MultiObjectiveFitness worstValue() {
     return new MultiObjectiveFitness(1d, 1d);
   }
 
-  public abstract boolean classify(I instance, Node<C> classifier);
+  public abstract boolean classify(I instance, Node<T> classifier);
 
   public List<I> getPositives() {
     return positives;

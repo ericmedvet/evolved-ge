@@ -3,31 +3,33 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.problem.symbolicregression;
-
-import java.util.Objects;
+package it.units.malelab.ege.util.symbolicregression;
 
 /**
  *
  * @author eric
  */
-public class Variable implements Element {
+public class Constant implements Element {
   
-  private final String string;
+  private final double value;
 
-  public Variable(String string) {
-    this.string = string;
+  public Constant(double value) {
+    this.value = value;
   }
 
   @Override
   public String toString() {
-    return string;
+    return Double.toString(value);
+  }
+
+  public double getValue() {
+    return value;
   }
 
   @Override
   public int hashCode() {
-    int hash = 5;
-    hash = 37 * hash + Objects.hashCode(this.string);
+    int hash = 3;
+    hash = 73 * hash + (int) (Double.doubleToLongBits(this.value) ^ (Double.doubleToLongBits(this.value) >>> 32));
     return hash;
   }
 
@@ -39,8 +41,8 @@ public class Variable implements Element {
     if (getClass() != obj.getClass()) {
       return false;
     }
-    final Variable other = (Variable) obj;
-    if (!Objects.equals(this.string, other.string)) {
+    final Constant other = (Constant) obj;
+    if (Double.doubleToLongBits(this.value) != Double.doubleToLongBits(other.value)) {
       return false;
     }
     return true;

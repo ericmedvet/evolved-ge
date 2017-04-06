@@ -11,7 +11,7 @@ import it.units.malelab.ege.util.distance.Distance;
 import it.units.malelab.ege.evolver.event.EvolutionEvent;
 import it.units.malelab.ege.evolver.event.OperatorApplicationEvent;
 import it.units.malelab.ege.ge.genotype.Genotype;
-import it.units.malelab.ege.problem.symbolicregression.MathUtils;
+import it.units.malelab.ege.util.symbolicregression.MathUtils;
 import java.io.BufferedOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;

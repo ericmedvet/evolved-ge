@@ -1,4 +1,4 @@
-package it.units.malelab.ege.fitness;
+package it.units.malelab.ege.benchmark.fitness;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
