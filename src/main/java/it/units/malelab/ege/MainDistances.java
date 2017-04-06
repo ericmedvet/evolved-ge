@@ -23,7 +23,7 @@ import it.units.malelab.ege.ge.evolver.StandardEvolver;
 import it.units.malelab.ege.ge.genotype.BitsGenotypeFactory;
 import it.units.malelab.ege.ge.genotype.SGEGenotype;
 import it.units.malelab.ege.ge.genotype.SGEGenotypeFactory;
-import it.units.malelab.ege.evolver.listener.CollectorGenerationLogger;
+import it.units.malelab.ege.core.listener.CollectorGenerationLogger;
 import it.units.malelab.ege.evolver.listener.DynamicLocalityAnalysisLogger;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
 import it.units.malelab.ege.evolver.listener.collector.Best;

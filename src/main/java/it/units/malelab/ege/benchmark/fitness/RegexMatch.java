@@ -18,24 +18,37 @@ import java.util.Set;
  * @author eric
  */
 public class RegexMatch extends BinaryClassification<String, String> {
-  
+
   private final String alphabet;
   private final int maxLength;
   private final int size;
   private final String[] regexes;
 
   public RegexMatch(String alphabet, int maxLength, int size, Random random, String... regexes) {
-    super(new ArrayList<String>(), new ArrayList<String>());
+    super(
+            new ArrayList<String>(),
+            new ArrayList<String>(),
+            new Classifier<String, String>() {
+      @Override
+      public boolean classify(String instance, Node<String> classifier) {
+        StringBuilder sb = new StringBuilder();
+        for (String leaf : Utils.contents(classifier.leaves())) {
+          sb.append(leaf);
+        }
+        return instance.matches(sb.toString());
+      }
+    }
+    );
     this.alphabet = alphabet;
     this.maxLength = maxLength;
     this.size = size;
     this.regexes = regexes;
     //generate strings    
     Set<String> strings = new LinkedHashSet<>();
-    while (strings.size()<size) {
-      int length = random.nextInt(maxLength-1)+1;
+    while (strings.size() < size) {
+      int length = random.nextInt(maxLength - 1) + 1;
       StringBuilder sb = new StringBuilder();
-      while (sb.length()<length) {
+      while (sb.length() < length) {
         sb.append(alphabet.charAt(random.nextInt(alphabet.length())));
       }
       strings.add(sb.toString());
@@ -57,15 +70,6 @@ public class RegexMatch extends BinaryClassification<String, String> {
     }
   }
 
-  @Override
-  public boolean classify(String instance, Node<String> classifier) {
-    StringBuilder sb = new StringBuilder();
-    for (String leaf : Utils.contents(classifier.leaves())) {
-      sb.append(leaf);
-    }
-    return instance.matches(sb.toString());
-  }    
-
   public String getAlphabet() {
     return alphabet;
   }
@@ -81,6 +85,5 @@ public class RegexMatch extends BinaryClassification<String, String> {
   public String[] getRegexes() {
     return regexes;
   }
-  
 
 }

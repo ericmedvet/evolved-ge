@@ -6,7 +6,6 @@
 package it.units.malelab.ege.core;
 
 import it.units.malelab.ege.core.ranker.IndividualRanker;
-import it.units.malelab.ege.evolver.PhenotypePrinter;
 import it.units.malelab.ege.core.fitness.Fitness;
 import it.units.malelab.ege.core.fitness.FitnessComputer;
 import it.units.malelab.ege.core.grammar.Grammar;

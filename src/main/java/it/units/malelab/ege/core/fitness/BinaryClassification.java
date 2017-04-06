@@ -16,25 +16,38 @@ import java.util.List;
  *
  * @author eric
  */
-public abstract class BinaryClassification<I, T> implements FitnessComputer<T, MultiObjectiveFitness> {
+public class BinaryClassification<I, T> implements FitnessComputer<T, MultiObjectiveFitness> {
+  
+  public static interface Classifier<I, T> {
+    public boolean classify(I instance, Node<T> classifier);
+  }
   
   private final List<I> positives;
   private final List<I> negatives;
+  private final Classifier<I, T> classifier;
 
-  public BinaryClassification(List<I> positives, List<I> negatives) {
+  public BinaryClassification(List<I> positives, List<I> negatives, Classifier<I, T> classifier) {
     this.positives = positives;
     this.negatives = negatives;
+    this.classifier = classifier;
   }
-
+  
+  public BinaryClassification<I, T> subset(double from, double to) {
+    return new BinaryClassification<>(
+            positives.subList((int)Math.round((double)positives.size()*from), (int)Math.round((double)positives.size()*to)),
+            negatives.subList((int)Math.round((double)negatives.size()*from), (int)Math.round((double)negatives.size()*to)),
+            classifier);
+  }
+  
   @Override
   public MultiObjectiveFitness compute(Node<T> phenotype) {
     double falsePositives = 0;
     double falseNegatives = 0;
     for (I positive : positives) {
-      falseNegatives = falseNegatives+(classify(positive, phenotype)?0:1);
+      falseNegatives = falseNegatives+(classifier.classify(positive, phenotype)?0:1);
     }
     for (I negative : negatives) {
-      falsePositives = falsePositives+(classify(negative, phenotype)?1:0);
+      falsePositives = falsePositives+(classifier.classify(negative, phenotype)?1:0);
     }
     return new MultiObjectiveFitness(
             falsePositives/(double)negatives.size(),
@@ -46,14 +59,16 @@ public abstract class BinaryClassification<I, T> implements FitnessComputer<T, M
     return new MultiObjectiveFitness(1d, 1d);
   }
 
-  public abstract boolean classify(I instance, Node<T> classifier);
-
   public List<I> getPositives() {
     return positives;
   }
 
   public List<I> getNegatives() {
     return negatives;
+  }
+
+  public Classifier<I, T> getClassifier() {
+    return classifier;
   }    
   
 }

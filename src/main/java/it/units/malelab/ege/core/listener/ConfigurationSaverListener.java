@@ -3,11 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.evolver.listener;
+package it.units.malelab.ege.core.listener;
 
-import it.units.malelab.ege.evolver.event.EvolutionEvent;
-import it.units.malelab.ege.evolver.event.GenerationEvent;
-import it.units.malelab.ege.ge.genotype.Genotype;
+import it.units.malelab.ege.core.fitness.Fitness;
+import it.units.malelab.ege.core.listener.event.EvolutionEvent;
+import it.units.malelab.ege.core.listener.event.EvolutionStartEvent;
 import java.io.PrintStream;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -17,23 +17,20 @@ import java.util.Set;
  *
  * @author eric
  */
-public class ConfigurationSaverListener<G extends Genotype, T> implements EvolutionListener<G, T>, WithConstants {
+public class ConfigurationSaverListener<T, F extends Fitness> extends AbstractListener<T, F> implements WithConstants {
 
-  private final Set<Class<? extends EvolutionEvent>> eventClasses;
   private final Map<String, Object> constants;
   private final PrintStream ps;
 
   public ConfigurationSaverListener(Map<String, Object> constants, PrintStream ps) {
-    eventClasses = new LinkedHashSet<>();
-    eventClasses.add(GenerationEvent.class);
+    super((Class)EvolutionStartEvent.class);
     this.constants = constants;
     this.ps = ps;
   } 
   
   @Override
-  public void listen(EvolutionEvent<G, T> event) {
-    int generation = ((GenerationEvent) event).getGeneration();
-    if (generation==1) {
+  public void listen(EvolutionEvent<T, F> event) {
+    if (event instanceof EvolutionStartEvent) {
       ps.println(constants.hashCode());
       ps.println(constants);
       ps.println(event.getEvolver().getConfiguration());
@@ -48,11 +45,6 @@ public class ConfigurationSaverListener<G extends Genotype, T> implements Evolut
         constants.put(key, newConstants.get(key));
       }
     }
-  }
-
-  @Override
-  public Set<Class<? extends EvolutionEvent>> getEventClasses() {
-    return eventClasses;
   }
   
 }

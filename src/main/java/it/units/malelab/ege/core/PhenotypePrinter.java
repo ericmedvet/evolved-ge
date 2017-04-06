@@ -3,16 +3,16 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.evolver.listener;
+package it.units.malelab.ege.core;
 
-import java.util.Map;
+import it.units.malelab.ege.core.grammar.Node;
 
 /**
  *
  * @author eric
  */
-public interface WithConstants {
+public interface PhenotypePrinter<T> {
   
-  public void updateConstants(Map<String, Object> newConstants);
+  public String toString(Node<T> node);
   
 }

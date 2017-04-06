@@ -16,6 +16,7 @@ import it.units.malelab.ege.core.listener.EvolverListener;
 import it.units.malelab.ege.core.listener.event.BirthEvent;
 import it.units.malelab.ege.core.listener.event.GenerationEvent;
 import it.units.malelab.ege.core.listener.event.EvolutionEndEvent;
+import it.units.malelab.ege.core.listener.event.EvolutionStartEvent;
 import it.units.malelab.ege.util.Utils;
 import it.units.malelab.ege.ge.genotype.Genotype;
 import it.units.malelab.ege.ge.operator.GeneticOperator;
@@ -82,6 +83,7 @@ public class StandardEvolver<G extends Genotype, T, F extends Fitness> implement
     }
     List<GEIndividual<G, T, F>> population = new ArrayList<>(Utils.getAll(executor.invokeAll(tasks)));
     int lastBroadcastGeneration = (int) Math.floor(births / configuration.getPopulationSize());
+    Utils.broadcast(new EvolutionStartEvent((List)population, lastBroadcastGeneration, this, null), (List)listeners);
     Utils.broadcast(new GenerationEvent<>((List)population, lastBroadcastGeneration, this, null), (List)listeners);
     //iterate
     while (Math.round(births / configuration.getPopulationSize()) < configuration.getNumberOfGenerations()) {

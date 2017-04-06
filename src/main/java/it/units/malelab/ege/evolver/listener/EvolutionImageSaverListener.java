@@ -5,6 +5,7 @@
  */
 package it.units.malelab.ege.evolver.listener;
 
+import it.units.malelab.ege.core.listener.WithConstants;
 import it.units.malelab.ege.evolver.Individual;
 import it.units.malelab.ege.evolver.event.EvolutionEndEvent;
 import it.units.malelab.ege.evolver.event.EvolutionEvent;

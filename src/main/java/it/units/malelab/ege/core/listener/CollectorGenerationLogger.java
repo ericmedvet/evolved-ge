@@ -3,21 +3,19 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.evolver.listener;
+package it.units.malelab.ege.core.listener;
 
-import it.units.malelab.ege.evolver.Individual;
-import it.units.malelab.ege.evolver.event.EvolutionEvent;
-import it.units.malelab.ege.evolver.event.GenerationEvent;
-import it.units.malelab.ege.ge.genotype.Genotype;
-import it.units.malelab.ege.evolver.listener.collector.PopulationInfoCollector;
+import it.units.malelab.ege.core.Individual;
+import it.units.malelab.ege.core.fitness.Fitness;
+import it.units.malelab.ege.core.listener.collector.PopulationInfoCollector;
+import it.units.malelab.ege.core.listener.event.EvolutionEvent;
+import it.units.malelab.ege.core.listener.event.GenerationEvent;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,16 +23,15 @@ import java.util.regex.Pattern;
  *
  * @author eric
  */
-public class CollectorGenerationLogger<G extends Genotype, T> implements EvolutionListener<G, T>, WithConstants {
+public class CollectorGenerationLogger<T, F extends Fitness> extends AbstractListener<T, F> implements WithConstants {
 
-  private final Set<Class<? extends EvolutionEvent>> eventClasses;
   private final Map<String, Object> constants;
   private final PrintStream ps;
   private final boolean format;
   private final int headerInterval;
   private final String innerSeparator;
   private final String outerSeparator;
-  private final List<PopulationInfoCollector<G, T>> collectors;
+  private final List<PopulationInfoCollector<T, F>> collectors;
 
   private final List<Map<String, String>> formattedNames;
   private int lines;
@@ -46,9 +43,8 @@ public class CollectorGenerationLogger<G extends Genotype, T> implements Evoluti
           int headerInterval,
           String innerSeparator,
           String outerSeparator,
-          PopulationInfoCollector<G, T>... collectors) {
-    eventClasses = new LinkedHashSet<>();
-    eventClasses.add(GenerationEvent.class);
+          PopulationInfoCollector<T, F>... collectors) {
+    super((Class)GenerationEvent.class);
     this.constants = new LinkedHashMap<>(constants);
     this.ps = ps;
     this.format = format;
@@ -57,7 +53,7 @@ public class CollectorGenerationLogger<G extends Genotype, T> implements Evoluti
     this.outerSeparator = outerSeparator;
     this.collectors = Arrays.asList(collectors);
     formattedNames = new ArrayList<>(this.collectors.size());
-    for (PopulationInfoCollector<G, T> collector : collectors) {
+    for (PopulationInfoCollector<T, F> collector : collectors) {
       Map<String, String> localFormattedNames = new LinkedHashMap<>();
       for (String name : collector.getFormattedNames().keySet()) {
         localFormattedNames.put(name, formatName(name, collector.getFormattedNames().get(name)));
@@ -68,9 +64,9 @@ public class CollectorGenerationLogger<G extends Genotype, T> implements Evoluti
   }
 
   @Override
-  public void listen(EvolutionEvent<G, T> event) {
+  public void listen(EvolutionEvent<T, F> event) {
     int generation = ((GenerationEvent) event).getGeneration();
-    List<Individual<G, T>> population = new ArrayList<>(((GenerationEvent) event).getPopulation());
+    List<Individual<T, F>> population = new ArrayList<>(((GenerationEvent) event).getPopulation());
     if ((headerInterval == 0 && lines == 0) || ((headerInterval > 0)&&((generation - 1) % headerInterval == 0))) {
       //print header: generation
       ps.print(format ? "gen" : "generation");
@@ -140,11 +136,6 @@ public class CollectorGenerationLogger<G extends Genotype, T> implements Evoluti
     }
     ps.println();
     lines = lines + 1;
-  }
-
-  @Override
-  public Set<Class<? extends EvolutionEvent>> getEventClasses() {
-    return eventClasses;
   }
 
   private String formatName(String name, String format) {

@@ -5,6 +5,7 @@
  */
 package it.units.malelab.ege.evolver.listener.collector;
 
+import it.units.malelab.ege.core.listener.collector.PopulationInfoCollector;
 import it.units.malelab.ege.evolver.Individual;
 import it.units.malelab.ege.ge.genotype.Genotype;
 import it.units.malelab.ege.ge.mapper.MultiMapper;

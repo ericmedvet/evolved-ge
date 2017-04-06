@@ -15,7 +15,7 @@ import it.units.malelab.ege.evolver.PartitionEvolver;
 import it.units.malelab.ege.ge.evolver.StandardEvolver;
 import it.units.malelab.ege.ge.genotype.BitsGenotypeFactory;
 import it.units.malelab.ege.ge.genotype.initializer.RandomInitializer;
-import it.units.malelab.ege.evolver.listener.CollectorGenerationLogger;
+import it.units.malelab.ege.core.listener.CollectorGenerationLogger;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
 import it.units.malelab.ege.evolver.listener.collector.Diversity;
 import it.units.malelab.ege.evolver.selector.Best;

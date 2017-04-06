@@ -215,15 +215,6 @@ public class Utils {
     }
   }
 
-  public static <G extends Genotype, T> void sortByFitness(List<Individual<G, T>> individuals) {
-    Collections.sort(individuals, new Comparator<Individual<G, T>>() {
-      @Override
-      public int compare(Individual<G, T> i1, Individual<G, T> i2) {
-        return i1.getFitness().compareTo(i2.getFitness());
-      }
-    });
-  }
-
   public static void broadcast(EvolutionEvent event, List<EvolverListener> listeners) {
     for (EvolverListener listener : listeners) {
       if (listener.getEventClasses().contains(event.getClass())) {

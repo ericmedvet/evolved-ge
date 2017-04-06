@@ -3,10 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.evolver.listener.collector;
+package it.units.malelab.ege.core.listener.collector;
 
-import it.units.malelab.ege.evolver.Individual;
-import it.units.malelab.ege.ge.genotype.Genotype;
+import it.units.malelab.ege.core.Individual;
+import it.units.malelab.ege.core.fitness.Fitness;
 import java.util.List;
 import java.util.Map;
 
@@ -14,9 +14,9 @@ import java.util.Map;
  *
  * @author eric
  */
-public interface PopulationInfoCollector<G extends Genotype, T> {
+public interface PopulationInfoCollector<T, F extends Fitness> {
   
   public Map<String, String> getFormattedNames();
-  public Map<String, Object> collect(List<Individual<G, T>> population);
+  public Map<String, Object> collect(List<Individual<T, F>> population);
   
 }
