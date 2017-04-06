@@ -3,28 +3,21 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.evolver.selector;
+package it.units.malelab.ege.core.selector;
 
-import java.util.Comparator;
 import java.util.List;
 
 /**
  *
  * @author eric
  */
-public class Best<T> implements Selector<T> {
-  
-  private final Comparator<T> comparator;
-
-  public Best(Comparator<T> comparator) {
-    this.comparator = comparator;
-  }    
+public class LastWorst<T extends Ranked> implements Selector<T> {
 
   @Override
   public T select(List<T> ts) {
     T selectedT = ts.get(0);
-    for (int i =1; i<ts.size(); i++) {
-      if (comparator.compare(ts.get(i), selectedT)<0) {
+    for (int i = 1; i < ts.size(); i++) {
+      if (ts.get(i).getRank()>=selectedT.getRank()) {
         selectedT = ts.get(i);
       }
     }
@@ -33,7 +26,7 @@ public class Best<T> implements Selector<T> {
 
   @Override
   public String toString() {
-    return "Best{" + "comparator=" + comparator + '}';
-  }  
-  
+    return "LastWorst{" + '}';
+  }
+
 }

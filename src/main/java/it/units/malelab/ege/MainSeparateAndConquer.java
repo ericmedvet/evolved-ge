@@ -14,13 +14,13 @@ import it.units.malelab.ege.ge.genotype.BitsGenotypeFactory;
 import it.units.malelab.ege.ge.genotype.initializer.RandomInitializer;
 import it.units.malelab.ege.core.listener.CollectorGenerationLogger;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
-import it.units.malelab.ege.evolver.listener.collector.Best;
-import it.units.malelab.ege.evolver.listener.collector.Diversity;
-import it.units.malelab.ege.evolver.listener.collector.MultiMapperInfo;
-import it.units.malelab.ege.evolver.listener.collector.Population;
+import it.units.malelab.ege.core.listener.collector.FirstBest;
+import it.units.malelab.ege.core.listener.collector.Diversity;
+import it.units.malelab.ege.ge.listener.collector.MultiMapperInfo;
+import it.units.malelab.ege.core.listener.collector.Population;
 import it.units.malelab.ege.ge.operator.LocalizedTwoPointsCrossover;
 import it.units.malelab.ege.ge.operator.ProbabilisticMutation;
-import it.units.malelab.ege.evolver.selector.IndividualComparator;
+import it.units.malelab.ege.core.selector.IndividualComparator;
 import it.units.malelab.ege.evolver.selector.Tournament;
 import it.units.malelab.ege.ge.genotype.validator.AnyValidator;
 import it.units.malelab.ege.ge.mapper.MappingException;
@@ -59,7 +59,7 @@ public class MainSeparateAndConquer {
     listeners.add(new CollectorGenerationLogger<>(
             Collections.EMPTY_MAP,
             System.out, true, 10, " ", " | ",
-            new Best<>("%10.10s"),
+            new FirstBest<>("%10.10s"),
             new Diversity<>()
     ));
     StandardConfiguration<BitsGenotype, String> configuration = new StandardConfiguration<>();

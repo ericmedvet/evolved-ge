@@ -6,9 +6,9 @@
 package it.units.malelab.ege.util;
 
 import com.google.common.collect.Range;
+import it.units.malelab.ege.core.Individual;
 import it.units.malelab.ege.core.grammar.Node;
 import it.units.malelab.ege.ge.genotype.Genotype;
-import it.units.malelab.ege.evolver.Individual;
 import it.units.malelab.ege.core.grammar.Grammar;
 import it.units.malelab.ege.core.listener.EvolverListener;
 import it.units.malelab.ege.core.listener.event.EvolutionEvent;
@@ -21,8 +21,6 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -254,20 +252,19 @@ public class Utils {
     return map;
   }
 
-  public static <G extends Genotype, T> void printIndividualAncestry(Individual<G, T> individual, PrintStream ps) {
+  public static void printIndividualAncestry(Individual<?, ?> individual, PrintStream ps) {
     printIndividualAncestry(individual, ps, 0);
   }
 
-  private static <G extends Genotype, T> void printIndividualAncestry(Individual<G, T> individual, PrintStream ps, int pad) {
+  private static void printIndividualAncestry(Individual<?, ?> individual, PrintStream ps, int pad) {
     for (int i = 0; i < pad; i++) {
       ps.print(" ");
     }
     ps.printf("'%20.20s' (%3d w/ %10.10s) f=%5.5s%n",
             individual.getPhenotype().leaves(),
             individual.getBirthDate(),
-            individual.getOperator() != null ? individual.getOperator().getClass().getSimpleName() : "",
             individual.getFitness());
-    for (Individual<G, T> parent : individual.getParents()) {
+    for (Individual<?, ?> parent : individual.getParents()) {
       printIndividualAncestry(parent, ps, pad + 2);
     }
   }

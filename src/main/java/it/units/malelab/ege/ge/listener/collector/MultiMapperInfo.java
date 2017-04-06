@@ -3,23 +3,22 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.evolver.listener.collector;
+package it.units.malelab.ege.ge.listener.collector;
 
+import it.units.malelab.ege.core.Individual;
+import it.units.malelab.ege.core.fitness.Fitness;
 import it.units.malelab.ege.core.listener.collector.PopulationInfoCollector;
-import it.units.malelab.ege.evolver.Individual;
 import it.units.malelab.ege.ge.genotype.Genotype;
 import it.units.malelab.ege.ge.mapper.MultiMapper;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  *
  * @author eric
  */
-public class MultiMapperInfo<G extends Genotype, T> implements PopulationInfoCollector<G, T> {
+public class MultiMapperInfo<T, F extends Fitness> implements PopulationInfoCollector<T, F> {
   
   private final int mappers;
 
@@ -28,17 +27,20 @@ public class MultiMapperInfo<G extends Genotype, T> implements PopulationInfoCol
   }  
 
   @Override
-  public Map<String, Object> collect(List<Individual<G, T>> population) {
-    Individual<G, T> best = population.get(0);
+  public Map<String, Object> collect(List<Individual<T, F>> population) {
+    Individual<T, F> best = null;
+    for (Individual<T, F> individual : population) {
+      if (individual.getRank()==0) {
+        best = individual;
+        break;
+      }
+    }
     Map<String, Object> indexes = new LinkedHashMap<>();
     int[] counts = new int[mappers];
-    for (Individual<G, T> individual : population) {
+    for (Individual<T, F> individual : population) {
       Integer index = (Integer)individual.getOtherInfo().get(MultiMapper.MAPPER_INDEX_NAME);
       if (index!=null) {
         counts[index] = counts[index]+1;
-      }
-      if (individual.getFitness().compareTo(best.getFitness())<0) {
-        best = individual;
       }
     }
     indexes.put("best.multimapper.i", best.getOtherInfo().get(MultiMapper.MAPPER_INDEX_NAME));

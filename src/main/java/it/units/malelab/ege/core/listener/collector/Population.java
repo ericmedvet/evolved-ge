@@ -3,12 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.evolver.listener.collector;
+package it.units.malelab.ege.core.listener.collector;
 
+import it.units.malelab.ege.core.Individual;
 import it.units.malelab.ege.core.listener.collector.PopulationInfoCollector;
-import it.units.malelab.ege.evolver.Individual;
 import it.units.malelab.ege.core.fitness.Fitness;
-import it.units.malelab.ege.ge.genotype.Genotype;
+import it.units.malelab.ege.core.fitness.NumericFitness;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -19,7 +19,7 @@ import java.util.Map;
  *
  * @author eric
  */
-public class Population<G extends Genotype, T> implements PopulationInfoCollector<G, T> {
+public class Population<T, F extends NumericFitness> implements PopulationInfoCollector<T, F> {
   
   private final String fitnessFormat;
 
@@ -28,22 +28,17 @@ public class Population<G extends Genotype, T> implements PopulationInfoCollecto
   }  
 
   @Override
-  public Map<String, Object> collect(List<Individual<G, T>> population) {
+  public Map<String, Object> collect(List<Individual<T, F>> population) {
     Map<String, Object> indexes = new LinkedHashMap<>();
     indexes.put("population.size", population.size());
-    List<Fitness> fitnesses = new ArrayList<>(population.size());
-    List<Double> values = new ArrayList<>();
+    List<Double> values = new ArrayList<>(population.size());
     double sum = 0;
-    for (Individual<G, T> individual : population) {
-      fitnesses.add(individual.getFitness());
-      if (individual.getFitness().getValue() instanceof Number) {
-        double value = ((Number) individual.getFitness().getValue()).doubleValue();
-        values.add(value);
-        sum = sum + value;
-      }
+    for (Individual<T, F> individual : population) {
+      values.add(individual.getFitness().getValue());
+      sum = sum + individual.getFitness().getValue();
     }
-    Collections.sort(fitnesses);
-    indexes.put("population.fitness.median", fitnesses.get(fitnesses.size() / 2).getValue());
+    Collections.sort(values);
+    indexes.put("population.fitness.median", values.get(values.size() / 2));
     if (!values.isEmpty()) {
       indexes.put("population.fitness.average", sum/values.size());
     }

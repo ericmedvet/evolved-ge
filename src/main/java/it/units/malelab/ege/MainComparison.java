@@ -14,18 +14,18 @@ import it.units.malelab.ege.ge.genotype.BitsGenotypeFactory;
 import it.units.malelab.ege.ge.genotype.initializer.RandomInitializer;
 import it.units.malelab.ege.core.listener.CollectorGenerationLogger;
 import it.units.malelab.ege.core.listener.ConfigurationSaverListener;
-import it.units.malelab.ege.evolver.listener.EvolutionImageSaverListener;
+import it.units.malelab.ege.ge.listener.EvolutionImageSaverListener;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
-import it.units.malelab.ege.evolver.listener.PopulationPrinter;
+import it.units.malelab.ege.ge.listener.PopulationPrinter;
 import it.units.malelab.ege.core.listener.WithConstants;
-import it.units.malelab.ege.evolver.listener.collector.Best;
-import it.units.malelab.ege.evolver.listener.collector.Diversity;
-import it.units.malelab.ege.evolver.listener.collector.MultiMapperInfo;
-import it.units.malelab.ege.evolver.listener.collector.Population;
+import it.units.malelab.ege.core.listener.collector.FirstBest;
+import it.units.malelab.ege.core.listener.collector.Diversity;
+import it.units.malelab.ege.ge.listener.collector.MultiMapperInfo;
+import it.units.malelab.ege.core.listener.collector.Population;
 import it.units.malelab.ege.ge.operator.BitsSGECrossover;
 import it.units.malelab.ege.ge.operator.LocalizedTwoPointsCrossover;
 import it.units.malelab.ege.ge.operator.ProbabilisticMutation;
-import it.units.malelab.ege.evolver.selector.IndividualComparator;
+import it.units.malelab.ege.core.selector.IndividualComparator;
 import it.units.malelab.ege.evolver.selector.Tournament;
 import it.units.malelab.ege.core.grammar.Grammar;
 import it.units.malelab.ege.ge.mapper.BitsSGEMapper;
@@ -75,7 +75,7 @@ public class MainComparison {
             Collections.EMPTY_MAP,
             System.out, true, 10, " ", " | ",
             new Population<>("%5.2f"),
-            new Best<>("%5.2f"),
+            new FirstBest<>("%5.2f"),
             new Diversity<>(),
             new MultiMapperInfo<>(4)
     ));
@@ -83,7 +83,7 @@ public class MainComparison {
             (Map) Utils.sameValueMap("", "key", "problem", "run", "initGenotypeSize", "variant", "pop"),
             generationFilePS, false, 0, ";", ";",
             new Population<>("%5.2f"),
-            new Best<>("%5.2f"),
+            new FirstBest<>("%5.2f"),
             new Diversity<>(),
             new MultiMapperInfo<>(4)
     ));

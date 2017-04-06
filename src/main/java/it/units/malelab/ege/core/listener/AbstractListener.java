@@ -6,7 +6,7 @@
 package it.units.malelab.ege.core.listener;
 
 import it.units.malelab.ege.core.fitness.Fitness;
-import it.units.malelab.ege.evolver.event.EvolutionEvent;
+import it.units.malelab.ege.core.listener.event.EvolutionEvent;
 import java.util.LinkedHashSet;
 import java.util.Set;
 

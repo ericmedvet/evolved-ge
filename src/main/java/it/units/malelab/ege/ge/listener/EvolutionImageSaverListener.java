@@ -3,13 +3,16 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.evolver.listener;
+package it.units.malelab.ege.ge.listener;
 
+import it.units.malelab.ege.core.Individual;
+import it.units.malelab.ege.core.fitness.Fitness;
+import it.units.malelab.ege.core.listener.AbstractListener;
 import it.units.malelab.ege.core.listener.WithConstants;
-import it.units.malelab.ege.evolver.Individual;
-import it.units.malelab.ege.evolver.event.EvolutionEndEvent;
-import it.units.malelab.ege.evolver.event.EvolutionEvent;
-import it.units.malelab.ege.evolver.event.GenerationEvent;
+import it.units.malelab.ege.core.listener.event.EvolutionEndEvent;
+import it.units.malelab.ege.core.listener.event.EvolutionEvent;
+import it.units.malelab.ege.core.listener.event.GenerationEvent;
+import it.units.malelab.ege.ge.GEIndividual;
 import it.units.malelab.ege.ge.genotype.BitsGenotype;
 import it.units.malelab.ege.ge.mapper.StandardGEMapper;
 import java.awt.Color;
@@ -20,21 +23,16 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 
 /**
  *
  * @author eric
  */
-public class EvolutionImageSaverListener<T> implements EvolutionListener<BitsGenotype, T>, WithConstants {
+public class EvolutionImageSaverListener<T, F extends Fitness> extends AbstractListener<T, F> implements WithConstants {
 
-  private final Set<Class<? extends EvolutionEvent>> eventClasses;
   private final Map<String, Object> constants;
   private final String basePath;
   private final List<double[]> evolutionDiversities;
@@ -45,9 +43,7 @@ public class EvolutionImageSaverListener<T> implements EvolutionListener<BitsGen
   public EvolutionImageSaverListener(
           Map<String, Object> constants,
           String basePath) {
-    eventClasses = new LinkedHashSet<>();
-    eventClasses.add(GenerationEvent.class);
-    eventClasses.add(EvolutionEndEvent.class);
+    super(GenerationEvent.class, EvolutionEndEvent.class);
     this.constants = new LinkedHashMap<>(constants);
     this.basePath = basePath;
     evolutionDiversities = new ArrayList<>();
@@ -57,10 +53,23 @@ public class EvolutionImageSaverListener<T> implements EvolutionListener<BitsGen
   }
 
   @Override
-  public void listen(EvolutionEvent<BitsGenotype, T> event) {
-    List<Individual<BitsGenotype, T>> population = new ArrayList<>(((GenerationEvent) event).getPopulation());
+  public void listen(EvolutionEvent<T, F> event) {
+    List<GEIndividual<BitsGenotype, T, F>> population = new ArrayList<>();
+    for (Individual<T, F> individual : ((GenerationEvent<T, F>)event).getPopulation()) {
+      if (individual instanceof GEIndividual) {
+        if (((GEIndividual)individual).getGenotype() instanceof BitsGenotype) {
+          population.add((GEIndividual<BitsGenotype, T, F>)individual);
+        }
+      }
+    }
     //update best bits
-    Individual<BitsGenotype, T> best = population.get(0);
+    GEIndividual<BitsGenotype, T, F> best = population.get(0);
+    for (GEIndividual<BitsGenotype, T, F> individual : population) {
+      if (individual.getRank()==0) {
+        best = individual;
+        break;
+      }
+    }
     double[] bestBits = new double[best.getGenotype().size()];
     for (int i = 0; i < bestBits.length; i++) {
       bestBits[i] = best.getGenotype().get(i) ? 1 : 0;
@@ -69,7 +78,7 @@ public class EvolutionImageSaverListener<T> implements EvolutionListener<BitsGen
     //update diversities
     double[] diversities = new double[bestBits.length];
     double[] counts = new double[best.getGenotype().size()];
-    for (Individual<BitsGenotype, T> individual : population) {
+    for (GEIndividual<BitsGenotype, T, F> individual : population) {
       for (int i = 0; i < Math.min(best.getGenotype().size(), individual.getGenotype().size()); i++) {
         counts[i] = counts[i] + 1;
         diversities[i] = diversities[i] + (individual.getGenotype().get(i) ? 1 : 0);
@@ -82,7 +91,7 @@ public class EvolutionImageSaverListener<T> implements EvolutionListener<BitsGen
     //update usages
     double[] usages = new double[bestBits.length];
     double count = 0;
-    for (Individual<BitsGenotype, T> individual : population) {
+    for (GEIndividual<BitsGenotype, T, F> individual : population) {
       int[] bitUsages = (int[]) individual.getOtherInfo().get(StandardGEMapper.BIT_USAGES_INDEX_NAME);
       if (bitUsages != null) {
         double maxUsage = 0;
@@ -139,11 +148,6 @@ public class EvolutionImageSaverListener<T> implements EvolutionListener<BitsGen
       evolutionUsages.clear();
       evolutionDiversities.clear();
     }
-  }
-
-  @Override
-  public Set<Class<? extends EvolutionEvent>> getEventClasses() {
-    return eventClasses;
   }
 
   @Override

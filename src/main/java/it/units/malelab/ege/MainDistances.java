@@ -26,8 +26,8 @@ import it.units.malelab.ege.ge.genotype.SGEGenotypeFactory;
 import it.units.malelab.ege.core.listener.CollectorGenerationLogger;
 import it.units.malelab.ege.evolver.listener.DynamicLocalityAnalysisLogger;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
-import it.units.malelab.ege.evolver.listener.collector.Best;
-import it.units.malelab.ege.evolver.listener.collector.Diversity;
+import it.units.malelab.ege.core.listener.collector.FirstBest;
+import it.units.malelab.ege.core.listener.collector.Diversity;
 import it.units.malelab.ege.ge.operator.BitsSGECrossover;
 import it.units.malelab.ege.ge.operator.ProbabilisticMutation;
 import it.units.malelab.ege.ge.operator.SGECrossover;
@@ -93,13 +93,13 @@ public class MainDistances {
     listeners.add(new CollectorGenerationLogger<>(
             Collections.EMPTY_MAP,
             System.out, true, 10, " ", " | ",
-            new Best<>("%5.2f"),
+            new FirstBest<>("%5.2f"),
             new Diversity<>()
     ));
     listeners.add(new CollectorGenerationLogger<>(
             (Map)Utils.sameValueMap(null, "problem", "run", "initGenotypeSize", "mapper"),
             generationFilePS, false, 0, ";", ";",
-            new Best<>("%5.2f"),
+            new FirstBest<>("%5.2f"),
             new Diversity<>()
     ));
     boolean writeHeader = true;

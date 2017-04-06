@@ -25,7 +25,7 @@ import it.units.malelab.ege.ge.operator.OnePointCrossover;
 import it.units.malelab.ege.evolver.selector.Tournament;
 import it.units.malelab.ege.ge.operator.ProbabilisticMutation;
 import it.units.malelab.ege.evolver.selector.Best;
-import it.units.malelab.ege.evolver.selector.IndividualComparator;
+import it.units.malelab.ege.core.selector.IndividualComparator;
 import it.units.malelab.ege.core.grammar.Grammar;
 import it.units.malelab.ege.ge.mapper.BitsSGEMapper;
 import it.units.malelab.ege.ge.mapper.BreathFirstMapper;

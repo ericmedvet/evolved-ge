@@ -17,10 +17,10 @@ import it.units.malelab.ege.ge.genotype.BitsGenotypeFactory;
 import it.units.malelab.ege.ge.genotype.initializer.RandomInitializer;
 import it.units.malelab.ege.core.listener.CollectorGenerationLogger;
 import it.units.malelab.ege.evolver.listener.EvolutionListener;
-import it.units.malelab.ege.evolver.listener.collector.Diversity;
+import it.units.malelab.ege.core.listener.collector.Diversity;
 import it.units.malelab.ege.evolver.selector.Best;
-import it.units.malelab.ege.evolver.selector.IndividualComparator;
-import it.units.malelab.ege.evolver.selector.RankProportional;
+import it.units.malelab.ege.core.selector.IndividualComparator;
+import it.units.malelab.ege.core.selector.RankProportional;
 import it.units.malelab.ege.evolver.selector.Selector;
 import it.units.malelab.ege.evolver.selector.Uniform;
 import it.units.malelab.ege.ge.mapper.MappingException;
@@ -78,13 +78,13 @@ public class MainDiversity {
     listeners.add(new CollectorGenerationLogger<>(
             Collections.EMPTY_MAP,
             System.out, true, 10, " ", " | ",
-            new it.units.malelab.ege.evolver.listener.collector.Best<>("%5.2f"),
+            new it.units.malelab.ege.core.listener.collector.FirstBest<>("%5.2f"),
             new Diversity<>()
     ));
     listeners.add(new CollectorGenerationLogger<>(
             (Map)Utils.sameValueMap(null, "problem", "run", "variant", "strategy", "diversity", "selector"),
             generationFilePS, false, 0, ";", ";",
-            new it.units.malelab.ege.evolver.listener.collector.Best<>("%5.2f"),
+            new it.units.malelab.ege.core.listener.collector.FirstBest<>("%5.2f"),
             new Diversity<>()
     ));
     for (String problemName : problems.keySet()) {

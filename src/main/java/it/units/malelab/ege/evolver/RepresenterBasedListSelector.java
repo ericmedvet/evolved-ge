@@ -3,8 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.evolver.selector;
+package it.units.malelab.ege.evolver;
 
+import it.units.malelab.ege.core.selector.Ranked;
+import it.units.malelab.ege.core.selector.Selector;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -14,7 +16,7 @@ import java.util.Map;
  *
  * @author eric
  */
-public class RepresenterBasedListSelector<T> implements Selector<List<T>> {
+public class RepresenterBasedListSelector<T extends Ranked> implements Selector<List<T>> {
   
   private final Selector<T> innerSelector;
   private final Selector<T> outerSelector;

@@ -3,11 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.evolver.listener.collector;
+package it.units.malelab.ege.core.listener.collector;
 
-import it.units.malelab.ege.core.listener.collector.PopulationInfoCollector;
-import it.units.malelab.ege.evolver.Individual;
-import it.units.malelab.ege.ge.genotype.Genotype;
+import it.units.malelab.ege.core.Individual;
+import it.units.malelab.ege.core.fitness.Fitness;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,28 +15,26 @@ import java.util.Map;
  *
  * @author eric
  */
-public class Best<G extends Genotype, T> implements PopulationInfoCollector<G, T>{
+public abstract class FirstBest<T, F extends Fitness> implements PopulationInfoCollector<T, F>{
   
-  private final String fitnessFormat;
-
-  public Best(String fitnessFormat) {
-    this.fitnessFormat = fitnessFormat;
-  }    
-
   @Override
-  public Map<String, Object> collect(List<Individual<G, T>> population) {
-    Individual<G, T> best = population.get(0);
-    for (Individual<G, T> individual : population) {
-      if (individual.getFitness().compareTo(best.getFitness())<0) {
+  public Map<String, Object> collect(List<Individual<T, F>> population) {
+    Individual<T, F> best = null;
+    for (Individual<T, F> individual : population) {
+      if (individual.getRank()==0) {
         best = individual;
+        break;
       }
     }
     Map<String, Object> indexes = new LinkedHashMap<>();
-    indexes.put("best.fitness", best.getFitness().getValue());
+    for (Map.Entry<String, Object> fitnessEntry : getFitnessIndexes(best.getFitness()).entrySet()) {
+      indexes.put(
+              augmentFitnessName(fitnessEntry.getKey()),
+              fitnessEntry.getValue());
+    }
     indexes.put("best.phenotype.size", best.getPhenotype().size());
     indexes.put("best.phenotype.length", best.getPhenotype().leaves().size());
     indexes.put("best.phenotype.depth", best.getPhenotype().depth());
-    indexes.put("best.genotype.size", best.getGenotype().size());
     indexes.put("best.birth", best.getBirthDate());
     indexes.put("best.ancestry.depth", getAncestryDepth(best));
     indexes.put("best.ancestry.size", getAncestrySize(best));
@@ -47,31 +44,44 @@ public class Best<G extends Genotype, T> implements PopulationInfoCollector<G, T
   @Override
   public Map<String, String> getFormattedNames() {
     LinkedHashMap<String, String> formattedNames = new LinkedHashMap<>();
-    formattedNames.put("best.fitness", fitnessFormat);
+    for (Map.Entry<String, String> fitnessEntry : getFitnessFormattedNames().entrySet()) {
+      formattedNames.put(
+              augmentFitnessName(fitnessEntry.getKey()),
+              fitnessEntry.getValue());
+    }
     formattedNames.put("best.phenotype.size", "%3d");
     formattedNames.put("best.phenotype.length", "%3d");
     formattedNames.put("best.phenotype.depth", "%2d");
-    formattedNames.put("best.genotype.size", "%5d");
     formattedNames.put("best.birth", "%3d");
     formattedNames.put("best.ancestry.depth", "%2d");
     formattedNames.put("best.ancestry.size", "%5d");
     return formattedNames;
   }  
   
-  private int getAncestrySize(Individual<G, T> individual) {
+  private int getAncestrySize(Individual<T, F> individual) {
     int count = 1;
-    for (Individual<G, T> parent : individual.getParents()) {
+    for (Individual<T, F> parent : individual.getParents()) {
       count = count+getAncestrySize(parent);
     }
     return count;
   }
 
-  private int getAncestryDepth(Individual<G, T> individual) {
+  private int getAncestryDepth(Individual<T, F> individual) {
     int count = 1;
-    for (Individual<G, T> parent : individual.getParents()) {
+    for (Individual<T, F> parent : individual.getParents()) {
       count = Math.max(count, getAncestryDepth(parent)+1);
     }
     return count;
+  }
+  
+  protected abstract Map<String, String> getFitnessFormattedNames();
+  protected abstract Map<String, Object> getFitnessIndexes(F fitness);
+  
+  private String augmentFitnessName(String fitnessName) {
+    if (fitnessName.isEmpty()) {
+      return "best.fitness";
+    }
+    return "best.fitness"+fitnessName;
   }
   
   

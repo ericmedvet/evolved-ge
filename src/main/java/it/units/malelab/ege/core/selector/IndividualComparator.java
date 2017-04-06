@@ -3,9 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.evolver.selector;
+package it.units.malelab.ege.core.selector;
 
-import it.units.malelab.ege.evolver.Individual;
+import it.units.malelab.ege.core.Individual;
+import it.units.malelab.ege.core.fitness.Fitness;
+import it.units.malelab.ege.core.fitness.NumericFitness;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -14,10 +16,10 @@ import java.util.Map;
  *
  * @author eric
  */
-public class IndividualComparator implements Comparator<Individual> {
+public class IndividualComparator<F extends Fitness> implements Comparator<Individual<?, F>> {
     
   public static enum Attribute {
-    FITNESS, AGE, GENO_SIZE, PHENO_SIZE, GENO, PHENO;
+    RANK, FITNESS, AGE, PHENO_SIZE, PHENO;
   }
 
   private final Map<Attribute, Boolean> attributes;
@@ -37,16 +39,18 @@ public class IndividualComparator implements Comparator<Individual> {
   public int compare(Individual i1, Individual i2) {
     int v = -1;
     for (Map.Entry<Attribute, Boolean> entry : attributes.entrySet()) {
-      if (entry.getKey().equals(Attribute.FITNESS)) {
-        v = i1.getFitness().compareTo(i2.getFitness());
+      if (entry.getKey().equals(Attribute.RANK)) {
+        v = i1.getRank()-i2.getRank();
+      } else if (entry.getKey().equals(Attribute.FITNESS)) {
+        if (i1.getFitness() instanceof NumericFitness) {
+          v = ((NumericFitness)i1.getFitness()).getValue().compareTo(((NumericFitness)i2.getFitness()).getValue());
+        } else {
+          v = 0;
+        }
       } else if (entry.getKey().equals(Attribute.AGE)) {
         v = -Integer.compare(i1.getBirthDate(), i2.getBirthDate());
-      } else if (entry.getKey().equals(Attribute.GENO_SIZE)) {
-        v = Integer.compare(i1.getGenotype().size(), i2.getGenotype().size());
       } else if (entry.getKey().equals(Attribute.PHENO_SIZE)) {
         v = Integer.compare(i1.getPhenotype().size(), i2.getPhenotype().size());
-      } else if (entry.getKey().equals(Attribute.GENO)) {
-        v = i1.getGenotype().equals(i2.getGenotype())?0:-1;
       } else if (entry.getKey().equals(Attribute.PHENO)) {
         v = i1.getPhenotype().equals(i2.getPhenotype())?0:-1;
       }
