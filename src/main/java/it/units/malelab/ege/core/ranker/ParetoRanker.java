@@ -6,9 +6,7 @@
 package it.units.malelab.ege.core.ranker;
 
 import it.units.malelab.ege.core.Individual;
-import it.units.malelab.ege.core.fitness.Fitness;
 import it.units.malelab.ege.core.fitness.MultiObjectiveFitness;
-import it.units.malelab.ege.util.Pair;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;

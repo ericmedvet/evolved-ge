@@ -6,8 +6,6 @@
 package it.units.malelab.ege.core.listener.collector;
 
 import it.units.malelab.ege.core.fitness.MultiObjectiveFitness;
-import it.units.malelab.ege.core.fitness.NumericFitness;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -19,7 +17,8 @@ public class MultiObjectiveFitnessFirstBest<T> extends FirstBest<T, MultiObjecti
 
   private final String[] fitnessFormats;
 
-  public MultiObjectiveFitnessFirstBest(String... fitnessFormats) {
+  public MultiObjectiveFitnessFirstBest(boolean ancestry, String... fitnessFormats) {
+    super(ancestry);
     this.fitnessFormats = fitnessFormats;
   }
 

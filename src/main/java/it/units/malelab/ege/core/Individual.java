@@ -5,10 +5,11 @@
  */
 package it.units.malelab.ege.core;
 
-import it.units.malelab.ege.ge.operator.GeneticOperator;
 import it.units.malelab.ege.core.fitness.Fitness;
 import it.units.malelab.ege.core.grammar.Node;
 import it.units.malelab.ege.core.selector.Ranked;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -17,7 +18,7 @@ import java.util.Map;
  * @author eric
  */
 public class Individual<T, F extends Fitness> implements Ranked {
-  
+
   private final Node<T> phenotype;
   private final F fitness;
   private final int birthDate;
@@ -29,8 +30,14 @@ public class Individual<T, F extends Fitness> implements Ranked {
     this.phenotype = phenotype;
     this.fitness = fitness;
     this.birthDate = birthDate;
-    this.parents = parents;
-    this.otherInfo = otherInfo;
+    this.parents = new ArrayList<>();
+    if (parents != null) {
+      this.parents.addAll(parents);
+    }
+    this.otherInfo = new LinkedHashMap<>();
+    if (otherInfo != null) {
+      this.otherInfo.putAll(otherInfo);
+    }
   }
 
   public Node<T> getPhenotype() {
@@ -61,5 +68,5 @@ public class Individual<T, F extends Fitness> implements Ranked {
   public void setRank(int rank) {
     this.rank = rank;
   }
-  
+
 }

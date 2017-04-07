@@ -26,8 +26,8 @@ public abstract class AbstractListener<T, F extends Fitness> implements EvolverL
   }
 
   @Override
-  public Set<Class<? extends EvolverListener>> getEventClasses() {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  public Set<Class<? extends EvolutionEvent>> getEventClasses() {
+    return eventClasses;
   }    
   
 }

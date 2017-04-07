@@ -17,7 +17,8 @@ public class NumericFirstBest<T> extends FirstBest<T, NumericFitness> {
 
   private final String fitnessFormat;
 
-  public NumericFirstBest(String fitnessFormat) {
+  public NumericFirstBest(boolean ancestry, String fitnessFormat) {
+    super(ancestry);
     this.fitnessFormat = fitnessFormat;
   }
 

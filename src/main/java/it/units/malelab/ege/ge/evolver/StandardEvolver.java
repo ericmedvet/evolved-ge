@@ -59,7 +59,6 @@ public class StandardEvolver<G extends Genotype, T, F extends Fitness> implement
     this.saveAncestry = saveAncestry;
   }
 
-
   @Override
   public GEConfiguration<G, T, F> getGEConfiguration() {
     return configuration;
@@ -83,12 +82,14 @@ public class StandardEvolver<G extends Genotype, T, F extends Fitness> implement
     }
     List<GEIndividual<G, T, F>> population = new ArrayList<>(Utils.getAll(executor.invokeAll(tasks)));
     int lastBroadcastGeneration = (int) Math.floor(births / configuration.getPopulationSize());
-    Utils.broadcast(new EvolutionStartEvent((List)population, lastBroadcastGeneration, this, null), (List)listeners);
-    Utils.broadcast(new GenerationEvent<>((List)population, lastBroadcastGeneration, this, null), (List)listeners);
+    Utils.broadcast(new EvolutionStartEvent<>((List) population, lastBroadcastGeneration, this, null), (List) listeners);
+    Utils.broadcast(new GenerationEvent<>((List) population, lastBroadcastGeneration, this, null), (List) listeners);
     //iterate
     while (Math.round(births / configuration.getPopulationSize()) < configuration.getNumberOfGenerations()) {
       int currentGeneration = (int) Math.floor(births / configuration.getPopulationSize());
       tasks.clear();
+      //re-rank
+      configuration.getProblem().getIndividualRanker().rank((List) population);
       //produce offsprings
       int i = 0;
       while (i < configuration.getOffspringSize()) {
@@ -109,6 +110,7 @@ public class StandardEvolver<G extends Genotype, T, F extends Fitness> implement
         if (newPopulation.size() >= configuration.getPopulationSize()) {
           population = newPopulation;
         } else {
+          //keep missing individuals from old population
           int targetSize = population.size() - newPopulation.size();
           while (population.size() > targetSize) {
             GEIndividual<G, T, F> individual = configuration.getUnsurvivalSelector().select(population);
@@ -118,7 +120,7 @@ public class StandardEvolver<G extends Genotype, T, F extends Fitness> implement
         }
       }
       //re-rank
-      configuration.getProblem().getIndividualRanker().rank((List)population);
+      configuration.getProblem().getIndividualRanker().rank((List) population);
       //select survivals
       while (population.size() > configuration.getPopulationSize()) {
         GEIndividual<G, T, F> individual = configuration.getUnsurvivalSelector().select(population);
@@ -126,14 +128,21 @@ public class StandardEvolver<G extends Genotype, T, F extends Fitness> implement
       }
       if ((int) Math.floor(births / configuration.getPopulationSize()) > lastBroadcastGeneration) {
         lastBroadcastGeneration = (int) Math.floor(births / configuration.getPopulationSize());
-        Utils.broadcast(new GenerationEvent<>((List)population, lastBroadcastGeneration, this, null), (List)listeners);
+        Utils.broadcast(new GenerationEvent<>((List) population, lastBroadcastGeneration, this, null), (List) listeners);
       }
     }
     //end
-    Utils.broadcast(new EvolutionEndEvent<>((List)population, configuration.getNumberOfGenerations(), this, null), (List)listeners);
+    Utils.broadcast(new EvolutionEndEvent<>((List) population, configuration.getNumberOfGenerations(), this, null), (List) listeners);
     executor.shutdown();
-    
-    return null;
+    configuration.getProblem().getIndividualRanker().rank((List) population);
+    configuration.getProblem().getIndividualRanker().rank((List) population);
+    List<Node<T>> bestPhenotypes = new ArrayList<>();
+    for (GEIndividual<G, T, F> individual : population) {
+      if (individual.getRank() == 0) {
+        bestPhenotypes.add(individual.getPhenotype());
+      }
+    }
+    return bestPhenotypes;
   }
 
   protected CacheLoader<G, Pair<Node<T>, Map<String, Object>>> getMappingCacheLoader() {
@@ -180,12 +189,12 @@ public class StandardEvolver<G extends Genotype, T, F extends Fitness> implement
         Pair<Node<T>, Map<String, Object>> mappingOutcome = mappingCache.getUnchecked(genotype);
         Node<T> phenotype = mappingOutcome.getFirst();
         long elapsed = stopwatch.stop().elapsed(TimeUnit.NANOSECONDS);
-        Utils.broadcast(new MappingEvent<>(genotype, phenotype, elapsed, generation, evolver, null), (List)listeners);
+        Utils.broadcast(new MappingEvent<>(genotype, phenotype, elapsed, generation, evolver, null), (List) listeners);
         stopwatch.reset().start();
         F fitness = fitnessCache.getUnchecked(phenotype);
         elapsed = stopwatch.stop().elapsed(TimeUnit.NANOSECONDS);
-        GEIndividual<G, T, F> individual = new GEIndividual<>(genotype, phenotype, fitness, generation, saveAncestry ? (List)parents : null, mappingOutcome.getSecond());
-        Utils.broadcast(new BirthEvent<>(individual, elapsed, generation, evolver, null), (List)listeners);
+        GEIndividual<G, T, F> individual = new GEIndividual<>(genotype, phenotype, fitness, generation, saveAncestry ? (List) parents : null, mappingOutcome.getSecond());
+        Utils.broadcast(new BirthEvent<>(individual, elapsed, generation, evolver, null), (List) listeners);
         return Collections.singletonList(individual);
       }
     };
@@ -214,7 +223,7 @@ public class StandardEvolver<G extends Genotype, T, F extends Fitness> implement
         for (G childGenotype : childGenotypes) {
           children.addAll(individualFromGenotypeCallable(childGenotype, generation, mappingCache, fitnessCache, listeners, operator, parents).call());
         }
-        Utils.broadcast(new OperatorApplicationEvent<>(parents, children, operator, elapsed, generation, evolver, null), (List)listeners);
+        Utils.broadcast(new OperatorApplicationEvent<>(parents, children, operator, elapsed, generation, evolver, null), (List) listeners);
         return children;
       }
     };

@@ -16,6 +16,6 @@ import java.util.Set;
 public interface EvolverListener<T, F extends Fitness> {
   
   public void listen(EvolutionEvent<T, F> event);
-  public Set<Class<? extends EvolverListener>> getEventClasses();
+  public Set<Class<? extends EvolutionEvent>> getEventClasses();
   
 }

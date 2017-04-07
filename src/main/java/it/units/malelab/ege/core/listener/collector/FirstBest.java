@@ -17,6 +17,12 @@ import java.util.Map;
  */
 public abstract class FirstBest<T, F extends Fitness> implements PopulationInfoCollector<T, F>{
   
+  private final boolean ancestry;
+
+  public FirstBest(boolean ancestry) {
+    this.ancestry = ancestry;
+  }    
+  
   @Override
   public Map<String, Object> collect(List<Individual<T, F>> population) {
     Individual<T, F> best = null;
@@ -36,8 +42,10 @@ public abstract class FirstBest<T, F extends Fitness> implements PopulationInfoC
     indexes.put("best.phenotype.length", best.getPhenotype().leaves().size());
     indexes.put("best.phenotype.depth", best.getPhenotype().depth());
     indexes.put("best.birth", best.getBirthDate());
-    indexes.put("best.ancestry.depth", getAncestryDepth(best));
-    indexes.put("best.ancestry.size", getAncestrySize(best));
+    if (ancestry) {
+      indexes.put("best.ancestry.depth", getAncestryDepth(best));
+      indexes.put("best.ancestry.size", getAncestrySize(best));
+    }
     return indexes;
   }  
 
@@ -53,8 +61,10 @@ public abstract class FirstBest<T, F extends Fitness> implements PopulationInfoC
     formattedNames.put("best.phenotype.length", "%3d");
     formattedNames.put("best.phenotype.depth", "%2d");
     formattedNames.put("best.birth", "%3d");
-    formattedNames.put("best.ancestry.depth", "%2d");
-    formattedNames.put("best.ancestry.size", "%5d");
+    if (ancestry) {
+      formattedNames.put("best.ancestry.depth", "%2d");
+      formattedNames.put("best.ancestry.size", "%5d");
+    }
     return formattedNames;
   }  
   

@@ -268,28 +268,28 @@ public class Utils {
       printIndividualAncestry(parent, ps, pad + 2);
     }
   }
-  
+
   public static List<Range<Integer>> slices(Range<Integer> range, int pieces) {
     List<Integer> sizes = new ArrayList<>(pieces);
-    for (int i = 0; i<pieces; i++) {
+    for (int i = 0; i < pieces; i++) {
       sizes.add(1);
     }
     return slices(range, sizes);
   }
 
   public static List<Range<Integer>> slices(Range<Integer> range, List<Integer> sizes) {
-    int length = range.upperEndpoint()-range.lowerEndpoint();
+    int length = range.upperEndpoint() - range.lowerEndpoint();
     int sumOfSizes = 0;
     for (int size : sizes) {
       sumOfSizes = sumOfSizes + size;
     }
-    if (sumOfSizes>length) {
+    if (sumOfSizes > length) {
       List<Integer> originalSizes = new ArrayList<>(sizes);
       sizes = new ArrayList<>(sizes.size());
       int oldSumOfSizes = sumOfSizes;
       sumOfSizes = 0;
       for (int originalSize : originalSizes) {
-        int newSize = (int)Math.round((double)originalSize/(double)oldSumOfSizes);
+        int newSize = (int) Math.round((double) originalSize / (double) oldSumOfSizes);
         sizes.add(newSize);
         sumOfSizes = sumOfSizes + newSize;
       }
@@ -304,15 +304,34 @@ public class Utils {
     while (missing > 0) {
       rangeSize[c % rangeSize.length] = rangeSize[c % rangeSize.length] + 1;
       c = c + 1;
-      missing = missing-1;
+      missing = missing - 1;
     }
     List<Range<Integer>> ranges = new ArrayList<>(sizes.size());
     int offset = range.lowerEndpoint();
     for (int i = 0; i < rangeSize.length; i++) {
-      ranges.add(Range.closedOpen(offset, offset+rangeSize[i]));
-      offset = offset+rangeSize[i];
+      ranges.add(Range.closedOpen(offset, offset + rangeSize[i]));
+      offset = offset + rangeSize[i];
     }
     return ranges;
+  }
+
+  public static class MapBuilder<K, V>  {
+    
+    private LinkedHashMap<K, V> map;
+
+    public MapBuilder() {
+      map = new LinkedHashMap<>();
+    }
+    
+    public MapBuilder<K,V> put(K key, V value) {
+      map.put(key, value);
+      return this;
+    }
+    
+    public Map<K, V> build() {
+      return map;
+    }
+
   }
 
 }
