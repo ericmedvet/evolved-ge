@@ -22,31 +22,32 @@ Finally, it can be easily configured and instrumented to output several metrics 
 
 Defining a problem
 ==================
-The user is expected to provide the problem as a pair consisting of a file of the grammar defining the language for the solutions and a Java class implementing the [`FintessComputer`](src/main/java/it/units/malelab/ege/evolver/fitness/FitnessComputer.java) inteface.
+The user is expected to provide the problem as a pair consisting of a file of the grammar defining the language for the solutions and a Java class implementing the [`FintessComputer`](src/main/java/it/units/malelab/ege/core/fitness/FitnessComputer.java) inteface.
 The latter allows evolved-ge to associate each candidate solution with an indication of its ability to solve the problem.
 `FintessComputer` operates on individuals as trees (`Node<T>`): in an individual tree, each leaf node is a terminal symbol of the grammar.
+`FintessComputer` returns a [`Fintess`](src/main/java/it/units/malelab/ege/core/fitness/Fitness.java) object: currently supported types of fitnesses include [`NumericFintess`](src/main/java/it/units/malelab/ege/core/fitness/NumericFitness.java) and [`MultiObjectiveFintess`](src/main/java/it/units/malelab/ege/core/fitness/MultiObjectiveFitness.java).
 
 A simple problem example follows.
-The goal is to generate a target string: each solution (individual) represents a string and its fitness is given by its distance from the target string (class [`LeafContentsDistanceFitness`](src/main/java/it/units/malelab/ege/evolver/fitness/LeafContentsDistanceFitness.java)).
+The goal is to generate a target string: each solution (individual) represents a string and its fitness is given by its distance from the target string (class [`LeafContentsDistanceFitness`](src/main/java/it/units/malelab/ege/core/fitness/LeafContentsDistanceFitness.java)).
 ```java
-public class LeafContentsDistanceFitness<T> implements FitnessComputer<T> {
+public class LeafContentsDistance<T> implements FitnessComputer<T, NumericFitness> {
   
   private final List<T> target;
   private final Distance<List<T>> distance;
 
-  public LeafContentsDistanceFitness(List<T> target, Distance<List<T>> distance) {
+  public LeafContentsDistance(List<T> target, Distance<List<T>> distance) {
     this.target = target;
     this.distance = distance;
   }
 
   @Override
-  public Fitness compute(Node<T> phenotype) {
+  public NumericFitness compute(Node<T> phenotype) {
     double d = distance.d(Utils.contents(phenotype.leaves()), target);
     return new NumericFitness(d);
   }
 
   @Override
-  public Fitness worstValue() {
+  public NumericFitness worstValue() {
     return new NumericFitness(Double.POSITIVE_INFINITY);
   }
   
@@ -71,40 +72,50 @@ The [BNF](https://en.wikipedia.org/wiki/Backus%E2%80%93Naur_form) grammar of the
 Sample usage
 ============
 Performing an evolutionary run with evolved-ge consists in three steps:
-1. building a configuration object (suitable for the chosen evolver)
-2. setting zero or more [`EvolutionListener`](src/main/java/it/units/malelab/ege/evolver/listener/EvolutionListener.java)
-3. starting the [`Evolver`](src/main/java/it/units/malelab/ege/evolver/Evolver.java)
+1. building a [`Configuration`](src/main/java/it/units/malelab/ege/core/Configuration.java) object (suitable for the chosen evolver)
+2. setting zero or more [`EvolverListener`](src/main/java/it/units/malelab/ege/core/listener/EvolverListener.java)
+3. starting the proper [`Evolver`](src/main/java/it/units/malelab/ege/core/Evolver.java)
 
-A simple code could be:
+A simple code could be (see [`ExampleMain`](src/main/java/it/units/malelab/ege/ExampleMain.java)):
 ```java
-public static void main(String[] args) {
-  StandardConfiguration<BitsGenotype, String> configuration = StandardConfiguration.createDefault(
-      BenchmarkProblems.harmonicCurveProblem(),
-      random);
-  List<EvolutionListener<BitsGenotype, String>> listeners = new ArrayList<>();
-      listeners.add(new CollectorGenerationLogger<>(
-              Collections.EMPTY_MAP,
-              System.out, true, 10, " ", " | ",
-              new Population<>("%5.2f"),
-              new Best<>("%5.2f")));
-  Evolver<BitsGenotype, String> evolver = new StandardEvolver<>(
-    Runtime.getRuntime().availableProcessors() - 1,
-    configuration,
-    random,
-    false);
-  evolver.go(listeners);  
+public final static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
+  Random random = new Random(1l);
+  Problem<String, NumericFitness> problem = new HarmonicCurve();
+  StandardConfiguration<BitsGenotype, String, NumericFitness> configuration = new StandardConfiguration<>(
+          500,
+          50,
+          new RandomInitializer<>(random, new BitsGenotypeFactory(256)),
+          new AnyValidator<BitsGenotype>(),
+          new StandardGEMapper<>(8, 5, problem.getGrammar()),
+          new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
+                  .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
+                  .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
+          new Tournament<GEIndividual<BitsGenotype, String, NumericFitness>>(3, random),
+          new LastWorst<GEIndividual<BitsGenotype, String, NumericFitness>>(),
+          500,
+          true,
+          problem);
+  List<EvolverListener<String, NumericFitness>> listeners = new ArrayList<>();
+  listeners.add(new CollectorGenerationLogger<>(
+          Collections.EMPTY_MAP, System.out, true, 10, " ", " | ",
+          new Population<String, NumericFitness>("%7.2f"),
+          new NumericFirstBest<String>("%6.2f", false),
+          new GEDiversity<String, NumericFitness>()
+  ));
+  Evolver<String, NumericFitness> evolver = new StandardEvolver<BitsGenotype, String, NumericFitness>(
+          1, configuration, random, false);
+  List<Node<String>> bests = evolver.solve(listeners);
+  System.out.printf("Found %d solutions.%n", bests.size());
 }
 ```
-Note that this code uses the `Problem` class for briefly defining the problem (see [`BenchmarkProblems`](src/main/java/it/units/malelab/ege/problems/BenchmarkProblems.java)) through the `createDefault` method.
-However, the user may act more directly by setting the `fitnessComputer` field in the `StandardConfiguration` object and the grammar directly in the mapper (which itself is a field in the `StandardConfiguration` object).
 
-The available evolvers include:
-* the [`StandardEvolver`](src/main/java/it/units/malelab/ege/evolver/StandardEvolver.java), which implements the generic _m+n_ replacement strategy with or without overlapping (depending on the values for `populationSize` (for _m_), `offspringSize` (for _n_), and `overlapping` fields in the [`StandardConfiguration`](src/main/java/it/units/malelab/ege/evolver/StandardConfiguration.java));
-* the [`PartitionEvolver`](src/main/java/it/units/malelab/ege/evolver/PartitionEvolver.java), which implements the modular diversity promotion mechanism sketched in [6].
+The available evolvers for GE variants include:
+* the [`StandardEvolver`](src/main/java/it/units/malelab/ege/ge/evolver/StandardEvolver.java), which implements the generic _m+n_ replacement strategy with or without overlapping (depending on the values for `populationSize` (for _m_), `offspringSize` (for _n_), and `overlapping` fields in the [`StandardConfiguration`](src/main/java/it/units/malelab/ege/ge/evolver/StandardConfiguration.java));
+* the [`PartitionEvolver`](src/main/java/it/units/malelab/ege/ge/evolver/PartitionEvolver.java), which implements the modular diversity promotion mechanism sketched in [6].
 
-The available [listeners](src/main/java/it/units/malelab/ege/evolver/listener) include:
-* a modular [`CollectorGenerationLogger`](src/main/java/it/units/malelab/ege/evolver/listener/CollectorGenerationLogger.java), which at each generation collects ad logs to a `PrintStream` (optionally with a customizable format) a set of specified metrics (through some [collectors](src/main/java/it/units/malelab/ege/evolver/listener/collector)) concerning the current population (e.g., best individual, stats, diversity measure); it can be used to log both on the standard output or on a file (possibly in a csv format);
-* a [`ConfigurationSaverListener`](src/main/java/it/units/malelab/ege/evolver/listener/CollectorGenerationLogger.java), useful for saving the configuration of each run in an automated execution of several runs.
+The available [listeners](src/main/java/it/units/malelab/ege/core/listener) include:
+* a modular [`CollectorGenerationLogger`](src/main/java/it/units/malelab/ege/core/listener/CollectorGenerationLogger.java), which at each generation collects ad logs to a `PrintStream` (optionally with a customizable format) a set of specified metrics (through some [collectors](src/main/java/it/units/malelab/ege/core/listener/collector)) concerning the current population (e.g., best individual, stats, diversity measure); it can be used to log both on the standard output or on a file (possibly in a csv format);
+* a [`ConfigurationSaverListener`](src/main/java/it/units/malelab/ege/core/listener/CollectorGenerationLogger.java), useful for saving the configuration of each run in an automated execution of several runs.
 
 
 References
