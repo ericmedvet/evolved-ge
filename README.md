@@ -22,8 +22,12 @@ Finally, it can be easily configured and instrumented to output several metrics 
 
 Defining a problem
 ==================
-The user is expected to provide the problem as a pair consisting of a file of the grammar defining the language for the solutions and a Java class implementing the [`FintessComputer`](src/main/java/it/units/malelab/ege/core/fitness/FitnessComputer.java) inteface.
-The latter allows evolved-ge to associate each candidate solution with an indication of its ability to solve the problem.
+The user is expected to provide the problem as a [`Problem`](src/main/java/it/units/malelab/ege/core/Problem.java) object including:
+* the [`Grammar`](src/main/java/it/units/malelab/ege/core/grammar/Grammar.java) defining the language for the solutions (can be loaded from a text file with `Utils.parseFromFile()`)
+* the [`FintessComputer`](src/main/java/it/units/malelab/ege/core/fitness/FitnessComputer.java) to be used for learning
+* the [`Ranker`](src/main/java/it/units/malelab/ege/core/ranker/FitnessComputer.java) for individuals (usually one among `ComparableFitnessRanker` and `ParetoRanker`)
+
+The `FintessComputer` allows evolved-ge to associate each candidate solution with an indication of its ability to solve the problem.
 `FintessComputer` operates on individuals as trees (`Node<T>`): in an individual tree, each leaf node is a terminal symbol of the grammar.
 `FintessComputer` returns a [`Fintess`](src/main/java/it/units/malelab/ege/core/fitness/Fitness.java) object: currently supported types of fitnesses include [`NumericFintess`](src/main/java/it/units/malelab/ege/core/fitness/NumericFitness.java) and [`MultiObjectiveFintess`](src/main/java/it/units/malelab/ege/core/fitness/MultiObjectiveFitness.java).
 
