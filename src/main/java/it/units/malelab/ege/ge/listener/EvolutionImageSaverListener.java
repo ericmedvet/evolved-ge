@@ -22,6 +22,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,9 +34,19 @@ import javax.imageio.ImageIO;
  * @author eric
  */
 public class EvolutionImageSaverListener<T, F extends Fitness> extends AbstractListener<T, F> implements WithConstants {
+  
+  public static enum ImageType {
+    DIVERSITY,
+    USAGE,
+    DU,
+    BEST_BITS,
+    BEST_USAGE
+  };
 
   private final Map<String, Object> constants;
   private final String basePath;
+  private final EnumSet<ImageType> types;
+  
   private final List<double[]> evolutionDiversities;
   private final List<double[]> evolutionUsages;
   private final List<double[]> evolutionBestUsages;
@@ -42,7 +54,7 @@ public class EvolutionImageSaverListener<T, F extends Fitness> extends AbstractL
 
   public EvolutionImageSaverListener(
           Map<String, Object> constants,
-          String basePath) {
+          String basePath, ImageType... types) {
     super(GenerationEvent.class, EvolutionEndEvent.class);
     this.constants = new LinkedHashMap<>(constants);
     this.basePath = basePath;
@@ -50,79 +62,88 @@ public class EvolutionImageSaverListener<T, F extends Fitness> extends AbstractL
     evolutionUsages = new ArrayList<>();
     evolutionBestUsages = new ArrayList<>();
     evolutionBestBits = new ArrayList<>();
+    this.types = EnumSet.copyOf(Arrays.asList(types));
   }
 
   @Override
   public void listen(EvolutionEvent<T, F> event) {
+    if (types.isEmpty()) {
+      return;
+    }
     List<GEIndividual<BitsGenotype, T, F>> population = new ArrayList<>();
-    for (Individual<T, F> individual : ((GenerationEvent<T, F>)event).getPopulation()) {
+    List<List<Individual<T, F>>> rankedPopulation = ((GenerationEvent)event).getRankedPopulation();
+    for (List<Individual<T, F>> rank : rankedPopulation) {
+      for (Individual<T, F> individual : rank) {
       if (individual instanceof GEIndividual) {
         if (((GEIndividual)individual).getGenotype() instanceof BitsGenotype) {
           population.add((GEIndividual<BitsGenotype, T, F>)individual);
         }
       }
+      }
     }
     //update best bits
-    GEIndividual<BitsGenotype, T, F> best = population.get(0);
-    for (GEIndividual<BitsGenotype, T, F> individual : population) {
-      if (individual.getRank()==0) {
-        best = individual;
-        break;
+    GEIndividual<BitsGenotype, T, F> best = (GEIndividual<BitsGenotype, T, F>)rankedPopulation.get(0).get(0);
+    if (types.contains(ImageType.BEST_BITS)) {
+      double[] bestBits = new double[best.getGenotype().size()];
+      for (int i = 0; i < bestBits.length; i++) {
+        bestBits[i] = best.getGenotype().get(i) ? 1 : 0;
       }
+      evolutionBestBits.add(bestBits);
     }
-    double[] bestBits = new double[best.getGenotype().size()];
-    for (int i = 0; i < bestBits.length; i++) {
-      bestBits[i] = best.getGenotype().get(i) ? 1 : 0;
-    }
-    evolutionBestBits.add(bestBits);
     //update diversities
-    double[] diversities = new double[bestBits.length];
-    double[] counts = new double[best.getGenotype().size()];
-    for (GEIndividual<BitsGenotype, T, F> individual : population) {
-      for (int i = 0; i < Math.min(best.getGenotype().size(), individual.getGenotype().size()); i++) {
-        counts[i] = counts[i] + 1;
-        diversities[i] = diversities[i] + (individual.getGenotype().get(i) ? 1 : 0);
+    if (types.contains(ImageType.DIVERSITY)||types.contains(ImageType.DU)) {
+      double[] diversities = new double[best.getGenotype().size()];
+      double[] counts = new double[best.getGenotype().size()];
+      for (GEIndividual<BitsGenotype, T, F> individual : population) {
+        for (int i = 0; i < Math.min(best.getGenotype().size(), individual.getGenotype().size()); i++) {
+          counts[i] = counts[i] + 1;
+          diversities[i] = diversities[i] + (individual.getGenotype().get(i) ? 1 : 0);
+        }
       }
+      for (int i = 0; i < diversities.length; i++) {
+        diversities[i] = 1 - Math.abs(diversities[i] / counts[i] - 0.5) * 2;
+      }
+      evolutionDiversities.add(diversities);
     }
-    for (int i = 0; i < diversities.length; i++) {
-      diversities[i] = 1 - Math.abs(diversities[i] / counts[i] - 0.5) * 2;
-    }
-    evolutionDiversities.add(diversities);
     //update usages
-    double[] usages = new double[bestBits.length];
-    double count = 0;
-    for (GEIndividual<BitsGenotype, T, F> individual : population) {
-      int[] bitUsages = (int[]) individual.getOtherInfo().get(StandardGEMapper.BIT_USAGES_INDEX_NAME);
+    if (types.contains(ImageType.USAGE)||types.contains(ImageType.DU)) {
+      double[] usages = new double[best.getGenotype().size()];
+      double count = 0;
+      for (GEIndividual<BitsGenotype, T, F> individual : population) {
+        int[] bitUsages = (int[]) individual.getOtherInfo().get(StandardGEMapper.BIT_USAGES_INDEX_NAME);
+        if (bitUsages != null) {
+          double maxUsage = 0;
+          for (int bitUsage : bitUsages) {
+            maxUsage = Math.max(maxUsage, (double) bitUsage);
+          }
+          for (int i = 0; i < Math.min(bitUsages.length, usages.length); i++) {
+            usages[i] = usages[i] + (double) bitUsages[i] / maxUsage;
+          }
+          count = count + 1;
+        }
+      }
+      if (count > 0) {
+        for (int i = 0; i < usages.length; i++) {
+          usages[i] = usages[i] / count;
+        }
+      }
+      evolutionUsages.add(usages);
+    }
+    //update best usages
+    if (types.contains(ImageType.BEST_BITS)) {
+      double[] bestUsages = new double[best.getGenotype().size()];
+      int[] bitUsages = (int[]) best.getOtherInfo().get(StandardGEMapper.BIT_USAGES_INDEX_NAME);
       if (bitUsages != null) {
         double maxUsage = 0;
         for (int bitUsage : bitUsages) {
           maxUsage = Math.max(maxUsage, (double) bitUsage);
         }
-        for (int i = 0; i < Math.min(bitUsages.length, usages.length); i++) {
-          usages[i] = usages[i] + (double) bitUsages[i] / maxUsage;
+        for (int i = 0; i < Math.min(bitUsages.length, bestUsages.length); i++) {
+          bestUsages[i] = (double) bitUsages[i] / maxUsage;
         }
-        count = count + 1;
       }
+      evolutionBestUsages.add(bestUsages);
     }
-    if (count > 0) {
-      for (int i = 0; i < usages.length; i++) {
-        usages[i] = usages[i] / count;
-      }
-    }
-    evolutionUsages.add(usages);
-    //update best usages
-    double[] bestUsages = new double[bestBits.length];
-    int[] bitUsages = (int[]) best.getOtherInfo().get(StandardGEMapper.BIT_USAGES_INDEX_NAME);
-    if (bitUsages != null) {
-      double maxUsage = 0;
-      for (int bitUsage : bitUsages) {
-        maxUsage = Math.max(maxUsage, (double) bitUsage);
-      }
-      for (int i = 0; i < Math.min(bitUsages.length, usages.length); i++) {
-        bestUsages[i] = (double) bitUsages[i] / maxUsage;
-      }
-    }
-    evolutionBestUsages.add(bestUsages);
     if (event instanceof EvolutionEndEvent) {
       //save and clear
       if (!evolutionBestBits.isEmpty()) {
@@ -131,16 +152,25 @@ public class EvolutionImageSaverListener<T, F extends Fitness> extends AbstractL
         for (Object value : constants.values()) {
           baseFileName = baseFileName + value.toString() + "-";
         }
-//        saveCSV(basePath + File.separator + baseFileName + "bestBits.csv", toArray(evolutionBestBits));
-//        saveCSV(basePath + File.separator + baseFileName + "bestUsage.csv", toArray(evolutionBestUsages));
-        saveCSV(basePath + File.separator + baseFileName + "usage.csv", toArray(evolutionUsages));
-        saveCSV(basePath + File.separator + baseFileName + "diversitiy.csv", toArray(evolutionDiversities));
-//        saveImage(basePath + File.separator + baseFileName + "bestBits.png", toArray(evolutionBestBits));
-//        saveImage(basePath + File.separator + baseFileName + "diversity.png", toArray(evolutionDiversities));
-//        saveImage(basePath + File.separator + baseFileName + "usage.png", toArray(evolutionUsages));
-//        saveImage(basePath + File.separator + baseFileName + "bestUsage.png", toArray(evolutionBestUsages));
-        saveImage(basePath + File.separator + baseFileName + "diversity_usage.png", toArray(evolutionDiversities), toArray(evolutionUsages));
-//        saveImage(basePath + File.separator + baseFileName + "diversity_bestUsage.png", toArray(evolutionDiversities), toArray(evolutionBestUsages));
+        if (types.contains(ImageType.DIVERSITY)) {
+          saveCSV(basePath + File.separator + baseFileName + "diversitiy.csv", toArray(evolutionDiversities));
+          saveImage(basePath + File.separator + baseFileName + "diversity.png", toArray(evolutionDiversities));
+        }
+        if (types.contains(ImageType.USAGE)) {
+          saveImage(basePath + File.separator + baseFileName + "usage.png", toArray(evolutionUsages));
+          saveCSV(basePath + File.separator + baseFileName + "usage.csv", toArray(evolutionUsages));
+        }
+        if (types.contains(ImageType.DU)) {
+          saveImage(basePath + File.separator + baseFileName + "diversity_usage.png", toArray(evolutionDiversities), toArray(evolutionUsages));
+        }
+        if (types.contains(ImageType.BEST_BITS)) {
+          saveCSV(basePath + File.separator + baseFileName + "bestBits.csv", toArray(evolutionBestBits));
+          saveCSV(basePath + File.separator + baseFileName + "bestBits.csv", toArray(evolutionBestBits));
+        }
+        if (types.contains(ImageType.BEST_USAGE)) {
+          saveImage(basePath + File.separator + baseFileName + "bestUsage.png", toArray(evolutionBestUsages));
+          saveCSV(basePath + File.separator + baseFileName + "bestUsage.csv", toArray(evolutionBestUsages));
+        }
       }
       //clear
       evolutionBestBits.clear();

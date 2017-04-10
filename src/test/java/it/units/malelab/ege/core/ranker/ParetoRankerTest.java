@@ -7,8 +7,6 @@ package it.units.malelab.ege.core.ranker;
 
 import it.units.malelab.ege.core.Individual;
 import it.units.malelab.ege.core.fitness.MultiObjectiveFitness;
-import it.units.malelab.ege.core.fitness.NumericFitness;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -59,13 +57,13 @@ public class ParetoRankerTest {
     Individual<?, MultiObjectiveFitness> i5 = new Individual<>(null, new MultiObjectiveFitness(5, 5), 0, null, null);
     List<Individual<?, MultiObjectiveFitness>> pop = Arrays.asList(i0, i1, i2, i3, i4, i5);
     for (int i = 0; i<5; i++) {
-      instance.rank(pop);
-      assertEquals("i0 rank should be 0", 0, i0.getRank());
-      assertEquals("i1 rank should be 0", 0, i1.getRank());
-      assertEquals("i2 rank should be 1", 1, i2.getRank());
-      assertEquals("i3 rank should be 1", 1, i3.getRank());
-      assertEquals("i4 rank should be 2", 2, i4.getRank());
-      assertEquals("i5 rank should be 3", 3, i5.getRank());
+      List<List<Individual<?, MultiObjectiveFitness>>> ranked = instance.rank(pop);
+      assertEquals("i0 rank should be in list 0", true, ranked.get(0).contains(i0));
+      assertEquals("i1 rank should be in list 0", true, ranked.get(0).contains(i1));
+      assertEquals("i2 rank should be in list 1", true, ranked.get(1).contains(i2));
+      assertEquals("i3 rank should be in list 1", true, ranked.get(1).contains(i3));
+      assertEquals("i4 rank should be in list 2", true, ranked.get(2).contains(i4));
+      assertEquals("i5 rank should be in list 3", true, ranked.get(3).contains(i5));
       Collections.shuffle(pop, new Random(1l));
     }
   }

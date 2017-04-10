@@ -13,11 +13,11 @@ import java.util.Map;
  *
  * @author eric
  */
-public class MultiObjectiveFitnessFirstBest<T> extends FirstBest<T, MultiObjectiveFitness> {
+public class MultiObjectiveFitnessFirstBest<T> extends Best<T, MultiObjectiveFitness> {
 
   private final String[] fitnessFormats;
 
-  public MultiObjectiveFitnessFirstBest(boolean ancestry, String... fitnessFormats) {
+  public MultiObjectiveFitnessFirstBest(String[] fitnessFormats, boolean ancestry) {
     super(ancestry);
     this.fitnessFormats = fitnessFormats;
   }

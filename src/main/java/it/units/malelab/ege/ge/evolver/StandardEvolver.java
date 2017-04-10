@@ -82,21 +82,21 @@ public class StandardEvolver<G extends Genotype, T, F extends Fitness> implement
     }
     List<GEIndividual<G, T, F>> population = new ArrayList<>(Utils.getAll(executor.invokeAll(tasks)));
     int lastBroadcastGeneration = (int) Math.floor(births / configuration.getPopulationSize());
-    Utils.broadcast(new EvolutionStartEvent<>((List) population, lastBroadcastGeneration, this, null), (List) listeners);
-    Utils.broadcast(new GenerationEvent<>((List) population, lastBroadcastGeneration, this, null), (List) listeners);
+    Utils.broadcast(new EvolutionStartEvent<>(this, null), (List) listeners);
+    Utils.broadcast(new GenerationEvent<>((List) configuration.getProblem().getIndividualRanker().rank((List) population), lastBroadcastGeneration, this, null), (List) listeners);
     //iterate
     while (Math.round(births / configuration.getPopulationSize()) < configuration.getNumberOfGenerations()) {
       int currentGeneration = (int) Math.floor(births / configuration.getPopulationSize());
       tasks.clear();
       //re-rank
-      configuration.getProblem().getIndividualRanker().rank((List) population);
+      List<List<GEIndividual<G, T, F>>> rankedPopulation = configuration.getProblem().getIndividualRanker().rank((List) population);
       //produce offsprings
       int i = 0;
       while (i < configuration.getOffspringSize()) {
         GeneticOperator<G> operator = Utils.selectRandom(configuration.getOperators(), random);
         List<GEIndividual<G, T, F>> parents = new ArrayList<>(operator.getParentsArity());
         for (int j = 0; j < operator.getParentsArity(); j++) {
-          parents.add(configuration.getParentSelector().select(population));
+          parents.add(configuration.getParentSelector().select(rankedPopulation));
         }
         tasks.add(operatorApplicationCallable(operator, parents, currentGeneration, mappingCache, fitnessCache, listeners));
         i = i + operator.getChildrenArity();
@@ -113,34 +113,31 @@ public class StandardEvolver<G extends Genotype, T, F extends Fitness> implement
           //keep missing individuals from old population
           int targetSize = population.size() - newPopulation.size();
           while (population.size() > targetSize) {
-            GEIndividual<G, T, F> individual = configuration.getUnsurvivalSelector().select(population);
+            GEIndividual<G, T, F> individual = configuration.getUnsurvivalSelector().select(rankedPopulation);
             population.remove(individual);
           }
           population.addAll(newPopulation);
         }
       }
-      //re-rank
-      configuration.getProblem().getIndividualRanker().rank((List) population);
       //select survivals
       while (population.size() > configuration.getPopulationSize()) {
-        GEIndividual<G, T, F> individual = configuration.getUnsurvivalSelector().select(population);
+        //re-rank
+        rankedPopulation = configuration.getProblem().getIndividualRanker().rank((List) population);
+        GEIndividual<G, T, F> individual = configuration.getUnsurvivalSelector().select(rankedPopulation);
         population.remove(individual);
       }
       if ((int) Math.floor(births / configuration.getPopulationSize()) > lastBroadcastGeneration) {
         lastBroadcastGeneration = (int) Math.floor(births / configuration.getPopulationSize());
-        Utils.broadcast(new GenerationEvent<>((List) population, lastBroadcastGeneration, this, null), (List) listeners);
+        Utils.broadcast(new GenerationEvent<>((List) rankedPopulation, lastBroadcastGeneration, this, null), (List) listeners);
       }
     }
     //end
-    Utils.broadcast(new EvolutionEndEvent<>((List) population, configuration.getNumberOfGenerations(), this, null), (List) listeners);
     executor.shutdown();
-    configuration.getProblem().getIndividualRanker().rank((List) population);
-    configuration.getProblem().getIndividualRanker().rank((List) population);
     List<Node<T>> bestPhenotypes = new ArrayList<>();
-    for (GEIndividual<G, T, F> individual : population) {
-      if (individual.getRank() == 0) {
-        bestPhenotypes.add(individual.getPhenotype());
-      }
+    List<List<GEIndividual<G, T, F>>> rankedPopulation = configuration.getProblem().getIndividualRanker().rank((List) population);
+    Utils.broadcast(new EvolutionEndEvent<>((List) rankedPopulation, configuration.getNumberOfGenerations(), this, null), (List) listeners);
+    for (GEIndividual<G, T, F> individual : rankedPopulation.get(0)) {
+      bestPhenotypes.add(individual.getPhenotype());
     }
     return bestPhenotypes;
   }

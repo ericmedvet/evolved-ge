@@ -16,10 +16,10 @@ import java.util.Map;
  *
  * @author eric
  */
-public class EvolutionStartEvent<T, F extends Fitness> extends GenerationEvent<T, F> {
+public class EvolutionStartEvent<T, F extends Fitness> extends EvolutionEvent<T, F> {
 
-  public EvolutionStartEvent(List<Individual<T, F>> population, int generation, Evolver<T, F> evolver, Map<String, Object> data) {
-    super(population, generation, evolver, data);
+  public EvolutionStartEvent(Evolver<T, F> evolver, Map<String, Object> data) {
+    super(0, evolver, data);
   }
 
 }

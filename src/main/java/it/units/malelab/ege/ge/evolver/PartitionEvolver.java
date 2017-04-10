@@ -14,6 +14,7 @@ import it.units.malelab.ege.core.listener.EvolverListener;
 import it.units.malelab.ege.core.listener.event.EvolutionEndEvent;
 import it.units.malelab.ege.core.listener.event.EvolutionStartEvent;
 import it.units.malelab.ege.core.listener.event.GenerationEvent;
+import it.units.malelab.ege.core.ranker.Ranker;
 import it.units.malelab.ege.core.selector.FirstBest;
 import it.units.malelab.ege.core.selector.Selector;
 import it.units.malelab.ege.ge.genotype.Genotype;
@@ -22,6 +23,7 @@ import it.units.malelab.ege.ge.GEIndividual;
 import it.units.malelab.ege.util.Pair;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -41,6 +43,9 @@ public class PartitionEvolver<G extends Genotype, T, F extends Fitness> extends 
     this.configuration = configuration;
   }
 
+  //TODO
+  // - likely to modify: partition should be ranked internally according to a parent/unsurvival ranker to be specified in the configuration
+  // - modify population parameter in broadcast call 
   @Override
   public List<Node<T>> solve(List<EvolverListener<T, F>> listeners) throws InterruptedException, ExecutionException {
     LoadingCache<G, Pair<Node<T>, Map<String, Object>>> mappingCache = CacheBuilder.newBuilder().maximumSize(CACHE_SIZE).build(getMappingCacheLoader());
@@ -57,21 +62,24 @@ public class PartitionEvolver<G extends Genotype, T, F extends Fitness> extends 
       addToPartition(partitionedPopulation, individual);
     }
     int lastBroadcastGeneration = (int) Math.floor(births / configuration.getPopulationSize());
-    Utils.broadcast(new EvolutionStartEvent<>((List) all(partitionedPopulation), lastBroadcastGeneration, this, null), (List) listeners);
+    Utils.broadcast(new EvolutionStartEvent<>(this, null), (List) listeners);
     Utils.broadcast(new GenerationEvent<>((List) all(partitionedPopulation), lastBroadcastGeneration, this, null), (List) listeners);
     //iterate
     while (Math.round(births / configuration.getPopulationSize()) < configuration.getNumberOfGenerations()) {
       int currentGeneration = (int) Math.floor(births / configuration.getPopulationSize());
       tasks.clear();
       //re-rank
-      configuration.getProblem().getIndividualRanker().rank((List) all(partitionedPopulation));
+      Map<GEIndividual<G, T, F>, List<GEIndividual<G, T, F>>> representedPartitions = representedPartitions(configuration.getParentRepresenterSelector(), partitionedPopulation);
+      List<List<GEIndividual<G, T, F>>> rankedRepresenters = rankRepresenters(
+              (Ranker)configuration.getProblem().getIndividualRanker(),
+              representedPartitions);
       //produce offsprings
       int i = 0;
       while (i < configuration.getOffspringSize()) {
         GeneticOperator<G> operator = Utils.selectRandom(configuration.getOperators(), random);
         List<GEIndividual<G, T, F>> parents = new ArrayList<>(operator.getParentsArity());
         for (int j = 0; j < operator.getParentsArity(); j++) {
-          parents.add(selectRepresenter(partitionedPopulation, configuration.getParentSelector()));
+          parents.add(configuration.getParentSelector().select(rankedRepresenters));
         }
         tasks.add(operatorApplicationCallable(operator, parents, currentGeneration, mappingCache, fitnessCache, listeners));
         i = i + operator.getChildrenArity();
@@ -89,25 +97,28 @@ public class PartitionEvolver<G extends Genotype, T, F extends Fitness> extends 
           addToPartition(newPartitionedPopulation, individual);
         }
         //keep missing individuals from old population
-        while (!partitionedPopulation.isEmpty()) {
-          Selector<GEIndividual<G, T, F>> bestSelector = new FirstBest<>();
+        Selector<GEIndividual<G, T, F>> bestSelector = new FirstBest<>();
+        List<GEIndividual<G, T, F>> availableRepresenters = all(rankedRepresenters);
+        while (!availableRepresenters.isEmpty()) {
           if (newPartitionedPopulation.size() >= configuration.getPopulationSize()) {
             break;
           }
-          List<GEIndividual<G, T, F>> bestOldPartition = selectPartition(partitionedPopulation, bestSelector);
-          partitionedPopulation.remove(bestOldPartition);
-          for (GEIndividual<G, T, F> individual : bestOldPartition) {
+          GEIndividual<G, T, F> toAddRepresenter = bestSelector.select(spread(availableRepresenters));
+          availableRepresenters.remove(toAddRepresenter);
+          for (GEIndividual<G, T, F> individual : representedPartitions.get(toAddRepresenter)) {
             addToPartition(newPartitionedPopulation, individual);
           }
         }
         partitionedPopulation = newPartitionedPopulation;
       }
-      //re-rank
-      configuration.getProblem().getIndividualRanker().rank((List) all(partitionedPopulation));
       //select survivals
       while (partitionedPopulation.size() > configuration.getPopulationSize()) {
-        List<GEIndividual<G, T, F>> partition = selectPartition(partitionedPopulation, configuration.getUnsurvivalSelector());
-        partitionedPopulation.remove(partition);
+        //re-rank
+        representedPartitions = representedPartitions(configuration.getUnsurvivalRepresenterSelector(), partitionedPopulation);
+        rankedRepresenters = rankRepresenters(
+                (Ranker)configuration.getProblem().getIndividualRanker(),
+                representedPartitions);
+        partitionedPopulation.remove(representedPartitions.get(configuration.getUnsurvivalSelector().select(rankedRepresenters)));
       }
       if ((int) Math.floor(births / configuration.getPopulationSize()) > lastBroadcastGeneration) {
         lastBroadcastGeneration = (int) Math.floor(births / configuration.getPopulationSize());
@@ -117,12 +128,10 @@ public class PartitionEvolver<G extends Genotype, T, F extends Fitness> extends 
     //end
     Utils.broadcast(new EvolutionEndEvent<>((List) all(partitionedPopulation), configuration.getNumberOfGenerations(), this, null), (List) listeners);
     executor.shutdown();
-    configuration.getProblem().getIndividualRanker().rank((List) all(partitionedPopulation));
     List<Node<T>> bestPhenotypes = new ArrayList<>();
-    for (GEIndividual<G, T, F> individual : all(partitionedPopulation)) {
-      if (individual.getRank() == 0) {
-        bestPhenotypes.add(individual.getPhenotype());
-      }
+    List<List<GEIndividual<G, T, F>>> rankedPopulation = configuration.getProblem().getIndividualRanker().rank((List)all(partitionedPopulation));
+    for (GEIndividual<G, T, F> individual : rankedPopulation.get(0)) {
+      bestPhenotypes.add(individual.getPhenotype());
     }
     return bestPhenotypes;
   }
@@ -134,7 +143,7 @@ public class PartitionEvolver<G extends Genotype, T, F extends Fitness> extends 
         found = true;
         partition.add(individual);
         while (partition.size() > configuration.getPartitionSize()) {
-          GEIndividual<G, T, F> toRemove = configuration.getUnsurvivalSelector().select(partition);
+          GEIndividual<G, T, F> toRemove = configuration.getUnsurvivalSelector().select(spread(partition));
           partition.remove(toRemove);
         }
         break;
@@ -147,30 +156,32 @@ public class PartitionEvolver<G extends Genotype, T, F extends Fitness> extends 
     }
   }
 
-  private List<GEIndividual<G, T, F>> all(List<List<GEIndividual<G, T, F>>> partitions) {
-    List<GEIndividual<G, T, F>> all = new ArrayList<>(partitions.size());
-    for (List<GEIndividual<G, T, F>> partition : partitions) {
+  private static <K> List<K> all(List<List<K>> partitions) {
+    List<K> all = new ArrayList<>(partitions.size());
+    for (List<K> partition : partitions) {
       all.addAll(partition);
     }
     return all;
   }
 
-  private List<GEIndividual<G, T, F>> selectPartition(List<List<GEIndividual<G, T, F>>> partitions, Selector<GEIndividual<G, T, F>> selector) {
-    GEIndividual<G, T, F> selected = selectRepresenter(partitions, selector);
-    for (List<GEIndividual<G, T, F>> partition : partitions) {
-      if (partition.contains(selected)) {
-        return partition;
-      }
-    }
-    return Collections.EMPTY_LIST;
+  private static <K> List<List<K>> rankRepresenters(Ranker<K> ranker, Map<K, List<K>> representedPartitions) {
+    return ranker.rank(new ArrayList<>(representedPartitions.keySet()));
   }
-
-  private GEIndividual<G, T, F> selectRepresenter(List<List<GEIndividual<G, T, F>>> partitions, Selector<GEIndividual<G, T, F>> selector) {
-    List<GEIndividual<G, T, F>> representers = new ArrayList<>(partitions.size());
-    for (List<GEIndividual<G, T, F>> partition : partitions) {
-      representers.add(configuration.getRepresenterSelector().select(partition));
+  
+  private static <K> Map<K, List<K>> representedPartitions(Selector<K> selector, List<List<K>> partitions) {
+    Map<K, List<K>> representedPartitions = new LinkedHashMap<>();
+    for (List<K> partition : partitions) {
+      representedPartitions.put(selector.select(spread(partition)), partition);
     }
-    return selector.select(representers);
+    return representedPartitions;
+  }
+  
+  private static <K> List<List<K>> spread(List<K> ks) {
+    List<List<K>> kss = new ArrayList<>(ks.size());
+    for (K k : ks) {
+      kss.add(Collections.singletonList(k));
+    }
+    return kss;
   }
 
 }

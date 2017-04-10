@@ -13,11 +13,11 @@ import java.util.Map;
  *
  * @author eric
  */
-public class NumericFirstBest<T> extends FirstBest<T, NumericFitness> {
+public class NumericFirstBest<T> extends Best<T, NumericFitness> {
 
   private final String fitnessFormat;
 
-  public NumericFirstBest(boolean ancestry, String fitnessFormat) {
+  public NumericFirstBest(String fitnessFormat, boolean ancestry) {
     super(ancestry);
     this.fitnessFormat = fitnessFormat;
   }

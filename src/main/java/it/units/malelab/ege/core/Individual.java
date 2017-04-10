@@ -7,7 +7,6 @@ package it.units.malelab.ege.core;
 
 import it.units.malelab.ege.core.fitness.Fitness;
 import it.units.malelab.ege.core.grammar.Node;
-import it.units.malelab.ege.core.selector.Ranked;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -17,7 +16,7 @@ import java.util.Map;
  *
  * @author eric
  */
-public class Individual<T, F extends Fitness> implements Ranked {
+public class Individual<T, F extends Fitness> {
 
   private final Node<T> phenotype;
   private final F fitness;
@@ -58,15 +57,6 @@ public class Individual<T, F extends Fitness> implements Ranked {
 
   public Map<String, Object> getOtherInfo() {
     return otherInfo;
-  }
-
-  @Override
-  public int getRank() {
-    return rank;
-  }
-
-  public void setRank(int rank) {
-    this.rank = rank;
   }
 
 }

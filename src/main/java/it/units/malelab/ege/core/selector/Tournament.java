@@ -9,12 +9,14 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 /**
  *
  * @author eric
  */
-public class Tournament<T extends Ranked> implements Selector<T> {
+public class Tournament<T> implements Selector<T> {
   
   private final int size;
   private final Random random;
@@ -25,18 +27,19 @@ public class Tournament<T extends Ranked> implements Selector<T> {
   }
 
   @Override
-  public T select(List<T> ts) {
-    List<T> preselectedTs = new ArrayList<>(size);
+  public T select(List<List<T>> ts) {
+    SortedMap<Integer, List<T>> selected = new TreeMap<>();
     for (int i = 0; i<size; i++) {
-      preselectedTs.add(ts.get(random.nextInt(ts.size())));
-    }
-    T selectedT = preselectedTs.get(0);
-    for (int i =1; i<preselectedTs.size(); i++) {
-      if (preselectedTs.get(i).getRank()<selectedT.getRank()) {
-        selectedT = preselectedTs.get(i);
+      int rankIndex = random.nextInt(ts.size());
+      int index = random.nextInt(ts.get(rankIndex).size());
+      List<T> localTs = selected.get(rankIndex);
+      if (localTs==null) {
+        localTs = new ArrayList<>();
+        selected.put(rankIndex, localTs);
       }
+      localTs.add(ts.get(rankIndex).get(index));
     }
-    return selectedT;
+    return selected.get(selected.firstKey()).get(0);
   }
 
   @Override

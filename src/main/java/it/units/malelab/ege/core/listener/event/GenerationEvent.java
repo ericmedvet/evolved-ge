@@ -17,15 +17,15 @@ import java.util.Map;
  */
 public class GenerationEvent<T, F extends Fitness> extends EvolutionEvent<T, F> {
   
-  private final List<Individual<T, F>> population;
+  private final List<List<Individual<T, F>>> rankedPopulation;
 
-  public GenerationEvent(List<Individual<T, F>> population, int generation, Evolver<T, F> evolver, Map<String, Object> data) {
+  public GenerationEvent(List<List<Individual<T, F>>> rankedPopulation, int generation, Evolver<T, F> evolver, Map<String, Object> data) {
     super(generation, evolver, data);
-    this.population = population;
+    this.rankedPopulation = rankedPopulation;
   }
 
-  public List<Individual<T, F>> getPopulation() {
-    return population;
+  public List<List<Individual<T, F>>> getRankedPopulation() {
+    return rankedPopulation;
   }
 
 }

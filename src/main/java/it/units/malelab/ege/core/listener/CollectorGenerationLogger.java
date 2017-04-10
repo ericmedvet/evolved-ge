@@ -66,7 +66,7 @@ public class CollectorGenerationLogger<T, F extends Fitness> extends AbstractLis
   @Override
   public void listen(EvolutionEvent<T, F> event) {
     int generation = ((GenerationEvent) event).getGeneration();
-    List<Individual<T, F>> population = new ArrayList<>(((GenerationEvent) event).getPopulation());
+    List<List<Individual<T, F>>> rankedPopulation = new ArrayList<>(((GenerationEvent) event).getRankedPopulation());
     if ((headerInterval == 0 && lines == 0) || ((headerInterval > 0)&&((generation - 1) % headerInterval == 0))) {
       //print header: generation
       ps.print(format ? "gen" : "generation");
@@ -117,7 +117,7 @@ public class CollectorGenerationLogger<T, F extends Fitness> extends AbstractLis
     //print header: collectors
     for (int i = 0; i < formattedNames.size(); i++) {
       int j = 0;
-      Map<String, Object> values = collectors.get(i).collect(population);
+      Map<String, Object> values = collectors.get(i).collect(rankedPopulation);
       for (String name : formattedNames.get(i).keySet()) {
         if (format) {
           String value = String.format(collectors.get(i).getFormattedNames().get(name), values.get(name));

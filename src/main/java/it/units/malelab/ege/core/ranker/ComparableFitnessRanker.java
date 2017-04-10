@@ -7,6 +7,8 @@ package it.units.malelab.ege.core.ranker;
 
 import it.units.malelab.ege.core.Individual;
 import it.units.malelab.ege.core.fitness.ComparableFitness;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -15,8 +17,8 @@ import java.util.List;
  *
  * @author eric
  */
-public class ComparableFitnessRanker<T, F extends ComparableFitness> implements IndividualRanker<T, F> {
-  
+public class ComparableFitnessRanker<T, F extends ComparableFitness> implements Ranker<Individual<T, F>> {
+
   private final Comparator<Individual<T, F>> comparator;
 
   public ComparableFitnessRanker() {
@@ -29,16 +31,18 @@ public class ComparableFitnessRanker<T, F extends ComparableFitness> implements 
   }
 
   @Override
-  public void rank(List<Individual<T, F>> individuals) {
+  public List<List<Individual<T, F>>> rank(List<Individual<T, F>> individuals) {
+    List<List<Individual<T, F>>> ranks = new ArrayList<>();
     Collections.sort(individuals, comparator);
-    individuals.get(0).setRank(0);
-    for (int i = 1; i<individuals.size(); i++) {
-      if (individuals.get(i).getFitness().compareTo(individuals.get(i-1).getFitness())>0) {
-        individuals.get(i).setRank(individuals.get(i-1).getRank()+1);
+    ranks.add(new ArrayList<>(Arrays.asList(individuals.get(0))));
+    for (int i = 1; i < individuals.size(); i++) {
+      if (individuals.get(i).getFitness().compareTo(individuals.get(i - 1).getFitness()) > 0) {
+        ranks.add(new ArrayList<>(Arrays.asList(individuals.get(i))));
       } else {
-        individuals.get(i).setRank(individuals.get(i-1).getRank());
+        ranks.get(ranks.size() - 1).add(individuals.get(i));
       }
     }
+    return ranks;
   }
-  
+
 }

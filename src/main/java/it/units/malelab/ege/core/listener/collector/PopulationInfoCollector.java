@@ -17,6 +17,6 @@ import java.util.Map;
 public interface PopulationInfoCollector<T, F extends Fitness> {
   
   public Map<String, String> getFormattedNames();
-  public Map<String, Object> collect(List<Individual<T, F>> population);
+  public Map<String, Object> collect(List<List<Individual<T, F>>> rankedPopulation);
   
 }

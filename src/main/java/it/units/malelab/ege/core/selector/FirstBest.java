@@ -11,17 +11,17 @@ import java.util.List;
  *
  * @author eric
  */
-public class FirstBest<T extends Ranked> implements Selector<T> {
+public class FirstBest<T> implements Selector<T> {
 
   @Override
-  public T select(List<T> ts) {
-    T selectedT = ts.get(0);
-    for (int i = 1; i < ts.size(); i++) {
-      if (ts.get(i).getRank()<selectedT.getRank()) {
-        selectedT = ts.get(i);
-      }
+  public T select(List<List<T>> ts) {
+    if (ts.isEmpty()) {
+      return null;
     }
-    return selectedT;
+    if (ts.get(0).isEmpty()) {
+      return null;
+    }
+    return ts.get(0).get(0);
   }
 
   @Override

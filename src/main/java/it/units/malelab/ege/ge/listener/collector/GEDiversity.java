@@ -23,15 +23,19 @@ import java.util.Set;
 public class GEDiversity<T, F extends Fitness> extends Diversity<T, F> {
 
   @Override
-  public Map<String, Object> collect(List<Individual<T, F>> population) {
-    Map<String, Object> indexes = super.collect(population);
+  public Map<String, Object> collect(List<List<Individual<T, F>>> rankedPopulation) {
+    Map<String, Object> indexes = super.collect(rankedPopulation);
     Set<Genotype> genotypes = new HashSet<>();
-    for (Individual<T, F> individual : population) {
-      if (individual instanceof GEIndividual) {
-        genotypes.add(((GEIndividual)individual).getGenotype());
+    double count = 0;
+    for (List<Individual<T, F>> rank : rankedPopulation) {
+      for (Individual<T, F> individual : rank) {
+        if (individual instanceof GEIndividual) {
+          genotypes.add(((GEIndividual) individual).getGenotype());
+          count = count+1;
+        }
       }
     }
-    indexes.put("diversity.genotype", (double) genotypes.size() / (double) population.size());
+    indexes.put("diversity.genotype", (double) genotypes.size() / count);
     return indexes;
   }
 
@@ -42,7 +46,5 @@ public class GEDiversity<T, F extends Fitness> extends Diversity<T, F> {
     formattedNames.putAll(super.getFormattedNames());
     return formattedNames;
   }
-  
-  
-  
+
 }

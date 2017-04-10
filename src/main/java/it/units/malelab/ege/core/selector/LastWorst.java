@@ -11,17 +11,17 @@ import java.util.List;
  *
  * @author eric
  */
-public class LastWorst<T extends Ranked> implements Selector<T> {
+public class LastWorst<T> implements Selector<T> {
 
   @Override
-  public T select(List<T> ts) {
-    T selectedT = ts.get(0);
-    for (int i = 1; i < ts.size(); i++) {
-      if (ts.get(i).getRank()>=selectedT.getRank()) {
-        selectedT = ts.get(i);
-      }
+  public T select(List<List<T>> ts) {
+    if (ts.isEmpty()) {
+      return null;
     }
-    return selectedT;
+    if (ts.get(ts.size()-1).isEmpty()) {
+      return null;
+    }
+    return ts.get(ts.size()-1).get(ts.get(ts.size()-1).size()-1);
   }
 
   @Override

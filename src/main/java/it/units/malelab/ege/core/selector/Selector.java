@@ -11,8 +11,8 @@ import java.util.List;
  *
  * @author eric
  */
-public interface Selector<T extends Ranked> {
+public interface Selector<T> {
   
-  public T select(List<T> ts);
+  public T select(List<List<T>> ts);
   
 }

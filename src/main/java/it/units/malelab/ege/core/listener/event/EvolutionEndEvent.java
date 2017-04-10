@@ -18,8 +18,8 @@ import java.util.Map;
  */
 public class EvolutionEndEvent<T, F extends Fitness> extends GenerationEvent<T, F> {
 
-  public EvolutionEndEvent(List<Individual<T, F>> population, int generation, Evolver<T, F> evolver, Map<String, Object> data) {
-    super(population, generation, evolver, data);
+  public EvolutionEndEvent(List<List<Individual<T, F>>> rankedPopulation, int generation, Evolver<T, F> evolver, Map<String, Object> data) {
+    super(rankedPopulation, generation, evolver, data);
   }
 
 }

@@ -12,7 +12,7 @@ import java.util.Random;
  *
  * @author eric
  */
-public class Uniform<T extends Ranked> implements Selector<T> {
+public class Uniform<T> implements Selector<T> {
   
   private final Random random;
 
@@ -21,8 +21,15 @@ public class Uniform<T extends Ranked> implements Selector<T> {
   }
 
   @Override
-  public T select(List<T> ts) {
-    return ts.get(random.nextInt(ts.size()));
+  public T select(List<List<T>> ts) {
+    if (ts.isEmpty()) {
+      return null;
+    }
+    int rankIndex = random.nextInt(ts.size());
+    if (ts.get(rankIndex).isEmpty()) {
+      return null;
+    }
+    return ts.get(rankIndex).get(random.nextInt(ts.get(rankIndex).size()));
   }
   
 }

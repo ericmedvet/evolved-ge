@@ -25,13 +25,15 @@ public class PartitionConfiguration<G extends Genotype, T, F extends Fitness> ex
   
   private final Comparator<GEIndividual<G, T, F>> partitionerComparator;
   private final int partitionSize;
-  private final Selector<GEIndividual<G, T, F>> representerSelector;
+  private final Selector<GEIndividual<G, T, F>> parentRepresenterSelector;
+  private final Selector<GEIndividual<G, T, F>> unsurvivalRepresenterSelector;
 
-  public PartitionConfiguration(Comparator<GEIndividual<G, T, F>> partitionerComparator, int partitionSize, Selector<GEIndividual<G, T, F>> representerSelector, int populationSize, int numberOfGenerations, PopulationInitializer<G> populationInitializer, GenotypeValidator<G> initGenotypeValidator, Mapper<G, T> mapper, Map<GeneticOperator<G>, Double> operators, Selector<GEIndividual<G, T, F>> parentSelector, Selector<GEIndividual<G, T, F>> unsurvivalSelector, int offspringSize, boolean overlapping, Problem<T, F> problem) {
+  public PartitionConfiguration(Comparator<GEIndividual<G, T, F>> partitionerComparator, int partitionSize, Selector<GEIndividual<G, T, F>> parentRepresenterSelector, Selector<GEIndividual<G, T, F>> unsurvivalRepresenterSelector, int populationSize, int numberOfGenerations, PopulationInitializer<G> populationInitializer, GenotypeValidator<G> initGenotypeValidator, Mapper<G, T> mapper, Map<GeneticOperator<G>, Double> operators, Selector<GEIndividual<G, T, F>> parentSelector, Selector<GEIndividual<G, T, F>> unsurvivalSelector, int offspringSize, boolean overlapping, Problem<T, F> problem) {
     super(populationSize, numberOfGenerations, populationInitializer, initGenotypeValidator, mapper, operators, parentSelector, unsurvivalSelector, offspringSize, overlapping, problem);
     this.partitionerComparator = partitionerComparator;
     this.partitionSize = partitionSize;
-    this.representerSelector = representerSelector;
+    this.parentRepresenterSelector = parentRepresenterSelector;
+    this.unsurvivalRepresenterSelector = unsurvivalRepresenterSelector;
   }
 
   public Comparator<GEIndividual<G, T, F>> getPartitionerComparator() {
@@ -42,13 +44,17 @@ public class PartitionConfiguration<G extends Genotype, T, F extends Fitness> ex
     return partitionSize;
   }
 
-  public Selector<GEIndividual<G, T, F>> getRepresenterSelector() {
-    return representerSelector;
+  public Selector<GEIndividual<G, T, F>> getParentRepresenterSelector() {
+    return parentRepresenterSelector;
+  }
+
+  public Selector<GEIndividual<G, T, F>> getUnsurvivalRepresenterSelector() {
+    return unsurvivalRepresenterSelector;
   }
 
   @Override
   public String toString() {
-    return "PartitionConfiguration{" + "partitionerComparator=" + partitionerComparator + ", partitionSize=" + partitionSize + ", representerSelector=" + representerSelector + '}';
+    return "PartitionConfiguration{" + "partitionerComparator=" + partitionerComparator + ", partitionSize=" + partitionSize + ", parentRepresenterSelector=" + parentRepresenterSelector + ", unsurvivalRepresenterSelector=" + unsurvivalRepresenterSelector + " (on "+super.toString()+")}";
   }
   
 }

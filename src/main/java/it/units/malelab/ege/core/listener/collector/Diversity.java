@@ -6,7 +6,6 @@
 package it.units.malelab.ege.core.listener.collector;
 
 import it.units.malelab.ege.core.Individual;
-import it.units.malelab.ege.core.listener.collector.PopulationInfoCollector;
 import it.units.malelab.ege.core.fitness.Fitness;
 import it.units.malelab.ege.core.grammar.Node;
 import java.util.HashSet;
@@ -19,28 +18,32 @@ import java.util.Set;
  *
  * @author eric
  */
-public class Diversity<T, F extends Fitness> implements PopulationInfoCollector<T, F>{
+public class Diversity<T, F extends Fitness> implements PopulationInfoCollector<T, F> {
 
   @Override
-  public Map<String, Object> collect(List<Individual<T, F>> population) {
+  public Map<String, Object> collect(List<List<Individual<T, F>>> rankedPopulation) {
     Set<Node<T>> phenotypes = new HashSet<>();
     Set<Fitness> fitnesses = new HashSet<>();
-    for (Individual<T, F> individual : population) {
-      phenotypes.add(individual.getPhenotype());
-      fitnesses.add(individual.getFitness());
+    double count = 0;
+    for (List<Individual<T, F>> rank : rankedPopulation) {
+      for (Individual<T, F> individual : rank) {
+        phenotypes.add(individual.getPhenotype());
+        fitnesses.add(individual.getFitness());
+        count = count+1;
+      }
     }
     Map<String, Object> indexes = new LinkedHashMap<>();
-    indexes.put("diversity.phenotype", (double) phenotypes.size() / (double) population.size());
-    indexes.put("diversity.fitness", (double) fitnesses.size() / (double) population.size());
+    indexes.put("diversity.phenotype", (double) phenotypes.size() / count);
+    indexes.put("diversity.fitness", (double) fitnesses.size() / count);
     return indexes;
-  }  
-  
+  }
+
   @Override
   public Map<String, String> getFormattedNames() {
     LinkedHashMap<String, String> formattedNames = new LinkedHashMap<>();
     formattedNames.put("diversity.phenotype", "%4.2f");
     formattedNames.put("diversity.fitness", "%4.2f");
     return formattedNames;
-  }  
-    
+  }
+
 }

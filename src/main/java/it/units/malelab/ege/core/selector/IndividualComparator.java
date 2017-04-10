@@ -17,9 +17,10 @@ import java.util.Map;
  * @author eric
  */
 public class IndividualComparator<F extends Fitness> implements Comparator<Individual<?, F>> {
-    
+
   public static enum Attribute {
-    RANK, FITNESS, AGE, PHENO_SIZE, PHENO;
+
+    FITNESS, AGE, PHENO_SIZE, PHENO;
   }
 
   private final Map<Attribute, Boolean> attributes;
@@ -27,7 +28,7 @@ public class IndividualComparator<F extends Fitness> implements Comparator<Indiv
   public IndividualComparator(Map<Attribute, Boolean> attributes) {
     this.attributes = attributes;
   }
-  
+
   public IndividualComparator(Attribute... attributes) {
     this.attributes = new LinkedHashMap<>();
     for (Attribute attribute : attributes) {
@@ -39,11 +40,9 @@ public class IndividualComparator<F extends Fitness> implements Comparator<Indiv
   public int compare(Individual i1, Individual i2) {
     int v = -1;
     for (Map.Entry<Attribute, Boolean> entry : attributes.entrySet()) {
-      if (entry.getKey().equals(Attribute.RANK)) {
-        v = i1.getRank()-i2.getRank();
-      } else if (entry.getKey().equals(Attribute.FITNESS)) {
+      if (entry.getKey().equals(Attribute.FITNESS)) {
         if (i1.getFitness() instanceof NumericFitness) {
-          v = ((NumericFitness)i1.getFitness()).getValue().compareTo(((NumericFitness)i2.getFitness()).getValue());
+          v = ((NumericFitness) i1.getFitness()).getValue().compareTo(((NumericFitness) i2.getFitness()).getValue());
         } else {
           v = 0;
         }
@@ -52,12 +51,12 @@ public class IndividualComparator<F extends Fitness> implements Comparator<Indiv
       } else if (entry.getKey().equals(Attribute.PHENO_SIZE)) {
         v = Integer.compare(i1.getPhenotype().size(), i2.getPhenotype().size());
       } else if (entry.getKey().equals(Attribute.PHENO)) {
-        v = i1.getPhenotype().equals(i2.getPhenotype())?0:-1;
+        v = i1.getPhenotype().equals(i2.getPhenotype()) ? 0 : -1;
       }
       if (entry.getValue()) {
         v = -v;
       }
-      if (v!=0) {
+      if (v != 0) {
         break;
       }
     }
@@ -67,6 +66,6 @@ public class IndividualComparator<F extends Fitness> implements Comparator<Indiv
   @Override
   public String toString() {
     return "IndividualComparator{" + "attributes=" + attributes + '}';
-  }  
-  
+  }
+
 }

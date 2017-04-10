@@ -15,23 +15,17 @@ import java.util.Map;
  *
  * @author eric
  */
-public abstract class FirstBest<T, F extends Fitness> implements PopulationInfoCollector<T, F>{
+public abstract class Best<T, F extends Fitness> implements PopulationInfoCollector<T, F>{
   
   private final boolean ancestry;
 
-  public FirstBest(boolean ancestry) {
+  public Best(boolean ancestry) {
     this.ancestry = ancestry;
-  }    
+  }
   
   @Override
-  public Map<String, Object> collect(List<Individual<T, F>> population) {
-    Individual<T, F> best = null;
-    for (Individual<T, F> individual : population) {
-      if (individual.getRank()==0) {
-        best = individual;
-        break;
-      }
-    }
+  public Map<String, Object> collect(List<List<Individual<T, F>>> rankedPopulation) {
+    Individual<T, F> best = rankedPopulation.get(0).get(0);
     Map<String, Object> indexes = new LinkedHashMap<>();
     for (Map.Entry<String, Object> fitnessEntry : getFitnessIndexes(best.getFitness()).entrySet()) {
       indexes.put(

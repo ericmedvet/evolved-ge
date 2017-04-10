@@ -16,7 +16,6 @@ import it.units.malelab.ege.core.listener.collector.NumericFirstBest;
 import it.units.malelab.ege.core.listener.collector.Population;
 import it.units.malelab.ege.core.selector.LastWorst;
 import it.units.malelab.ege.core.selector.Tournament;
-import it.units.malelab.ege.ge.GEEvolver;
 import it.units.malelab.ege.ge.GEIndividual;
 import it.units.malelab.ege.ge.evolver.StandardConfiguration;
 import it.units.malelab.ege.ge.evolver.StandardEvolver;
@@ -49,7 +48,7 @@ public class ExampleMain {
     StandardConfiguration<BitsGenotype, String, NumericFitness> configuration = new StandardConfiguration<>(
             500,
             50,
-            new RandomInitializer<BitsGenotype>(random, new BitsGenotypeFactory(256)),
+            new RandomInitializer<>(random, new BitsGenotypeFactory(256)),
             new AnyValidator<BitsGenotype>(),
             new StandardGEMapper<>(8, 5, problem.getGrammar()),
             new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
@@ -64,13 +63,13 @@ public class ExampleMain {
     listeners.add(new CollectorGenerationLogger<>(
             Collections.EMPTY_MAP, System.out, true, 10, " ", " | ",
             new Population<String, NumericFitness>("%7.2f"),
-            new NumericFirstBest<String>(false, "%6.2f"),
+            new NumericFirstBest<String>("%6.2f", false),
             new GEDiversity<String, NumericFitness>()
     ));
     Evolver<String, NumericFitness> evolver = new StandardEvolver<BitsGenotype, String, NumericFitness>(
             1, configuration, random, false);
     List<Node<String>> bests = evolver.solve(listeners);
-    System.out.printf("Found %d solutions.", bests.size());
+    System.out.printf("Found %d solutions.%n", bests.size());
   }
 
 }
