@@ -9,7 +9,7 @@ package it.units.malelab.ege.core.fitness;
  *
  * @author eric
  */
-public class NumericFitness implements ComparableFitness<Double> {
+public class NumericFitness implements Comparable<NumericFitness>, Fitness<Double> {
   
   private final double value;
 
@@ -18,11 +18,8 @@ public class NumericFitness implements ComparableFitness<Double> {
   }
 
   @Override
-  public int compareTo(ComparableFitness<Double> otherFitness) {
-    if (otherFitness instanceof NumericFitness) {
-      return Double.compare(value, ((NumericFitness)otherFitness).getValue());
-    }
-    return -1;
+  public int compareTo(NumericFitness otherFitness) {
+    return Double.compare(value, ((NumericFitness)otherFitness).getValue());
   }
 
   @Override

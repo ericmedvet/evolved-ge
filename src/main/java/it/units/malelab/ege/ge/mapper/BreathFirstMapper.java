@@ -5,9 +5,11 @@
  */
 package it.units.malelab.ege.ge.mapper;
 
+import it.units.malelab.ege.core.mapper.AbstractMapper;
+import it.units.malelab.ege.core.mapper.MappingException;
 import it.units.malelab.ege.ge.genotype.BitsGenotype;
-import it.units.malelab.ege.core.grammar.Node;
-import it.units.malelab.ege.core.grammar.Grammar;
+import it.units.malelab.ege.core.Node;
+import it.units.malelab.ege.core.Grammar;
 import static it.units.malelab.ege.ge.mapper.StandardGEMapper.BIT_USAGES_INDEX_NAME;
 import java.util.List;
 import java.util.Map;
@@ -54,9 +56,9 @@ public class BreathFirstMapper<T> extends AbstractMapper<BitsGenotype, T> {
 
   @Override
   public Node<T> map(BitsGenotype genotype, Map<String, Object> report) throws MappingException {
-    int[] bitUsages = new int[genotype.size()];
-    if (genotype.size()<codonLenght) {
-      throw new MappingException(String.format("Short genotype (%d<%d)", genotype.size(), codonLenght));
+    int[] bitUsages = new int[genotype.length()];
+    if (genotype.length()<codonLenght) {
+      throw new MappingException(String.format("Short genotype (%d<%d)", genotype.length(), codonLenght));
     }
     Node<EnhancedSymbol<T>> enhancedTree = new Node<>(new EnhancedSymbol<>(grammar.getStartingSymbol(), 0));
     int currentCodonIndex = 0;
@@ -74,7 +76,7 @@ public class BreathFirstMapper<T> extends AbstractMapper<BitsGenotype, T> {
         break;
       }
       //get codon index and option
-      if ((currentCodonIndex + 1) * codonLenght > genotype.size()) {
+      if ((currentCodonIndex + 1) * codonLenght > genotype.length()) {
         wraps = wraps + 1;
         currentCodonIndex = 0;
         if (wraps > maxWraps) {

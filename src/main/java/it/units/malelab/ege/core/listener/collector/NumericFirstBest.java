@@ -5,6 +5,7 @@
  */
 package it.units.malelab.ege.core.listener.collector;
 
+import it.units.malelab.ege.core.Sequence;
 import it.units.malelab.ege.core.fitness.NumericFitness;
 import java.util.Collections;
 import java.util.Map;
@@ -13,7 +14,7 @@ import java.util.Map;
  *
  * @author eric
  */
-public class NumericFirstBest<T> extends Best<T, NumericFitness> {
+public class NumericFirstBest<G extends Sequence, T> extends Best<G, T, NumericFitness> {
 
   private final String fitnessFormat;
 

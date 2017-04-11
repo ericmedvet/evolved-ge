@@ -6,7 +6,6 @@
 package it.units.malelab.ege.core;
 
 import it.units.malelab.ege.core.fitness.Fitness;
-import it.units.malelab.ege.core.grammar.Node;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -16,16 +15,17 @@ import java.util.Map;
  *
  * @author eric
  */
-public class Individual<T, F extends Fitness> {
+public class Individual<G, T, F extends Fitness> {
 
+  private final G genotype;
   private final Node<T> phenotype;
   private final F fitness;
   private final int birthDate;
-  private final List<Individual<T, F>> parents;
+  private final List<Individual<G, T, F>> parents;
   private final Map<String, Object> otherInfo;
-  private int rank;
 
-  public Individual(Node<T> phenotype, F fitness, int birthDate, List<Individual<T, F>> parents, Map<String, Object> otherInfo) {
+  public Individual(G genotype, Node<T> phenotype, F fitness, int birthDate, List<Individual<G, T, F>> parents, Map<String, Object> otherInfo) {
+    this.genotype = genotype;
     this.phenotype = phenotype;
     this.fitness = fitness;
     this.birthDate = birthDate;
@@ -37,6 +37,10 @@ public class Individual<T, F extends Fitness> {
     if (otherInfo != null) {
       this.otherInfo.putAll(otherInfo);
     }
+  }
+
+  public G getGenotype() {
+    return genotype;
   }
 
   public Node<T> getPhenotype() {
@@ -51,12 +55,17 @@ public class Individual<T, F extends Fitness> {
     return birthDate;
   }
 
-  public List<Individual<T, F>> getParents() {
+  public List<Individual<G, T, F>> getParents() {
     return parents;
   }
 
   public Map<String, Object> getOtherInfo() {
     return otherInfo;
+  }
+
+  @Override
+  public String toString() {
+    return "Individual{" + "genotype=" + genotype + ", phenotype=" + phenotype + ", fitness=" + fitness + '}';
   }
 
 }

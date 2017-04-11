@@ -6,6 +6,7 @@
 package it.units.malelab.ege.ge.genotype;
 
 import com.google.common.collect.Range;
+import it.units.malelab.ege.core.Sequence;
 import it.units.malelab.ege.util.Utils;
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -16,24 +17,24 @@ import java.util.Objects;
  *
  * @author eric
  */
-public class BitsGenotype implements Genotype {
+public class BitsGenotype implements Sequence<Boolean> {
   
-  private final int size;
+  private final int length;
   private final BitSet bitSet;
 
   public BitsGenotype(int nBits) {
-    this.size = nBits;
+    this.length = nBits;
     bitSet = new BitSet(nBits);
   }
 
-  public BitsGenotype(int size, BitSet bitSet) {
-    this.size = size;
-    this.bitSet = bitSet.get(0, size);
+  public BitsGenotype(int length, BitSet bitSet) {
+    this.length = length;
+    this.bitSet = bitSet.get(0, length);
   }
   
   @Override
-  public int size() {
-    return size;
+  public int length() {
+    return length;
   }
   
   public BitsGenotype slice(int fromIndex, int toIndex) {
@@ -47,7 +48,7 @@ public class BitsGenotype implements Genotype {
   
   public int toInt() {
     BitsGenotype genotype = this;
-    if (size>Integer.SIZE/2) {
+    if (length>Integer.SIZE/2) {
       genotype = compress(Integer.SIZE/2);
     }
     if (genotype.bitSet.toLongArray().length<=0) {
@@ -57,8 +58,8 @@ public class BitsGenotype implements Genotype {
   }
     
   public void set(int fromIndex, BitsGenotype other) {
-    checkIndexes(fromIndex, fromIndex+other.size());
-    for (int i = 0; i<other.size(); i++) {
+    checkIndexes(fromIndex, fromIndex+other.length());
+    for (int i = 0; i<other.length(); i++) {
       bitSet.set(fromIndex+i, other.bitSet.get(i));
     }
   }
@@ -66,20 +67,21 @@ public class BitsGenotype implements Genotype {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append(size+":");
-    for (int i = 0; i < size; i++) {
+    sb.append(length+":");
+    for (int i = 0; i < length; i++) {
       sb.append(bitSet.get(i) ? '1' : '0');
     }
     return sb.toString();
   }
   
-  public boolean get(int index) {
+  @Override
+  public Boolean get(int index) {
     checkIndexes(index, index+1);
     return bitSet.get(index);
   }
   
   public void flip() {
-    bitSet.flip(0, size);
+    bitSet.flip(0, length);
   }
   
   public void flip(int index) {
@@ -99,22 +101,22 @@ public class BitsGenotype implements Genotype {
     if (fromIndex<0) {
       throw new ArrayIndexOutOfBoundsException(String.format("from=%d < 0", fromIndex));
     }
-    if (toIndex>size) {
-      throw new ArrayIndexOutOfBoundsException(String.format("to=%d > size=%d", toIndex, size));
+    if (toIndex>length) {
+      throw new ArrayIndexOutOfBoundsException(String.format("to=%d > length=%d", toIndex, length));
     }
   }
   
   public BitSet asBitSet() {
-    BitSet copy = new BitSet(size);
+    BitSet copy = new BitSet(length);
     copy.or(bitSet);
     return copy;
   }
     
-  public BitsGenotype compress(int newSize) {
-    BitsGenotype compressed = new BitsGenotype(newSize);
-    List<BitsGenotype> slices = slices(Utils.slices(Range.closedOpen(0, size), newSize));
+  public BitsGenotype compress(int newLength) {
+    BitsGenotype compressed = new BitsGenotype(newLength);
+    List<BitsGenotype> slices = slices(Utils.slices(Range.closedOpen(0, length), newLength));
     for (int i = 0; i<slices.size(); i++) {
-      compressed.bitSet.set(i, slices.get(i).count()>slices.get(i).size()/2);
+      compressed.bitSet.set(i, slices.get(i).count()>slices.get(i).length()/2);
     }
     return compressed;
   }
@@ -135,18 +137,18 @@ public class BitsGenotype implements Genotype {
   }
   
   public BitsGenotype append(BitsGenotype genotype) {
-    BitsGenotype resultGenotype = new BitsGenotype(size+genotype.size);
-    if (size>0) {
+    BitsGenotype resultGenotype = new BitsGenotype(length+genotype.length);
+    if (length>0) {
       resultGenotype.set(0, this);
     }
-    resultGenotype.set(size, genotype);
+    resultGenotype.set(length, genotype);
     return resultGenotype;
   }
 
   @Override
   public int hashCode() {
     int hash = 3;
-    hash = 47 * hash + this.size;
+    hash = 47 * hash + this.length;
     hash = 47 * hash + Objects.hashCode(this.bitSet);
     return hash;
   }
@@ -160,7 +162,7 @@ public class BitsGenotype implements Genotype {
       return false;
     }
     final BitsGenotype other = (BitsGenotype) obj;
-    if (this.size != other.size) {
+    if (this.length != other.length) {
       return false;
     }
     if (!Objects.equals(this.bitSet, other.bitSet)) {

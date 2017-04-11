@@ -18,8 +18,8 @@ public class BitsGenotypeEditDistance implements Distance<BitsGenotype> {
 
   @Override
   public double d(BitsGenotype g1, BitsGenotype g2) {
-    Boolean[] bs1 = new Boolean[g1.size()];
-    Boolean[] bs2 = new Boolean[g2.size()];
+    Boolean[] bs1 = new Boolean[g1.length()];
+    Boolean[] bs2 = new Boolean[g2.length()];
     for (int i = 0; i<bs1.length; i++) {
       bs1[i] = g1.get(i);
     }

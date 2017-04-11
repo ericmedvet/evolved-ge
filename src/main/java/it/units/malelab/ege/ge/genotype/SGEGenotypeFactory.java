@@ -5,6 +5,7 @@
  */
 package it.units.malelab.ege.ge.genotype;
 
+import it.units.malelab.ege.core.Factory;
 import it.units.malelab.ege.util.Pair;
 import it.units.malelab.ege.ge.mapper.SGEMapper;
 import java.util.ArrayList;

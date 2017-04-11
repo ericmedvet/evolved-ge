@@ -9,9 +9,6 @@ import it.units.malelab.ege.core.LeavesJoiner;
 import it.units.malelab.ege.core.Problem;
 import it.units.malelab.ege.core.fitness.LeafContentsDistance;
 import it.units.malelab.ege.core.fitness.NumericFitness;
-import it.units.malelab.ege.core.grammar.Node;
-import it.units.malelab.ege.core.ranker.ComparableFitnessRanker;
-import it.units.malelab.ege.core.PhenotypePrinter;
 import it.units.malelab.ege.util.Utils;
 import it.units.malelab.ege.util.distance.EditDistance;
 import java.io.File;
@@ -32,7 +29,6 @@ public class Text extends Problem<String, NumericFitness> {
     super(Utils.parseFromFile(new File("grammars/text.bnf")),
             new LeafContentsDistance<>(Arrays.asList(target.replace(" ", "_").split("")), new EditDistance<String>()),
             null,
-            new ComparableFitnessRanker<String, NumericFitness>(),
             new LeavesJoiner<String>()
     );
   }

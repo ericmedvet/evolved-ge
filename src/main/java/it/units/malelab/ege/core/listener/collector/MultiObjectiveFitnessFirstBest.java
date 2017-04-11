@@ -5,6 +5,7 @@
  */
 package it.units.malelab.ege.core.listener.collector;
 
+import it.units.malelab.ege.core.Sequence;
 import it.units.malelab.ege.core.fitness.MultiObjectiveFitness;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -13,7 +14,7 @@ import java.util.Map;
  *
  * @author eric
  */
-public class MultiObjectiveFitnessFirstBest<T> extends Best<T, MultiObjectiveFitness> {
+public class MultiObjectiveFitnessFirstBest<G extends Sequence, T> extends Best<G, T, MultiObjectiveFitness> {
 
   private final String[] fitnessFormats;
 

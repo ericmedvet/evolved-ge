@@ -15,15 +15,15 @@ import java.util.List;
  *
  * @author eric
  */
-public class ParetoRanker<T, F extends MultiObjectiveFitness> implements Ranker<Individual<T,F>>, Comparator<MultiObjectiveFitness> {
+public class ParetoRanker<G, T, F extends MultiObjectiveFitness> implements Ranker<Individual<G, T,F>>, Comparator<MultiObjectiveFitness> {
 
   @Override
-  public List<List<Individual<T, F>>> rank(List<Individual<T, F>> individuals) {
-    List<List<Individual<T, F>>> ranks = new ArrayList<>();
-    List<Individual<T, F>> localIndividuals = new ArrayList<>(individuals);
+  public List<List<Individual<G, T, F>>> rank(List<Individual<G, T, F>> individuals) {
+    List<List<Individual<G, T, F>>> ranks = new ArrayList<>();
+    List<Individual<G, T, F>> localIndividuals = new ArrayList<>(individuals);
     while (!localIndividuals.isEmpty()) {
       int[] counts = dominanceCounts(localIndividuals);
-      List<Individual<T, F>> paretoFront = new ArrayList<>();
+      List<Individual<G, T, F>> paretoFront = new ArrayList<>();
       for (int i = 0; i<counts.length; i++) {
         if (counts[i]==0) {
           paretoFront.add(localIndividuals.get(i));
@@ -35,7 +35,7 @@ public class ParetoRanker<T, F extends MultiObjectiveFitness> implements Ranker<
     return ranks;
   }
   
-  private int[] dominanceCounts(List<Individual<T, F>> individuals) {
+  private int[] dominanceCounts(List<Individual<G, T, F>> individuals) {
     int[] counts = new int[individuals.size()];
     for (int i = 0; i<individuals.size(); i++) {
       for (int j = i+1; j<individuals.size(); j++) {

@@ -8,7 +8,6 @@ package it.units.malelab.ege.benchmark;
 import it.units.malelab.ege.benchmark.fitness.SymbolicRegression;
 import it.units.malelab.ege.core.Problem;
 import it.units.malelab.ege.core.fitness.NumericFitness;
-import it.units.malelab.ege.core.ranker.ComparableFitnessRanker;
 import it.units.malelab.ege.util.Utils;
 import it.units.malelab.ege.util.symbolicregression.MathUtils;
 import java.io.File;
@@ -38,15 +37,13 @@ public class HarmonicCurve extends Problem<String, NumericFitness> {
   };
 
   public HarmonicCurve() throws IOException {
-    super(
-            Utils.parseFromFile(new File("grammars/symbolic-regression-harmonic.bnf")),
+    super(Utils.parseFromFile(new File("grammars/symbolic-regression-harmonic.bnf")),
             new SymbolicRegression(
                     TARGET_FUNCTION,
                     new LinkedHashMap<>(MathUtils.varValuesMap("x", MathUtils.uniformSample(1, 50, 1)))),
             new SymbolicRegression(
                     TARGET_FUNCTION,
                     new LinkedHashMap<>(MathUtils.varValuesMap("x", MathUtils.uniformSample(51, 100, 1)))),
-            new ComparableFitnessRanker<String, NumericFitness>(),
             MathUtils.phenotypePrinter());
   }
 

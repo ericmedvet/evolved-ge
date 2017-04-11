@@ -7,9 +7,8 @@ package it.units.malelab.ege.util;
 
 import com.google.common.collect.Range;
 import it.units.malelab.ege.core.Individual;
-import it.units.malelab.ege.core.grammar.Node;
-import it.units.malelab.ege.ge.genotype.Genotype;
-import it.units.malelab.ege.core.grammar.Grammar;
+import it.units.malelab.ege.core.Node;
+import it.units.malelab.ege.core.Grammar;
 import it.units.malelab.ege.core.listener.EvolverListener;
 import it.units.malelab.ege.core.listener.event.EvolutionEvent;
 import java.io.BufferedReader;
@@ -213,7 +212,7 @@ public class Utils {
     }
   }
 
-  public static void broadcast(EvolutionEvent event, List<EvolverListener> listeners) {
+  public static void broadcast(EvolutionEvent event, List<? extends EvolverListener> listeners) {
     for (EvolverListener listener : listeners) {
       if (listener.getEventClasses().contains(event.getClass())) {
         listener.listen(event);
@@ -252,11 +251,11 @@ public class Utils {
     return map;
   }
 
-  public static void printIndividualAncestry(Individual<?, ?> individual, PrintStream ps) {
+  public static void printIndividualAncestry(Individual<?, ?, ?> individual, PrintStream ps) {
     printIndividualAncestry(individual, ps, 0);
   }
 
-  private static void printIndividualAncestry(Individual<?, ?> individual, PrintStream ps, int pad) {
+  private static void printIndividualAncestry(Individual<?, ?, ?> individual, PrintStream ps, int pad) {
     for (int i = 0; i < pad; i++) {
       ps.print(" ");
     }
@@ -264,7 +263,7 @@ public class Utils {
             individual.getPhenotype().leaves(),
             individual.getBirthDate(),
             individual.getFitness());
-    for (Individual<?, ?> parent : individual.getParents()) {
+    for (Individual<?, ?, ?> parent : individual.getParents()) {
       printIndividualAncestry(parent, ps, pad + 2);
     }
   }

@@ -5,8 +5,10 @@
  */
 package it.units.malelab.ege.ge.mapper;
 
+import it.units.malelab.ege.core.mapper.MappingException;
+import it.units.malelab.ege.core.mapper.Mapper;
 import com.google.common.collect.Range;
-import it.units.malelab.ege.core.grammar.Node;
+import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.ge.genotype.BitsGenotype;
 import it.units.malelab.ege.util.Utils;
 import java.util.Arrays;
@@ -44,7 +46,7 @@ public class MultiMapper<T> implements Mapper<BitsGenotype, T> {
         {
           int mapperBits = (int) Math.ceil(Math.log10(mappers.size()) / Math.log10(2d));
           mapperIndex = genotype.slice(0, mapperBits).toInt()%mappers.size();
-          innerGenotype = genotype.slice(mapperIndex, genotype.size());
+          innerGenotype = genotype.slice(mapperIndex, genotype.length());
           break;
         }
       case ALL_MODULE:
@@ -54,9 +56,9 @@ public class MultiMapper<T> implements Mapper<BitsGenotype, T> {
         {
           int mapperBits = (int) Math.ceil(Math.log10(mappers.size()) / Math.log10(2d));
           int index = 0;
-          List<BitsGenotype> slices = genotype.slices(Utils.slices(Range.closedOpen(0, genotype.size()), mapperBits));
+          List<BitsGenotype> slices = genotype.slices(Utils.slices(Range.closedOpen(0, genotype.length()), mapperBits));
           for (int i = 0; i<mapperBits; i++) {
-            int value = (int)Math.round((double)slices.get(i).count()/(double)slices.get(i).size());
+            int value = (int)Math.round((double)slices.get(i).count()/(double)slices.get(i).length());
             index = index+value*(int)Math.pow(2, i);
           }   mapperIndex = index%mappers.size();
           break;
@@ -65,9 +67,9 @@ public class MultiMapper<T> implements Mapper<BitsGenotype, T> {
         {
           int maxIndex = 0;
           double maxValue = Double.NEGATIVE_INFINITY;
-          List<BitsGenotype> slices = genotype.slices(Utils.slices(Range.closedOpen(0, genotype.size()), mappers.size()));
+          List<BitsGenotype> slices = genotype.slices(Utils.slices(Range.closedOpen(0, genotype.length()), mappers.size()));
           for (int i = 0; i<slices.size(); i++) {
-            double value = (double)slices.get(i).count()/(double)slices.get(i).size();
+            double value = (double)slices.get(i).count()/(double)slices.get(i).length();
             if (value>maxValue) {
               maxValue = value;
               maxIndex = i;

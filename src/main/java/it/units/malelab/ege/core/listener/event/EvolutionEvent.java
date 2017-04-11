@@ -5,7 +5,7 @@
  */
 package it.units.malelab.ege.core.listener.event;
 
-import it.units.malelab.ege.core.Evolver;
+import it.units.malelab.ege.core.evolver.Evolver;
 import it.units.malelab.ege.core.fitness.Fitness;
 import java.util.Map;
 
@@ -13,13 +13,13 @@ import java.util.Map;
  *
  * @author eric
  */
-public class EvolutionEvent<T, F extends Fitness> {
+public class EvolutionEvent<G, T, F extends Fitness> {
   
   private final int generation;
-  private final Evolver<T, F> evolver;
+  private final Evolver<G, T, F> evolver;
   private final Map<String, Object> data;
 
-  public EvolutionEvent(int generation, Evolver<T, F> evolver, Map<String, Object> data) {
+  public EvolutionEvent(int generation, Evolver<G, T, F> evolver, Map<String, Object> data) {
     this.generation = generation;
     this.evolver = evolver;
     this.data = data;
@@ -29,7 +29,7 @@ public class EvolutionEvent<T, F extends Fitness> {
     return generation;
   }
 
-  public Evolver<T, F> getEvolver() {
+  public Evolver<G, T, F> getEvolver() {
     return evolver;
   }
 

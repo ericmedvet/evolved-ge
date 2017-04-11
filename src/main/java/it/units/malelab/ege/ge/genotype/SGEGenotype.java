@@ -5,6 +5,7 @@
  */
 package it.units.malelab.ege.ge.genotype;
 
+import it.units.malelab.ege.core.Sequence;
 import it.units.malelab.ege.util.Pair;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -16,7 +17,7 @@ import java.util.Objects;
  *
  * @author eric
  */
-public class SGEGenotype<T> implements Genotype {
+public class SGEGenotype<T> implements Sequence<Integer> {
   
   private final Map<Pair<T, Integer>, List<Integer>> genes;
 
@@ -41,12 +42,12 @@ public class SGEGenotype<T> implements Genotype {
   }
 
   @Override
-  public int size() {
-    int size = 0;
+  public int length() {
+    int length = 0;
     for (List<Integer> gene : genes.values()) {
-      size = size+gene.size();
+      length = length+gene.size();
     }
-    return size;
+    return length;
   }
 
   @Override
@@ -69,6 +70,18 @@ public class SGEGenotype<T> implements Genotype {
       return false;
     }
     return true;
+  }
+
+  @Override
+  public Integer get(int index) {
+    int count = 0;
+    for (List<Integer> values : genes.values()) {
+      if (index<count+values.size()) {
+        return values.get(index-count);
+      }
+      count = count+values.size();
+    }
+    throw new IndexOutOfBoundsException();
   }
   
 }

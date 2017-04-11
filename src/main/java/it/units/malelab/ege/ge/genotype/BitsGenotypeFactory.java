@@ -5,6 +5,7 @@
  */
 package it.units.malelab.ege.ge.genotype;
 
+import it.units.malelab.ege.core.Factory;
 import java.util.BitSet;
 import java.util.Random;
 

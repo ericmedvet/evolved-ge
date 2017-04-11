@@ -23,9 +23,9 @@ Finally, it can be easily configured and instrumented to output several metrics 
 Defining a problem
 ==================
 The user is expected to provide the problem as a [`Problem`](src/main/java/it/units/malelab/ege/core/Problem.java) object including:
-* the [`Grammar`](src/main/java/it/units/malelab/ege/core/grammar/Grammar.java) defining the language for the solutions (can be loaded from a text file with `Utils.parseFromFile()`)
+* the [`Grammar`](src/main/java/it/units/malelab/ege/core/Grammar.java) defining the language for the solutions (can be loaded from a text file with `Utils.parseFromFile()`)
 * the [`FintessComputer`](src/main/java/it/units/malelab/ege/core/fitness/FitnessComputer.java) to be used for learning
-* the [`Ranker`](src/main/java/it/units/malelab/ege/core/ranker/FitnessComputer.java) for individuals (usually one among `ComparableFitnessRanker` and `ParetoRanker`)
+* the [`Ranker`](src/main/java/it/units/malelab/ege/core/ranker/Ranker.java) for individuals (usually one among `ComparableRanker` and `ParetoRanker`)
 
 The `FintessComputer` allows evolved-ge to associate each candidate solution with an indication of its ability to solve the problem.
 `FintessComputer` operates on individuals as trees (`Node<T>`): in an individual tree, each leaf node is a terminal symbol of the grammar.
@@ -89,24 +89,25 @@ public final static void main(String[] args) throws IOException, InterruptedExce
           500,
           50,
           new RandomInitializer<>(random, new BitsGenotypeFactory(256)),
-          new AnyValidator<BitsGenotype>(),
+          new Any<BitsGenotype>(),
           new StandardGEMapper<>(8, 5, problem.getGrammar()),
           new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
                   .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
                   .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
-          new Tournament<GEIndividual<BitsGenotype, String, NumericFitness>>(3, random),
-          new LastWorst<GEIndividual<BitsGenotype, String, NumericFitness>>(),
+          new ComparableRanker<>(new IndividualComparator<BitsGenotype, String, NumericFitness>(IndividualComparator.Attribute.FITNESS)),
+          new Tournament<Individual<BitsGenotype, String, NumericFitness>>(3, random),
+          new LastWorst<Individual<BitsGenotype, String, NumericFitness>>(),
           500,
           true,
           problem);
-  List<EvolverListener<String, NumericFitness>> listeners = new ArrayList<>();
+  List<EvolverListener<BitsGenotype, String, NumericFitness>> listeners = new ArrayList<>();
   listeners.add(new CollectorGenerationLogger<>(
           Collections.EMPTY_MAP, System.out, true, 10, " ", " | ",
-          new Population<String, NumericFitness>("%7.2f"),
-          new NumericFirstBest<String>("%6.2f", false),
-          new GEDiversity<String, NumericFitness>()
+          new Population<BitsGenotype, String, NumericFitness>("%7.2f"),
+          new NumericFirstBest<BitsGenotype, String>("%6.2f", false),
+          new Diversity<BitsGenotype, String, NumericFitness>()
   ));
-  Evolver<String, NumericFitness> evolver = new StandardEvolver<BitsGenotype, String, NumericFitness>(
+  Evolver<BitsGenotype, String, NumericFitness> evolver = new StandardEvolver<>(
           1, configuration, random, false);
   List<Node<String>> bests = evolver.solve(listeners);
   System.out.printf("Found %d solutions.%n", bests.size());
@@ -114,8 +115,8 @@ public final static void main(String[] args) throws IOException, InterruptedExce
 ```
 
 The available evolvers for GE variants include:
-* the [`StandardEvolver`](src/main/java/it/units/malelab/ege/ge/evolver/StandardEvolver.java), which implements the generic _m+n_ replacement strategy with or without overlapping (depending on the values for `populationSize` (for _m_), `offspringSize` (for _n_), and `overlapping` fields in the [`StandardConfiguration`](src/main/java/it/units/malelab/ege/ge/evolver/StandardConfiguration.java));
-* the [`PartitionEvolver`](src/main/java/it/units/malelab/ege/ge/evolver/PartitionEvolver.java), which implements the modular diversity promotion mechanism sketched in [6].
+* the [`StandardEvolver`](src/main/java/it/units/malelab/ege/evolver/StandardEvolver.java), which implements the generic _m+n_ replacement strategy with or without overlapping (depending on the values for `populationSize` (for _m_), `offspringSize` (for _n_), and `overlapping` fields in the [`StandardConfiguration`](src/main/java/it/units/malelab/ege/evolver/StandardConfiguration.java));
+* the [`PartitionEvolver`](src/main/java/it/units/malelab/ege/evolver/PartitionEvolver.java), which implements the modular diversity promotion mechanism sketched in [6].
 
 The available [listeners](src/main/java/it/units/malelab/ege/core/listener) include:
 * a modular [`CollectorGenerationLogger`](src/main/java/it/units/malelab/ege/core/listener/CollectorGenerationLogger.java), which at each generation collects ad logs to a `PrintStream` (optionally with a customizable format) a set of specified metrics (through some [collectors](src/main/java/it/units/malelab/ege/core/listener/collector)) concerning the current population (e.g., best individual, stats, diversity measure); it can be used to log both on the standard output or on a file (possibly in a csv format);

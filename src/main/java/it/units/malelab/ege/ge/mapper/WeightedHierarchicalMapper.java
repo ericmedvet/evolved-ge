@@ -6,7 +6,7 @@
 package it.units.malelab.ege.ge.mapper;
 
 import com.google.common.collect.Range;
-import it.units.malelab.ege.core.grammar.Grammar;
+import it.units.malelab.ege.core.Grammar;
 import it.units.malelab.ege.util.Utils;
 import java.util.ArrayList;
 import java.util.HashMap;

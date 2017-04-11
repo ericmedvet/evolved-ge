@@ -6,7 +6,7 @@
 package it.units.malelab.ege.benchmark.fitness;
 
 import it.units.malelab.ege.core.fitness.BinaryClassification;
-import it.units.malelab.ege.core.grammar.Node;
+import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.util.Utils;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;

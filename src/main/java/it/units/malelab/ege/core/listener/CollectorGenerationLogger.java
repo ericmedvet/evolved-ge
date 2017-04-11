@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
  *
  * @author eric
  */
-public class CollectorGenerationLogger<T, F extends Fitness> extends AbstractListener<T, F> implements WithConstants {
+public class CollectorGenerationLogger<G, T, F extends Fitness> extends AbstractListener<G, T, F> implements WithConstants {
 
   private final Map<String, Object> constants;
   private final PrintStream ps;
@@ -31,7 +31,7 @@ public class CollectorGenerationLogger<T, F extends Fitness> extends AbstractLis
   private final int headerInterval;
   private final String innerSeparator;
   private final String outerSeparator;
-  private final List<PopulationInfoCollector<T, F>> collectors;
+  private final List<PopulationInfoCollector<G, T, F>> collectors;
 
   private final List<Map<String, String>> formattedNames;
   private int lines;
@@ -43,8 +43,8 @@ public class CollectorGenerationLogger<T, F extends Fitness> extends AbstractLis
           int headerInterval,
           String innerSeparator,
           String outerSeparator,
-          PopulationInfoCollector<T, F>... collectors) {
-    super((Class)GenerationEvent.class);
+          PopulationInfoCollector<G, T, F>... collectors) {
+    super((Class) GenerationEvent.class);
     this.constants = new LinkedHashMap<>(constants);
     this.ps = ps;
     this.format = format;
@@ -53,7 +53,7 @@ public class CollectorGenerationLogger<T, F extends Fitness> extends AbstractLis
     this.outerSeparator = outerSeparator;
     this.collectors = Arrays.asList(collectors);
     formattedNames = new ArrayList<>(this.collectors.size());
-    for (PopulationInfoCollector<T, F> collector : collectors) {
+    for (PopulationInfoCollector<G, T, F> collector : collectors) {
       Map<String, String> localFormattedNames = new LinkedHashMap<>();
       for (String name : collector.getFormattedNames().keySet()) {
         localFormattedNames.put(name, formatName(name, collector.getFormattedNames().get(name)));
@@ -64,10 +64,10 @@ public class CollectorGenerationLogger<T, F extends Fitness> extends AbstractLis
   }
 
   @Override
-  public void listen(EvolutionEvent<T, F> event) {
+  public void listen(EvolutionEvent<G, T, F> event) {
     int generation = ((GenerationEvent) event).getGeneration();
-    List<List<Individual<T, F>>> rankedPopulation = new ArrayList<>(((GenerationEvent) event).getRankedPopulation());
-    if ((headerInterval == 0 && lines == 0) || ((headerInterval > 0)&&((generation - 1) % headerInterval == 0))) {
+    List<List<Individual<G, T, F>>> rankedPopulation = new ArrayList<>(((GenerationEvent) event).getRankedPopulation());
+    if ((headerInterval == 0 && lines == 0) || ((headerInterval > 0) && ((generation - 1) % headerInterval == 0))) {
       //print header: generation
       ps.print(format ? "gen" : "generation");
       ps.print(outerSeparator);

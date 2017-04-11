@@ -13,9 +13,9 @@ import java.util.Set;
  *
  * @author eric
  */
-public interface EvolverListener<T, F extends Fitness> {
+public interface EvolverListener<G, T, F extends Fitness> {
   
-  public void listen(EvolutionEvent<T, F> event);
+  public void listen(EvolutionEvent<G, T, F> event);
   public Set<Class<? extends EvolutionEvent>> getEventClasses();
   
 }

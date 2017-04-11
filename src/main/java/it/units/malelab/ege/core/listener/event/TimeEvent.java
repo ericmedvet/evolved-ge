@@ -5,7 +5,7 @@
  */
 package it.units.malelab.ege.core.listener.event;
 
-import it.units.malelab.ege.core.Evolver;
+import it.units.malelab.ege.core.evolver.Evolver;
 import it.units.malelab.ege.core.fitness.Fitness;
 import java.util.Map;
 
@@ -13,11 +13,11 @@ import java.util.Map;
  *
  * @author eric
  */
-public class TimeEvent<T, F extends Fitness> extends EvolutionEvent<T, F> {
+public class TimeEvent<G, T, F extends Fitness> extends EvolutionEvent<G, T, F> {
   
   private final long elapsedNanos;
 
-  public TimeEvent(long elapsedNanos, int generation, Evolver<T, F> evolver, Map<String, Object> data) {
+  public TimeEvent(long elapsedNanos, int generation, Evolver<G, T, F> evolver, Map<String, Object> data) {
     super(generation, evolver, data);
     this.elapsedNanos = elapsedNanos;
   }

@@ -5,7 +5,7 @@
  */
 package it.units.malelab.ege.core.fitness;
 
-import it.units.malelab.ege.core.grammar.Node;
+import it.units.malelab.ege.core.Node;
 
 /**
  *

@@ -5,7 +5,7 @@
  */
 package it.units.malelab.ege.core.listener.event;
 
-import it.units.malelab.ege.core.Evolver;
+import it.units.malelab.ege.core.evolver.Evolver;
 import it.units.malelab.ege.core.Individual;
 import it.units.malelab.ege.core.fitness.Fitness;
 import java.util.List;
@@ -15,16 +15,16 @@ import java.util.Map;
  *
  * @author eric
  */
-public class GenerationEvent<T, F extends Fitness> extends EvolutionEvent<T, F> {
+public class GenerationEvent<G, T, F extends Fitness> extends EvolutionEvent<G, T, F> {
   
-  private final List<List<Individual<T, F>>> rankedPopulation;
+  private final List<List<Individual<G, T, F>>> rankedPopulation;
 
-  public GenerationEvent(List<List<Individual<T, F>>> rankedPopulation, int generation, Evolver<T, F> evolver, Map<String, Object> data) {
+  public GenerationEvent(List<List<Individual<G, T, F>>> rankedPopulation, int generation, Evolver<G, T, F> evolver, Map<String, Object> data) {
     super(generation, evolver, data);
     this.rankedPopulation = rankedPopulation;
   }
 
-  public List<List<Individual<T, F>>> getRankedPopulation() {
+  public List<List<Individual<G, T, F>>> getRankedPopulation() {
     return rankedPopulation;
   }
 

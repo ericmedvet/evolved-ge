@@ -5,10 +5,8 @@
  */
 package it.units.malelab.ege.core.listener.event;
 
-import it.units.malelab.ege.core.Evolver;
-import it.units.malelab.ege.core.Individual;
+import it.units.malelab.ege.core.evolver.Evolver;
 import it.units.malelab.ege.core.fitness.Fitness;
-import java.util.List;
 import java.util.Map;
 
 
@@ -16,9 +14,9 @@ import java.util.Map;
  *
  * @author eric
  */
-public class EvolutionStartEvent<T, F extends Fitness> extends EvolutionEvent<T, F> {
+public class EvolutionStartEvent<G, T, F extends Fitness> extends EvolutionEvent<G, T, F> {
 
-  public EvolutionStartEvent(Evolver<T, F> evolver, Map<String, Object> data) {
+  public EvolutionStartEvent(Evolver<G, T, F> evolver, Map<String, Object> data) {
     super(0, evolver, data);
   }
 

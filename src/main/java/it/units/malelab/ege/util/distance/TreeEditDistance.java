@@ -1,7 +1,7 @@
 package it.units.malelab.ege.util.distance;
 
 import distance.APTED;
-import it.units.malelab.ege.core.grammar.Node;
+import it.units.malelab.ege.core.Node;
 import util.LblTree;
 
 /**

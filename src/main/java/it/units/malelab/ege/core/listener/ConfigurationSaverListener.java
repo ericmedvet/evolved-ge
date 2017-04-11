@@ -9,15 +9,13 @@ import it.units.malelab.ege.core.fitness.Fitness;
 import it.units.malelab.ege.core.listener.event.EvolutionEvent;
 import it.units.malelab.ege.core.listener.event.EvolutionStartEvent;
 import java.io.PrintStream;
-import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Set;
 
 /**
  *
  * @author eric
  */
-public class ConfigurationSaverListener<T, F extends Fitness> extends AbstractListener<T, F> implements WithConstants {
+public class ConfigurationSaverListener<G, T, F extends Fitness> extends AbstractListener<G, T, F> implements WithConstants {
 
   private final Map<String, Object> constants;
   private final PrintStream ps;
@@ -29,7 +27,7 @@ public class ConfigurationSaverListener<T, F extends Fitness> extends AbstractLi
   } 
   
   @Override
-  public void listen(EvolutionEvent<T, F> event) {
+  public void listen(EvolutionEvent<G, T, F> event) {
     if (event instanceof EvolutionStartEvent) {
       ps.println(constants.hashCode());
       ps.println(constants);

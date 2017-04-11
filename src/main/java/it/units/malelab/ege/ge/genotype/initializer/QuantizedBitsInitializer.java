@@ -5,9 +5,10 @@
  */
 package it.units.malelab.ege.ge.genotype.initializer;
 
+import it.units.malelab.ege.core.initializer.PopulationInitializer;
 import com.google.common.collect.Range;
 import it.units.malelab.ege.ge.genotype.BitsGenotype;
-import it.units.malelab.ege.ge.genotype.validator.GenotypeValidator;
+import it.units.malelab.ege.core.Validator;
 import it.units.malelab.ege.util.Utils;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,12 +26,12 @@ public class QuantizedBitsInitializer implements PopulationInitializer<BitsGenot
   }  
 
   @Override
-  public List<BitsGenotype> getGenotypes(int n, GenotypeValidator<BitsGenotype> genotypeValidator) {
+  public List<BitsGenotype> getGenotypes(int n, Validator<BitsGenotype> genotypeValidator) {
     List<BitsGenotype> genotypes = new ArrayList<>(n);
     int pieces = (int)Math.ceil(Math.log(n)/Math.log(2d));
     for (int i = 0; i<n; i++) {
       BitsGenotype genotype = new BitsGenotype(size);
-      List<BitsGenotype> slices = genotype.slices(Utils.slices(Range.closedOpen(0, genotype.size()), pieces));
+      List<BitsGenotype> slices = genotype.slices(Utils.slices(Range.closedOpen(0, genotype.length()), pieces));
       int b = 0;
       int v = i;
       for (int j = slices.size()-1; j>=0; j--) {
@@ -39,7 +40,7 @@ public class QuantizedBitsInitializer implements PopulationInitializer<BitsGenot
           v = v-(int)Math.pow(2, j);
         }
         genotype.set(b, slices.get(j));
-        b = b+slices.get(j).size();
+        b = b+slices.get(j).length();
       }
       genotypes.add(genotype);
     }

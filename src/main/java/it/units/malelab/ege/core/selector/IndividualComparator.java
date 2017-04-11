@@ -6,8 +6,8 @@
 package it.units.malelab.ege.core.selector;
 
 import it.units.malelab.ege.core.Individual;
+import it.units.malelab.ege.core.Sequence;
 import it.units.malelab.ege.core.fitness.Fitness;
-import it.units.malelab.ege.core.fitness.NumericFitness;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -16,11 +16,10 @@ import java.util.Map;
  *
  * @author eric
  */
-public class IndividualComparator<F extends Fitness> implements Comparator<Individual<?, F>> {
+public class IndividualComparator<G, T, F extends Fitness> implements Comparator<Individual<G, T, F>> {
 
   public static enum Attribute {
-
-    FITNESS, AGE, PHENO_SIZE, PHENO;
+    FITNESS, AGE, PHENO_SIZE, GENO_SIZE;
   }
 
   private final Map<Attribute, Boolean> attributes;
@@ -37,12 +36,12 @@ public class IndividualComparator<F extends Fitness> implements Comparator<Indiv
   }
 
   @Override
-  public int compare(Individual i1, Individual i2) {
+  public int compare(Individual<G, T, F> i1, Individual<G, T, F> i2) {
     int v = -1;
     for (Map.Entry<Attribute, Boolean> entry : attributes.entrySet()) {
       if (entry.getKey().equals(Attribute.FITNESS)) {
-        if (i1.getFitness() instanceof NumericFitness) {
-          v = ((NumericFitness) i1.getFitness()).getValue().compareTo(((NumericFitness) i2.getFitness()).getValue());
+        if (i1.getFitness() instanceof Comparable) {
+          v = ((Comparable) i1.getFitness()).compareTo(i2.getFitness());
         } else {
           v = 0;
         }
@@ -50,8 +49,12 @@ public class IndividualComparator<F extends Fitness> implements Comparator<Indiv
         v = -Integer.compare(i1.getBirthDate(), i2.getBirthDate());
       } else if (entry.getKey().equals(Attribute.PHENO_SIZE)) {
         v = Integer.compare(i1.getPhenotype().size(), i2.getPhenotype().size());
-      } else if (entry.getKey().equals(Attribute.PHENO)) {
-        v = i1.getPhenotype().equals(i2.getPhenotype()) ? 0 : -1;
+      } else if (entry.getKey().equals(Attribute.GENO_SIZE)) {
+        if (i1.getGenotype() instanceof Sequence) {
+          v = Integer.compare(((Sequence)i1.getGenotype()).length(), ((Sequence)i2.getGenotype()).length());
+        } else {
+          v = 0;
+        }
       }
       if (entry.getValue()) {
         v = -v;

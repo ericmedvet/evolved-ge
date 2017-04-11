@@ -3,7 +3,7 @@ package it.units.malelab.ege.benchmark.fitness;
 import it.units.malelab.ege.core.fitness.FitnessComputer;
 import it.units.malelab.ege.core.fitness.NumericFitness;
 import it.units.malelab.ege.core.fitness.Fitness;
-import it.units.malelab.ege.core.grammar.Node;
+import it.units.malelab.ege.core.Node;
 import java.util.List;
 
 /**

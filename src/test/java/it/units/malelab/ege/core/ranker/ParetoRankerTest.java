@@ -49,15 +49,15 @@ public class ParetoRankerTest {
   @Test
   public void testRank() {
     ParetoRanker instance = new ParetoRanker();
-    Individual<?, MultiObjectiveFitness> i0 = new Individual<>(null, new MultiObjectiveFitness(2, 1), 0, null, null);
-    Individual<?, MultiObjectiveFitness> i1 = new Individual<>(null, new MultiObjectiveFitness(1, 2), 0, null, null);
-    Individual<?, MultiObjectiveFitness> i2 = new Individual<>(null, new MultiObjectiveFitness(1, 3), 0, null, null);
-    Individual<?, MultiObjectiveFitness> i3 = new Individual<>(null, new MultiObjectiveFitness(3, 1), 0, null, null);
-    Individual<?, MultiObjectiveFitness> i4 = new Individual<>(null, new MultiObjectiveFitness(4, 4), 0, null, null);
-    Individual<?, MultiObjectiveFitness> i5 = new Individual<>(null, new MultiObjectiveFitness(5, 5), 0, null, null);
-    List<Individual<?, MultiObjectiveFitness>> pop = Arrays.asList(i0, i1, i2, i3, i4, i5);
+    Individual<?, ?, MultiObjectiveFitness> i0 = new Individual<>(null, null, new MultiObjectiveFitness(2, 1), 0, null, null);
+    Individual<?, ?, MultiObjectiveFitness> i1 = new Individual<>(null, null, new MultiObjectiveFitness(1, 2), 0, null, null);
+    Individual<?, ?, MultiObjectiveFitness> i2 = new Individual<>(null, null, new MultiObjectiveFitness(1, 3), 0, null, null);
+    Individual<?, ?, MultiObjectiveFitness> i3 = new Individual<>(null, null, new MultiObjectiveFitness(3, 1), 0, null, null);
+    Individual<?, ?, MultiObjectiveFitness> i4 = new Individual<>(null, null, new MultiObjectiveFitness(4, 4), 0, null, null);
+    Individual<?, ?, MultiObjectiveFitness> i5 = new Individual<>(null, null, new MultiObjectiveFitness(5, 5), 0, null, null);
+    List<Individual<?, ?, MultiObjectiveFitness>> pop = Arrays.asList(i0, i1, i2, i3, i4, i5);
     for (int i = 0; i<5; i++) {
-      List<List<Individual<?, MultiObjectiveFitness>>> ranked = instance.rank(pop);
+      List<List<Individual<?, ?, MultiObjectiveFitness>>> ranked = instance.rank(pop);
       assertEquals("i0 rank should be in list 0", true, ranked.get(0).contains(i0));
       assertEquals("i1 rank should be in list 0", true, ranked.get(0).contains(i1));
       assertEquals("i2 rank should be in list 1", true, ranked.get(1).contains(i2));

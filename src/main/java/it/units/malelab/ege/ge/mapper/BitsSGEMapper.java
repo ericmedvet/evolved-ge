@@ -5,14 +5,16 @@
  */
 package it.units.malelab.ege.ge.mapper;
 
+import it.units.malelab.ege.core.mapper.AbstractMapper;
+import it.units.malelab.ege.core.mapper.MappingException;
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Range;
 import it.units.malelab.ege.ge.genotype.BitsGenotype;
-import it.units.malelab.ege.core.grammar.Node;
+import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.util.Pair;
 import it.units.malelab.ege.util.Utils;
-import it.units.malelab.ege.core.grammar.Grammar;
+import it.units.malelab.ege.core.Grammar;
 import static it.units.malelab.ege.ge.mapper.StandardGEMapper.BIT_USAGES_INDEX_NAME;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -83,13 +85,13 @@ public class BitsSGEMapper<T> extends AbstractMapper<BitsGenotype, T> {
 
   @Override
   public Node<T> map(BitsGenotype genotype, Map<String, Object> report) throws MappingException {
-    int[] bitUsages = new int[genotype.size()];
+    int[] bitUsages = new int[genotype.length()];
     //transform genotypes in ints
-    if (genotype.size() < overallSize) {
-      throw new MappingException(String.format("Short genotype (%d<%d)", genotype.size(), overallSize));
+    if (genotype.length() < overallSize) {
+      throw new MappingException(String.format("Short genotype (%d<%d)", genotype.length(), overallSize));
     }
     Map<Pair<T, Integer>, List<Range<Integer>>> codonRanges = new LinkedHashMap<>();
-    List<Range<Integer>> nonTerminalRanges = Utils.slices(Range.closedOpen(0, genotype.size()), nonTerminalSizes);
+    List<Range<Integer>> nonTerminalRanges = Utils.slices(Range.closedOpen(0, genotype.length()), nonTerminalSizes);
     for (int i = 0; i < nonTerminals.size(); i++) {
       //int codonSize = (int) Math.max(Math.ceil(Math.log10(nonRecursiveGrammar.getRules().get(nonTerminals.get(i)).size()) / Math.log10(2)), 1);
       List<Range<Integer>> boundaries = Utils.slices(nonTerminalRanges.get(i), nonTerminalCodonsNumbers.get(i));

@@ -8,6 +8,7 @@ package it.units.malelab.ege.ge.listener.collector;
 import it.units.malelab.ege.core.Individual;
 import it.units.malelab.ege.core.fitness.Fitness;
 import it.units.malelab.ege.core.listener.collector.PopulationInfoCollector;
+import it.units.malelab.ege.ge.genotype.BitsGenotype;
 import it.units.malelab.ege.ge.mapper.MultiMapper;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -17,7 +18,7 @@ import java.util.Map;
  *
  * @author eric
  */
-public class MultiMapperInfo<T, F extends Fitness> implements PopulationInfoCollector<T, F> {
+public class MultiMapperInfo<G extends BitsGenotype, T, F extends Fitness> implements PopulationInfoCollector<G, T, F> {
 
   private final int mappers;
 
@@ -26,13 +27,13 @@ public class MultiMapperInfo<T, F extends Fitness> implements PopulationInfoColl
   }
 
   @Override
-  public Map<String, Object> collect(List<List<Individual<T, F>>> rankedPopulation) {
-    Individual<T, F> best = rankedPopulation.get(0).get(0);
+  public Map<String, Object> collect(List<List<Individual<G, T, F>>> rankedPopulation) {
+    Individual<G, T, F> best = rankedPopulation.get(0).get(0);
     Map<String, Object> indexes = new LinkedHashMap<>();
     int[] counts = new int[mappers];
     double count = 0;
-    for (List<Individual<T, F>> rank : rankedPopulation) {
-      for (Individual<T, F> individual : rank) {
+    for (List<Individual<G, T, F>> rank : rankedPopulation) {
+      for (Individual<G, T, F> individual : rank) {
         Integer index = (Integer) individual.getOtherInfo().get(MultiMapper.MAPPER_INDEX_NAME);
         if (index != null) {
           counts[index] = counts[index] + 1;

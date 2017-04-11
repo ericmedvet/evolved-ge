@@ -6,6 +6,7 @@
 package it.units.malelab.ege.core.listener.collector;
 
 import it.units.malelab.ege.core.Individual;
+import it.units.malelab.ege.core.Sequence;
 import it.units.malelab.ege.core.fitness.Fitness;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -15,7 +16,7 @@ import java.util.Map;
  *
  * @author eric
  */
-public abstract class Best<T, F extends Fitness> implements PopulationInfoCollector<T, F>{
+public abstract class Best<G extends Sequence, T, F extends Fitness> implements PopulationInfoCollector<G, T, F>{
   
   private final boolean ancestry;
 
@@ -24,16 +25,17 @@ public abstract class Best<T, F extends Fitness> implements PopulationInfoCollec
   }
   
   @Override
-  public Map<String, Object> collect(List<List<Individual<T, F>>> rankedPopulation) {
-    Individual<T, F> best = rankedPopulation.get(0).get(0);
+  public Map<String, Object> collect(List<List<Individual<G, T, F>>> rankedPopulation) {
+    Individual<G, T, F> best = rankedPopulation.get(0).get(0);
     Map<String, Object> indexes = new LinkedHashMap<>();
     for (Map.Entry<String, Object> fitnessEntry : getFitnessIndexes(best.getFitness()).entrySet()) {
       indexes.put(
               augmentFitnessName(fitnessEntry.getKey()),
               fitnessEntry.getValue());
     }
+    indexes.put("best.genotype.length", best.getGenotype().length());
     indexes.put("best.phenotype.size", best.getPhenotype().size());
-    indexes.put("best.phenotype.length", best.getPhenotype().leaves().size());
+    indexes.put("best.phenotype.length", best.getPhenotype().length());
     indexes.put("best.phenotype.depth", best.getPhenotype().depth());
     indexes.put("best.birth", best.getBirthDate());
     if (ancestry) {
@@ -51,8 +53,9 @@ public abstract class Best<T, F extends Fitness> implements PopulationInfoCollec
               augmentFitnessName(fitnessEntry.getKey()),
               fitnessEntry.getValue());
     }
-    formattedNames.put("best.phenotype.size", "%3d");
+    formattedNames.put("best.genotype.length", "%4d");
     formattedNames.put("best.phenotype.length", "%3d");
+    formattedNames.put("best.phenotype.size", "%3d");
     formattedNames.put("best.phenotype.depth", "%2d");
     formattedNames.put("best.birth", "%3d");
     if (ancestry) {
@@ -62,17 +65,17 @@ public abstract class Best<T, F extends Fitness> implements PopulationInfoCollec
     return formattedNames;
   }  
   
-  private int getAncestrySize(Individual<T, F> individual) {
+  private int getAncestrySize(Individual<G, T, F> individual) {
     int count = 1;
-    for (Individual<T, F> parent : individual.getParents()) {
+    for (Individual<G, T, F> parent : individual.getParents()) {
       count = count+getAncestrySize(parent);
     }
     return count;
   }
 
-  private int getAncestryDepth(Individual<T, F> individual) {
+  private int getAncestryDepth(Individual<G, T, F> individual) {
     int count = 1;
-    for (Individual<T, F> parent : individual.getParents()) {
+    for (Individual<G, T, F> parent : individual.getParents()) {
       count = Math.max(count, getAncestryDepth(parent)+1);
     }
     return count;

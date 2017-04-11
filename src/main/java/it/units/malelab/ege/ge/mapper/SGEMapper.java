@@ -5,13 +5,15 @@
  */
 package it.units.malelab.ege.ge.mapper;
 
+import it.units.malelab.ege.core.mapper.AbstractMapper;
+import it.units.malelab.ege.core.mapper.MappingException;
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
-import it.units.malelab.ege.core.grammar.Node;
+import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.util.Pair;
 import it.units.malelab.ege.util.Utils;
 import it.units.malelab.ege.ge.genotype.SGEGenotype;
-import it.units.malelab.ege.core.grammar.Grammar;
+import it.units.malelab.ege.core.Grammar;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

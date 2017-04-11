@@ -10,7 +10,6 @@ import it.units.malelab.ege.core.LeavesJoiner;
 import it.units.malelab.ege.core.Problem;
 import it.units.malelab.ege.core.fitness.BinaryClassification;
 import it.units.malelab.ege.core.fitness.MultiObjectiveFitness;
-import it.units.malelab.ege.core.ranker.ParetoRanker;
 import it.units.malelab.ege.util.Utils;
 import java.io.File;
 import java.io.IOException;
@@ -20,7 +19,7 @@ import java.util.Random;
  *
  * @author eric
  */
-public class BinaryRegex extends Problem<String, MultiObjectiveFitness> {
+public class BinaryRegex<G> extends Problem<String, MultiObjectiveFitness> {
 
   private final static BinaryClassification<String, String> DATASET = new RegexMatch("01", 20, 1000, new Random(1l), "0+1?0+", "1010.+0101", "111.+", "1?0.+01?");
 
@@ -28,7 +27,6 @@ public class BinaryRegex extends Problem<String, MultiObjectiveFitness> {
     super(Utils.parseFromFile(new File("grammars/binary-regex.bnf")),
             DATASET.subset(0, 0.8),
             DATASET.subset(0.8, 0.2),
-            new ParetoRanker<String, MultiObjectiveFitness>(),
             new LeavesJoiner<String>()
     );
   }

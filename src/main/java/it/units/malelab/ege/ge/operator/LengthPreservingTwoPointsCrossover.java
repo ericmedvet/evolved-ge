@@ -25,9 +25,9 @@ public class LengthPreservingTwoPointsCrossover extends TwoPointsCrossover {
   public List<BitsGenotype> apply(List<BitsGenotype> parents) {
     BitsGenotype parent1 = parents.get(0);
     BitsGenotype parent2 = parents.get(1);
-    int startIndex1 = Math.min(Math.max(1, random.nextInt(parent1.size())), parent1.size()-2);
-    int startIndex2 = Math.min(Math.max(1, random.nextInt(parent2.size())), parent2.size()-2);
-    int crossoverSize = Math.max(1, random.nextInt(Math.min(parent1.size()-startIndex1, parent2.size()-startIndex2)));    
+    int startIndex1 = Math.min(Math.max(1, random.nextInt(parent1.length())), parent1.length()-2);
+    int startIndex2 = Math.min(Math.max(1, random.nextInt(parent2.length())), parent2.length()-2);
+    int crossoverSize = Math.max(1, random.nextInt(Math.min(parent1.length()-startIndex1, parent2.length()-startIndex2)));    
     int endIndex1 = startIndex1+crossoverSize;
     int endIndex2 = startIndex2+crossoverSize;
     return children(

@@ -14,7 +14,7 @@ import java.util.Set;
  *
  * @author eric
  */
-public abstract class AbstractListener<T, F extends Fitness> implements EvolverListener<T, F> {
+public abstract class AbstractListener<G, T, F extends Fitness> implements EvolverListener<G, T, F> {
   
   private final Set<Class<? extends EvolutionEvent>> eventClasses;
 

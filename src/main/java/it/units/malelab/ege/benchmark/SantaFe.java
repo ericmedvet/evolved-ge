@@ -8,9 +8,6 @@ package it.units.malelab.ege.benchmark;
 import it.units.malelab.ege.core.LeavesJoiner;
 import it.units.malelab.ege.core.Problem;
 import it.units.malelab.ege.core.fitness.NumericFitness;
-import it.units.malelab.ege.core.grammar.Node;
-import it.units.malelab.ege.core.ranker.ComparableFitnessRanker;
-import it.units.malelab.ege.core.PhenotypePrinter;
 import it.units.malelab.ege.util.Utils;
 import java.io.File;
 import java.io.IOException;
@@ -25,7 +22,6 @@ public class SantaFe extends Problem<String, NumericFitness> {
     super(Utils.parseFromFile(new File("grammars/santa-fe.bnf")),
             new it.units.malelab.ege.benchmark.fitness.SantaFe(),
             null,
-            new ComparableFitnessRanker<String, NumericFitness>(),
             new LeavesJoiner<String>()
     );
   }

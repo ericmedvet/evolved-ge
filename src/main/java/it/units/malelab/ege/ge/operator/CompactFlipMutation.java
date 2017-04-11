@@ -5,6 +5,7 @@
  */
 package it.units.malelab.ege.ge.operator;
 
+import it.units.malelab.ege.core.operator.AbstractMutation;
 import it.units.malelab.ege.ge.genotype.BitsGenotype;
 import java.util.Collections;
 import java.util.List;
@@ -23,10 +24,10 @@ public class CompactFlipMutation extends AbstractMutation<BitsGenotype> {
   @Override
   public List<BitsGenotype> apply(List<BitsGenotype> parents) {
     BitsGenotype parent = parents.get(0);
-    BitsGenotype child = new BitsGenotype(parent.size());
+    BitsGenotype child = new BitsGenotype(parent.length());
     child.set(0, parent);
-    int fromIndex = random.nextInt(child.size()-1);
-    int size = Math.max(1, random.nextInt(child.size()-fromIndex));
+    int fromIndex = random.nextInt(child.length()-1);
+    int size = Math.max(1, random.nextInt(child.length()-fromIndex));
     child.flip(fromIndex, fromIndex+size);
     return Collections.singletonList(child);
   }  

@@ -5,7 +5,7 @@
  */
 package it.units.malelab.ege.util.symbolicregression;
 
-import it.units.malelab.ege.core.grammar.Node;
+import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.core.PhenotypePrinter;
 import java.util.Arrays;
 import java.util.Collections;

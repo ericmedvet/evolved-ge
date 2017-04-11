@@ -5,10 +5,12 @@
  */
 package it.units.malelab.ege.ge.mapper;
 
+import it.units.malelab.ege.core.mapper.AbstractMapper;
+import it.units.malelab.ege.core.mapper.MappingException;
 import com.google.common.collect.Range;
 import it.units.malelab.ege.ge.genotype.BitsGenotype;
-import it.units.malelab.ege.core.grammar.Node;
-import it.units.malelab.ege.core.grammar.Grammar;
+import it.units.malelab.ege.core.Node;
+import it.units.malelab.ege.core.Grammar;
 import static it.units.malelab.ege.ge.mapper.StandardGEMapper.BIT_USAGES_INDEX_NAME;
 import it.units.malelab.ege.util.Utils;
 import java.util.ArrayList;
@@ -106,8 +108,8 @@ public class HierarchicalMapper<T> extends AbstractMapper<BitsGenotype, T> {
 
   @Override
   public Node<T> map(BitsGenotype genotype, Map<String, Object> report) throws MappingException {
-    int[] bitUsages = new int[genotype.size()];
-    Node<EnhancedSymbol<T>> enhancedTree = new Node<>(new EnhancedSymbol<>(grammar.getStartingSymbol(), Range.closedOpen(0, genotype.size())));    
+    int[] bitUsages = new int[genotype.length()];
+    Node<EnhancedSymbol<T>> enhancedTree = new Node<>(new EnhancedSymbol<>(grammar.getStartingSymbol(), Range.closedOpen(0, genotype.length())));    
     while (true) {
       Node<EnhancedSymbol<T>> nodeToBeReplaced = null;
       for (Node<EnhancedSymbol<T>> node : enhancedTree.leaves()) {
@@ -181,7 +183,7 @@ public class HierarchicalMapper<T> extends AbstractMapper<BitsGenotype, T> {
     List<BitsGenotype> slices = genotype.slices(Utils.slices(range, options.size()));
     List<Integer> bestOptionIndexes = new ArrayList<>();
     for (int i = 0; i < options.size(); i++) {
-      double value = (double) slices.get(i).count() / (double) slices.get(i).size();
+      double value = (double) slices.get(i).count() / (double) slices.get(i).length();
       if (value == max) {
         bestOptionIndexes.add(i);
       } else if (value > max) {

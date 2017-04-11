@@ -5,18 +5,15 @@
  */
 package it.units.malelab.ege.benchmark;
 
-import it.units.malelab.ege.benchmark.fitness.SymbolicRegression;
 import it.units.malelab.ege.core.Problem;
 import it.units.malelab.ege.core.fitness.FitnessComputer;
 import it.units.malelab.ege.core.fitness.NumericFitness;
-import it.units.malelab.ege.core.grammar.Node;
-import it.units.malelab.ege.core.ranker.ComparableFitnessRanker;
+import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.util.Utils;
 import it.units.malelab.ege.util.symbolicregression.MathUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 
 /**
  *
@@ -25,8 +22,7 @@ import java.util.LinkedHashMap;
 public class Max extends Problem<String, NumericFitness> {
 
   public Max() throws IOException {
-    super(
-            Utils.parseFromFile(new File("grammars/max-grammar.bnf")),
+    super(Utils.parseFromFile(new File("grammars/max-grammar.bnf")),
             new FitnessComputer<String, NumericFitness>() {
               @Override
               public NumericFitness compute(Node<String> phenotype) {
@@ -39,7 +35,6 @@ public class Max extends Problem<String, NumericFitness> {
               }
             },
             null,
-            new ComparableFitnessRanker<String, NumericFitness>(),
             MathUtils.phenotypePrinter());
   }
 

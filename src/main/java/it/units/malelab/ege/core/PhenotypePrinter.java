@@ -5,8 +5,6 @@
  */
 package it.units.malelab.ege.core;
 
-import it.units.malelab.ege.core.grammar.Node;
-
 /**
  *
  * @author eric

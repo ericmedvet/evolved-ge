@@ -5,6 +5,7 @@
  */
 package it.units.malelab.ege.ge.operator;
 
+import it.units.malelab.ege.core.operator.AbstractCrossover;
 import it.units.malelab.ege.util.Pair;
 import it.units.malelab.ege.ge.genotype.SGEGenotype;
 import java.util.Arrays;
