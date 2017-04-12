@@ -6,6 +6,7 @@
 package it.units.malelab.ege.core.fitness;
 
 import it.units.malelab.ege.core.Node;
+import it.units.malelab.ege.core.fitness.Fitness;
 
 /**
  *

@@ -6,7 +6,6 @@
 package it.units.malelab.ege.core.evolver;
 
 import it.units.malelab.ege.core.Node;
-import it.units.malelab.ege.core.evolver.Configuration;
 import it.units.malelab.ege.core.fitness.Fitness;
 import it.units.malelab.ege.core.listener.EvolverListener;
 import java.util.List;

@@ -7,6 +7,7 @@ package it.units.malelab.ege.core.listener.collector;
 
 import it.units.malelab.ege.core.Individual;
 import it.units.malelab.ege.core.Sequence;
+import it.units.malelab.ege.core.fitness.Fitness;
 import it.units.malelab.ege.core.fitness.NumericFitness;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,40 +19,28 @@ import java.util.Map;
  *
  * @author eric
  */
-public class Population<G extends Sequence, T, F extends NumericFitness> implements PopulationInfoCollector<G, T, F> {
-
-  private final String fitnessFormat;
-
-  public Population(String fitnessFormat) {
-    this.fitnessFormat = fitnessFormat;
-  }
+public class Population<G extends Sequence, T, F extends Fitness> implements PopulationInfoCollector<G, T, F> {
 
   @Override
   public Map<String, Object> collect(List<List<Individual<G, T, F>>> rankedPopulation) {
     Map<String, Object> indexes = new LinkedHashMap<>();
-    indexes.put("population.size", rankedPopulation.size());
-    List<Double> values = new ArrayList<>(rankedPopulation.size());
-    double fitnessSum = 0;
+    double count = 0;
     double genoLengthSum = 0;
     double phenoLengthSum = 0;
     double birthDateSum = 0;
     for (List<Individual<G, T, F>> rank : rankedPopulation) {
       for (Individual<G, T, F> individual : rank) {
-        values.add(individual.getFitness().getValue());
-        fitnessSum = fitnessSum + individual.getFitness().getValue();
+        count = count+1;
         genoLengthSum = genoLengthSum+individual.getGenotype().length();
         phenoLengthSum = phenoLengthSum+individual.getPhenotype().length();
         birthDateSum = birthDateSum+individual.getBirthDate();
       }
     }
-    Collections.sort(values);
-    indexes.put("population.fitness.median", values.get(values.size() / 2));
-    if (!values.isEmpty()) {
-      indexes.put("population.genotype.length.average", (int)Math.round(genoLengthSum / (double)values.size()));
-      indexes.put("population.phenotype.length.average", (int)Math.round(phenoLengthSum / (double)values.size()));
-      indexes.put("population.birthDate.average", (int)Math.round(birthDateSum / (double)values.size()));
-      indexes.put("population.fitness.average", fitnessSum / (double)values.size());
-    }
+    indexes.put("population.genotype.length.average", (int)Math.round(genoLengthSum / count));
+    indexes.put("population.phenotype.length.average", (int)Math.round(phenoLengthSum / count));
+    indexes.put("population.birthDate.average", (int)Math.round(birthDateSum / count));
+    indexes.put("population.size", (int)count);
+    indexes.put("population.ranks", rankedPopulation.size());
     return indexes;
   }
 
@@ -59,10 +48,9 @@ public class Population<G extends Sequence, T, F extends NumericFitness> impleme
   public Map<String, String> getFormattedNames() {
     LinkedHashMap<String, String> formattedNames = new LinkedHashMap<>();
     formattedNames.put("population.size", "%5d");
+    formattedNames.put("population.ranks", "%3d");
     formattedNames.put("population.genotype.length.average", "%5d");
     formattedNames.put("population.phenotype.length.average", "%4d");
-    formattedNames.put("population.fitness.average", fitnessFormat);
-    formattedNames.put("population.fitness.median", fitnessFormat);
     formattedNames.put("population.birthDate.average", "%3d");
     return formattedNames;
   }

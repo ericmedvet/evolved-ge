@@ -6,6 +6,7 @@
 package it.units.malelab.ege.core.listener.collector;
 
 import it.units.malelab.ege.core.Sequence;
+import it.units.malelab.ege.core.fitness.FitnessComputer;
 import it.units.malelab.ege.core.fitness.MultiObjectiveFitness;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -18,8 +19,8 @@ public class MultiObjectiveFitnessFirstBest<G extends Sequence, T> extends Best<
 
   private final String[] fitnessFormats;
 
-  public MultiObjectiveFitnessFirstBest(String[] fitnessFormats, boolean ancestry) {
-    super(ancestry);
+  public MultiObjectiveFitnessFirstBest(boolean ancestry, FitnessComputer<T, MultiObjectiveFitness> validationFitnessComputer, String... fitnessFormats) {
+    super(ancestry, validationFitnessComputer);
     this.fitnessFormats = fitnessFormats;
   }
 
@@ -27,7 +28,7 @@ public class MultiObjectiveFitnessFirstBest<G extends Sequence, T> extends Best<
   protected Map<String, String> getFitnessFormattedNames() {
     Map<String, String> formattedNames = new LinkedHashMap<>();
     for (int i = 0; i<fitnessFormats.length; i++) {
-      formattedNames.put("o"+i, fitnessFormats[i]);
+      formattedNames.put(""+i, fitnessFormats[i]);
     }
     return formattedNames;
   }
@@ -36,7 +37,7 @@ public class MultiObjectiveFitnessFirstBest<G extends Sequence, T> extends Best<
   protected Map<String, Object> getFitnessIndexes(MultiObjectiveFitness fitness) {
     Map<String, Object> indexes = new LinkedHashMap<>();
     for (int i = 0; i<Math.min(fitnessFormats.length, fitness.getValue().length); i++) {
-      indexes.put("o"+i, fitness.getValue()[i]);
+      indexes.put(""+i, fitness.getValue()[i]);
     }
     return indexes;
   }

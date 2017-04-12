@@ -8,6 +8,7 @@ package it.units.malelab.ege.core.listener.collector;
 import it.units.malelab.ege.core.Individual;
 import it.units.malelab.ege.core.Sequence;
 import it.units.malelab.ege.core.fitness.Fitness;
+import it.units.malelab.ege.core.fitness.FitnessComputer;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,9 +20,11 @@ import java.util.Map;
 public abstract class Best<G extends Sequence, T, F extends Fitness> implements PopulationInfoCollector<G, T, F>{
   
   private final boolean ancestry;
+  private final FitnessComputer<T, F> validationFitnessComputer;
 
-  public Best(boolean ancestry) {
+  public Best(boolean ancestry, FitnessComputer<T, F> validationFitnessComputer) {
     this.ancestry = ancestry;
+    this.validationFitnessComputer = validationFitnessComputer;
   }
   
   @Override
@@ -30,8 +33,16 @@ public abstract class Best<G extends Sequence, T, F extends Fitness> implements 
     Map<String, Object> indexes = new LinkedHashMap<>();
     for (Map.Entry<String, Object> fitnessEntry : getFitnessIndexes(best.getFitness()).entrySet()) {
       indexes.put(
-              augmentFitnessName(fitnessEntry.getKey()),
+              augmentFitnessName("best.fitness", fitnessEntry.getKey()),
               fitnessEntry.getValue());
+    }
+    if (validationFitnessComputer!=null) {
+      F validationFitness = validationFitnessComputer.compute(best.getPhenotype());
+      for (Map.Entry<String, Object> fitnessEntry : getFitnessIndexes(validationFitness).entrySet()) {
+        indexes.put(
+                augmentFitnessName("best.validation.fitness", fitnessEntry.getKey()),
+                fitnessEntry.getValue());
+      }
     }
     indexes.put("best.genotype.length", best.getGenotype().length());
     indexes.put("best.phenotype.size", best.getPhenotype().size());
@@ -50,8 +61,15 @@ public abstract class Best<G extends Sequence, T, F extends Fitness> implements 
     LinkedHashMap<String, String> formattedNames = new LinkedHashMap<>();
     for (Map.Entry<String, String> fitnessEntry : getFitnessFormattedNames().entrySet()) {
       formattedNames.put(
-              augmentFitnessName(fitnessEntry.getKey()),
+              augmentFitnessName("best.fitness", fitnessEntry.getKey()),
               fitnessEntry.getValue());
+    }
+    if (validationFitnessComputer!=null) {
+      for (Map.Entry<String, String> fitnessEntry : getFitnessFormattedNames().entrySet()) {
+        formattedNames.put(
+                augmentFitnessName("best.validation.fitness", fitnessEntry.getKey()),
+                fitnessEntry.getValue());
+      }      
     }
     formattedNames.put("best.genotype.length", "%4d");
     formattedNames.put("best.phenotype.length", "%3d");
@@ -84,11 +102,11 @@ public abstract class Best<G extends Sequence, T, F extends Fitness> implements 
   protected abstract Map<String, String> getFitnessFormattedNames();
   protected abstract Map<String, Object> getFitnessIndexes(F fitness);
   
-  private String augmentFitnessName(String fitnessName) {
+  private String augmentFitnessName(String prefix, String fitnessName) {
     if (fitnessName.isEmpty()) {
-      return "best.fitness";
+      return prefix;
     }
-    return "best.fitness"+fitnessName;
+    return prefix+"."+fitnessName;
   }
   
   

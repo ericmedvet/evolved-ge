@@ -6,6 +6,7 @@
 package it.units.malelab.ege.core.listener.collector;
 
 import it.units.malelab.ege.core.Sequence;
+import it.units.malelab.ege.core.fitness.FitnessComputer;
 import it.units.malelab.ege.core.fitness.NumericFitness;
 import java.util.Collections;
 import java.util.Map;
@@ -18,8 +19,8 @@ public class NumericFirstBest<G extends Sequence, T> extends Best<G, T, NumericF
 
   private final String fitnessFormat;
 
-  public NumericFirstBest(String fitnessFormat, boolean ancestry) {
-    super(ancestry);
+  public NumericFirstBest(boolean ancestry, FitnessComputer<T, NumericFitness> validationFitnessComputer, String fitnessFormat) {
+    super(ancestry, validationFitnessComputer);
     this.fitnessFormat = fitnessFormat;
   }
 

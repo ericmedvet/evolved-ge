@@ -6,6 +6,7 @@
 package it.units.malelab.ege.core.fitness;
 
 import it.units.malelab.ege.core.Node;
+import it.units.malelab.ege.core.fitness.NumericFitness;
 import it.units.malelab.ege.util.Utils;
 import it.units.malelab.ege.util.distance.Distance;
 import java.util.List;
