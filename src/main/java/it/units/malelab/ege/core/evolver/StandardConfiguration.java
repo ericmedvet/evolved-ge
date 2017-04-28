@@ -5,7 +5,6 @@
  */
 package it.units.malelab.ege.core.evolver;
 
-import it.units.malelab.ege.core.evolver.Configuration;
 import it.units.malelab.ege.core.Individual;
 import it.units.malelab.ege.core.Problem;
 import it.units.malelab.ege.core.fitness.Fitness;

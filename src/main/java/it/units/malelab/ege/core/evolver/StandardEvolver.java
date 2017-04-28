@@ -10,8 +10,6 @@ import com.google.common.base.Stopwatch;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import it.units.malelab.ege.core.evolver.Configuration;
-import it.units.malelab.ege.core.evolver.Evolver;
 import it.units.malelab.ege.core.Individual;
 import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.core.listener.EvolverListener;
@@ -76,7 +74,7 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
     List<Individual<G, T, F>> population = new ArrayList<>(Utils.getAll(executor.invokeAll(tasks)));
     int lastBroadcastGeneration = (int) Math.floor(births / configuration.getPopulationSize());
     Utils.broadcast(new EvolutionStartEvent<>(this, null), listeners);
-    Utils.broadcast(new GenerationEvent<>((List) configuration.getRanker().rank(population), lastBroadcastGeneration, this, null), listeners);
+    Utils.broadcast(new GenerationEvent<>(configuration.getRanker().rank(population), lastBroadcastGeneration, this, null), listeners);
     //iterate
     while (Math.round(births / configuration.getPopulationSize()) < configuration.getNumberOfGenerations()) {
       int currentGeneration = (int) Math.floor(births / configuration.getPopulationSize());

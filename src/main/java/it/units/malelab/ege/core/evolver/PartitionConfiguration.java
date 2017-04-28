@@ -6,7 +6,6 @@
 package it.units.malelab.ege.core.evolver;
 
 import it.units.malelab.ege.core.Individual;
-import it.units.malelab.ege.core.evolver.StandardConfiguration;
 import it.units.malelab.ege.core.Problem;
 import it.units.malelab.ege.core.fitness.Fitness;
 import it.units.malelab.ege.core.selector.Selector;
@@ -26,17 +25,19 @@ public class PartitionConfiguration<G, T, F extends Fitness> extends StandardCon
   
   private final Comparator<Individual<G, T, F>> partitionerComparator;
   private final int partitionSize;
-  private final Ranker<Individual<G, T, F>> partitionRanker;
-  private final Selector<Individual<G, T, F>> parentRepresenterSelector;
-  private final Selector<Individual<G, T, F>> unsurvivalRepresenterSelector;
+  private final Ranker<Individual<G, T, F>> parentInPartitionRanker;
+  private final Selector<Individual<G, T, F>> parentInPartitionSelector;
+  private final Ranker<Individual<G, T, F>> unsurvivalInPartitionRanker;
+  private final Selector<Individual<G, T, F>> unsurvivalInPartitionSelector;
 
-  public PartitionConfiguration(Comparator<Individual<G, T, F>> partitionerComparator, int partitionSize, Ranker<Individual<G, T, F>> partitionRanker, Selector<Individual<G, T, F>> parentRepresenterSelector, Selector<Individual<G, T, F>> unsurvivalRepresenterSelector, int populationSize, int numberOfGenerations, PopulationInitializer<G> populationInitializer, Validator<G> initGenotypeValidator, Mapper<G, T> mapper, Map<GeneticOperator<G>, Double> operators, Ranker<Individual<G, T, F>> ranker, Selector<Individual<G, T, F>> parentSelector, Selector<Individual<G, T, F>> unsurvivalSelector, int offspringSize, boolean overlapping, Problem<T, F> problem) {
+  public PartitionConfiguration(Comparator<Individual<G, T, F>> partitionerComparator, int partitionSize, Ranker<Individual<G, T, F>> parentInPartitionRanker, Selector<Individual<G, T, F>> parentInPartitionSelector, Ranker<Individual<G, T, F>> unsurvivalInPartitionRanker, Selector<Individual<G, T, F>> unsurvivalInPartitionSelector, int populationSize, int numberOfGenerations, PopulationInitializer<G> populationInitializer, Validator<G> initGenotypeValidator, Mapper<G, T> mapper, Map<GeneticOperator<G>, Double> operators, Ranker<Individual<G, T, F>> ranker, Selector<Individual<G, T, F>> parentSelector, Selector<Individual<G, T, F>> unsurvivalSelector, int offspringSize, boolean overlapping, Problem<T, F> problem) {
     super(populationSize, numberOfGenerations, populationInitializer, initGenotypeValidator, mapper, operators, ranker, parentSelector, unsurvivalSelector, offspringSize, overlapping, problem);
     this.partitionerComparator = partitionerComparator;
     this.partitionSize = partitionSize;
-    this.partitionRanker = partitionRanker;
-    this.parentRepresenterSelector = parentRepresenterSelector;
-    this.unsurvivalRepresenterSelector = unsurvivalRepresenterSelector;
+    this.parentInPartitionRanker = parentInPartitionRanker;
+    this.parentInPartitionSelector = parentInPartitionSelector;
+    this.unsurvivalInPartitionRanker = unsurvivalInPartitionRanker;
+    this.unsurvivalInPartitionSelector = unsurvivalInPartitionSelector;
   }
 
   public Comparator<Individual<G, T, F>> getPartitionerComparator() {
@@ -47,21 +48,25 @@ public class PartitionConfiguration<G, T, F extends Fitness> extends StandardCon
     return partitionSize;
   }
 
-  public Ranker<Individual<G, T, F>> getPartitionRanker() {
-    return partitionRanker;
+  public Ranker<Individual<G, T, F>> getParentInPartitionRanker() {
+    return parentInPartitionRanker;
   }
 
-  public Selector<Individual<G, T, F>> getParentRepresenterSelector() {
-    return parentRepresenterSelector;
+  public Selector<Individual<G, T, F>> getParentInPartitionSelector() {
+    return parentInPartitionSelector;
   }
 
-  public Selector<Individual<G, T, F>> getUnsurvivalRepresenterSelector() {
-    return unsurvivalRepresenterSelector;
+  public Ranker<Individual<G, T, F>> getUnsurvivalInPartitionRanker() {
+    return unsurvivalInPartitionRanker;
+  }
+
+  public Selector<Individual<G, T, F>> getUnsurvivalInPartitionSelector() {
+    return unsurvivalInPartitionSelector;
   }
 
   @Override
   public String toString() {
-    return "PartitionConfiguration{" + "partitionerComparator=" + partitionerComparator + ", partitionSize=" + partitionSize + ", partitionRanker=" + partitionRanker + ", parentRepresenterSelector=" + parentRepresenterSelector + ", unsurvivalRepresenterSelector=" + unsurvivalRepresenterSelector + '}';
+    return "PartitionConfiguration{" + "partitionerComparator=" + partitionerComparator + ", partitionSize=" + partitionSize + ", parentInPartitionRanker=" + parentInPartitionRanker + ", parentInPartitionSelector=" + parentInPartitionSelector + ", unsurvivalInPartitionRanker=" + unsurvivalInPartitionRanker + ", unsurvivalInPartitionSelector=" + unsurvivalInPartitionSelector + '}';
   }
   
 }

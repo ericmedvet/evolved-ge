@@ -5,12 +5,7 @@
  */
 package it.units.malelab.ege.core.fitness;
 
-import it.units.malelab.ege.core.fitness.FitnessComputer;
-import it.units.malelab.ege.core.fitness.MultiObjectiveFitness;
-import it.units.malelab.ege.core.fitness.Fitness;
 import it.units.malelab.ege.core.Node;
-import it.units.malelab.ege.core.Node;
-import it.units.malelab.ege.core.fitness.MultiObjectiveFitness;
 import java.util.List;
 
 /**

@@ -19,7 +19,7 @@ import java.util.Map;
 public class IndividualComparator<G, T, F extends Fitness> implements Comparator<Individual<G, T, F>> {
 
   public static enum Attribute {
-    FITNESS, AGE, PHENO_SIZE, GENO_SIZE;
+    FITNESS, AGE, PHENO_SIZE, GENO_SIZE, PHENO, GENO;
   }
 
   private final Map<Attribute, Boolean> attributes;
@@ -55,6 +55,10 @@ public class IndividualComparator<G, T, F extends Fitness> implements Comparator
         } else {
           v = 0;
         }
+      } else if (entry.getKey().equals(Attribute.GENO)) {        
+        v = (i1.getGenotype().equals(i2.getGenotype()))?0:1;
+      } else if (entry.getKey().equals(Attribute.PHENO)) {
+        v = (i1.getPhenotype().equals(i2.getPhenotype()))?0:1;        
       }
       if (entry.getValue()) {
         v = -v;
