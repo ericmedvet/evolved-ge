@@ -14,6 +14,6 @@ import java.util.List;
  */
 public interface Joiner<T> {
   
-  public Node<T> join(List<Node<T>> pieces);
+  public Node<T> join(Node<T>... pieces);
   
 }

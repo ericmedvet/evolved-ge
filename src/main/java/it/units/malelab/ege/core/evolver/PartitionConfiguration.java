@@ -30,7 +30,25 @@ public class PartitionConfiguration<G, T, F extends Fitness> extends StandardCon
   private final Ranker<Individual<G, T, F>> unsurvivalInPartitionRanker;
   private final Selector<Individual<G, T, F>> unsurvivalInPartitionSelector;
 
-  public PartitionConfiguration(Comparator<Individual<G, T, F>> partitionerComparator, int partitionSize, Ranker<Individual<G, T, F>> parentInPartitionRanker, Selector<Individual<G, T, F>> parentInPartitionSelector, Ranker<Individual<G, T, F>> unsurvivalInPartitionRanker, Selector<Individual<G, T, F>> unsurvivalInPartitionSelector, int populationSize, int numberOfGenerations, PopulationInitializer<G> populationInitializer, Validator<G> initGenotypeValidator, Mapper<G, T> mapper, Map<GeneticOperator<G>, Double> operators, Ranker<Individual<G, T, F>> ranker, Selector<Individual<G, T, F>> parentSelector, Selector<Individual<G, T, F>> unsurvivalSelector, int offspringSize, boolean overlapping, Problem<T, F> problem) {
+  public PartitionConfiguration(
+          Comparator<Individual<G, T, F>> partitionerComparator,
+          int partitionSize,
+          Ranker<Individual<G, T, F>> parentInPartitionRanker,
+          Selector<Individual<G, T, F>> parentInPartitionSelector,
+          Ranker<Individual<G, T, F>> unsurvivalInPartitionRanker,
+          Selector<Individual<G, T, F>> unsurvivalInPartitionSelector,
+          int populationSize,
+          int numberOfGenerations,
+          PopulationInitializer<G> populationInitializer,
+          Validator<G> initGenotypeValidator,
+          Mapper<G, T> mapper,
+          Map<GeneticOperator<G>, Double> operators,
+          Ranker<Individual<G, T, F>> ranker,
+          Selector<Individual<G, T, F>> parentSelector,
+          Selector<Individual<G, T, F>> unsurvivalSelector,
+          int offspringSize,
+          boolean overlapping,
+          Problem<T, F> problem) {
     super(populationSize, numberOfGenerations, populationInitializer, initGenotypeValidator, mapper, operators, ranker, parentSelector, unsurvivalSelector, offspringSize, overlapping, problem);
     this.partitionerComparator = partitionerComparator;
     this.partitionSize = partitionSize;
@@ -66,7 +84,7 @@ public class PartitionConfiguration<G, T, F extends Fitness> extends StandardCon
 
   @Override
   public String toString() {
-    return "PartitionConfiguration{" + "partitionerComparator=" + partitionerComparator + ", partitionSize=" + partitionSize + ", parentInPartitionRanker=" + parentInPartitionRanker + ", parentInPartitionSelector=" + parentInPartitionSelector + ", unsurvivalInPartitionRanker=" + unsurvivalInPartitionRanker + ", unsurvivalInPartitionSelector=" + unsurvivalInPartitionSelector + '}';
+    return "PartitionConfiguration{" + "partitionerComparator=" + partitionerComparator + ", partitionSize=" + partitionSize + ", parentInPartitionRanker=" + parentInPartitionRanker + ", parentInPartitionSelector=" + parentInPartitionSelector + ", unsurvivalInPartitionRanker=" + unsurvivalInPartitionRanker + ", unsurvivalInPartitionSelector=" + unsurvivalInPartitionSelector + "} from " + super.toString();
   }
   
 }

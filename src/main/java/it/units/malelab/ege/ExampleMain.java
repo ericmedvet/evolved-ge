@@ -24,6 +24,9 @@ import it.units.malelab.ege.core.selector.Tournament;
 import it.units.malelab.ege.core.selector.IndividualComparator;
 import it.units.malelab.ege.core.evolver.StandardConfiguration;
 import it.units.malelab.ege.core.evolver.StandardEvolver;
+import it.units.malelab.ege.core.evolver.sepandconq.Joiner;
+import it.units.malelab.ege.core.evolver.sepandconq.SACConfiguration;
+import it.units.malelab.ege.core.evolver.sepandconq.SACEvolver;
 import it.units.malelab.ege.core.fitness.MultiObjectiveFitness;
 import it.units.malelab.ege.ge.genotype.BitsGenotype;
 import it.units.malelab.ege.ge.genotype.BitsGenotypeFactory;
@@ -33,6 +36,8 @@ import it.units.malelab.ege.core.listener.collector.MultiObjectiveFitnessFirstBe
 import it.units.malelab.ege.ge.genotype.validator.Any;
 import it.units.malelab.ege.core.operator.GeneticOperator;
 import it.units.malelab.ege.core.ranker.ComparableRanker;
+import it.units.malelab.ege.core.ranker.ComparatorChain;
+import it.units.malelab.ege.core.ranker.LexicoGraphicalMOComparator;
 import it.units.malelab.ege.core.ranker.ParetoRanker;
 import it.units.malelab.ege.core.selector.FirstBest;
 import it.units.malelab.ege.ge.mapper.WeightedHierarchicalMapper;
@@ -42,6 +47,7 @@ import it.units.malelab.ege.util.Utils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
@@ -51,12 +57,13 @@ import java.util.concurrent.ExecutionException;
  * @author eric
  */
 public class ExampleMain {
-  
+
   public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
     //solveHarmonicCurve();
     //solveHarmonicCurveDiversity();
     //solveBinaryRegex();
-    solveBinaryRegexDiversity();
+    //solveBinaryRegexDiversity();
+    solveBinaryRegexSAC();
   }
 
   private static void solveHarmonicCurve() throws IOException, InterruptedException, ExecutionException {
@@ -131,7 +138,7 @@ public class ExampleMain {
     List<Node<String>> bests = evolver.solve(listeners);
     System.out.printf("Found %d solutions.%n", bests.size());
   }
-  
+
   private static void solveBinaryRegex() throws IOException, InterruptedException, ExecutionException {
     Random random = new Random(1l);
     Problem<String, MultiObjectiveFitness> problem = new BinaryRegex();
@@ -197,6 +204,68 @@ public class ExampleMain {
             new BestPrinter<BitsGenotype, String, MultiObjectiveFitness>(problem.getPhenotypePrinter(), "%30.30s")
     ));
     Evolver<BitsGenotype, String, MultiObjectiveFitness> evolver = new PartitionEvolver<>(
+            1, configuration, random, false);
+    List<Node<String>> bests = evolver.solve(listeners);
+    System.out.printf("Found %d solutions.%n", bests.size());
+  }
+
+  private static void solveBinaryRegexSAC() throws IOException, InterruptedException, ExecutionException {
+    Random random = new Random(1l);
+    Problem<String, MultiObjectiveFitness> problem = new BinaryRegex();
+    final LexicoGraphicalMOComparator lgmoc = new LexicoGraphicalMOComparator(0, 1);
+    SACConfiguration<String, BitsGenotype, String, MultiObjectiveFitness> configuration = new SACConfiguration<>(
+            new Joiner<String>() {
+              @Override
+              public Node<String> join(Node<String>... pieces) {
+                Node<String> orNode = new Node<>("<or>");
+                for (int i = 0; i < pieces.length; i++) {
+                  if (i > 0) {
+                    orNode.getChildren().add(new Node<>("|"));
+                  }
+                  orNode.getChildren().add(new Node<>("("));
+                  orNode.getChildren().add(pieces[i]);
+                  orNode.getChildren().add(new Node<>(")"));
+                }
+                return orNode;
+              }
+            },
+            new IndividualComparator<BitsGenotype, String, MultiObjectiveFitness>(IndividualComparator.Attribute.PHENO),
+            1,
+            new ComparableRanker<>(new IndividualComparator<BitsGenotype, String, MultiObjectiveFitness>(IndividualComparator.Attribute.AGE)),
+            new FirstBest<Individual<BitsGenotype, String, MultiObjectiveFitness>>(),
+            new ComparableRanker<>(new IndividualComparator<BitsGenotype, String, MultiObjectiveFitness>(IndividualComparator.Attribute.AGE)),
+            new LastWorst<Individual<BitsGenotype, String, MultiObjectiveFitness>>(),
+            500,
+            25,
+            new RandomInitializer<>(random, new BitsGenotypeFactory(256)),
+            new Any<BitsGenotype>(),
+            new WeightedHierarchicalMapper<>(3, problem.getGrammar()),
+            new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
+                    .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
+                    .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
+            new ComparableRanker<>(new ComparatorChain<Individual<BitsGenotype, String, MultiObjectiveFitness>>(
+                    new Comparator<Individual<BitsGenotype, String, MultiObjectiveFitness>>() {
+                      @Override
+                      public int compare(Individual<BitsGenotype, String, MultiObjectiveFitness> i1, Individual<BitsGenotype, String, MultiObjectiveFitness> i2) {
+                        return lgmoc.compare(i1.getFitness(), i2.getFitness());
+                      }
+                    },
+                     new IndividualComparator<BitsGenotype, String, MultiObjectiveFitness>(IndividualComparator.Attribute.PHENO_SIZE)
+            )),
+            new Tournament<Individual<BitsGenotype, String, MultiObjectiveFitness>>(3, random),
+            new LastWorst<Individual<BitsGenotype, String, MultiObjectiveFitness>>(),
+            500,
+            true,
+            problem);
+    List<EvolverListener<BitsGenotype, String, MultiObjectiveFitness>> listeners = new ArrayList<>();
+    listeners.add(new CollectorGenerationLogger<>(
+            Collections.EMPTY_MAP, System.out, true, 10, " ", " | ",
+            new Population<BitsGenotype, String, MultiObjectiveFitness>(),
+            new MultiObjectiveFitnessFirstBest<BitsGenotype, String>(false, problem.getTestingFitnessComputer(), "%4.2f", "%4.2f"),
+            new Diversity<BitsGenotype, String, MultiObjectiveFitness>(),
+            new BestPrinter<BitsGenotype, String, MultiObjectiveFitness>(problem.getPhenotypePrinter(), "%30.30s")
+    ));
+    Evolver<BitsGenotype, String, MultiObjectiveFitness> evolver = new SACEvolver<>(
             1, configuration, random, false);
     List<Node<String>> bests = evolver.solve(listeners);
     System.out.printf("Found %d solutions.%n", bests.size());

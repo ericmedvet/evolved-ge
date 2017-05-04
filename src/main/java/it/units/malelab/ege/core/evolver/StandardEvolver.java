@@ -46,7 +46,7 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
   private final StandardConfiguration<G, T, F> configuration;
   protected final ExecutorService executor;
   protected final Random random;
-  private final boolean saveAncestry;
+  protected final boolean saveAncestry;
 
   public StandardEvolver(int numberOfThreads, StandardConfiguration<G, T, F> configuration, Random random, boolean saveAncestry) {
     this.configuration = configuration;

@@ -15,7 +15,7 @@ import java.util.List;
  *
  * @author eric
  */
-public class ParetoRanker<G, T, F extends MultiObjectiveFitness> implements Ranker<Individual<G, T,F>>, Comparator<MultiObjectiveFitness> {
+public class ParetoRanker<G, T, F extends MultiObjectiveFitness> implements Ranker<Individual<G, T, F>>, Comparator<MultiObjectiveFitness> {
 
   @Override
   public List<List<Individual<G, T, F>>> rank(List<Individual<G, T, F>> individuals) {
