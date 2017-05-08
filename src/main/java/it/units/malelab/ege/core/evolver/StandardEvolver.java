@@ -67,7 +67,7 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
     //initialize population
     int births = 0;
     List<Callable<List<Individual<G, T, F>>>> tasks = new ArrayList<>();
-    for (G genotype : configuration.getPopulationInitializer().getGenotypes(configuration.getPopulationSize(), configuration.getInitGenotypeValidator())) {
+    for (G genotype : configuration.getPopulationInitializer().build(configuration.getPopulationSize(), configuration.getInitGenotypeValidator())) {
       tasks.add(individualFromGenotypeCallable(genotype, 0, mappingCache, fitnessCache, listeners, null, null));
       births = births + 1;
     }
@@ -208,8 +208,10 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
         Stopwatch stopwatch = Stopwatch.createStarted();
         List<G> childGenotypes = operator.apply(parentGenotypes).subList(0, operator.getChildrenArity());
         long elapsed = stopwatch.elapsed(TimeUnit.NANOSECONDS);
-        for (G childGenotype : childGenotypes) {
-          children.addAll(individualFromGenotypeCallable(childGenotype, generation, mappingCache, fitnessCache, listeners, operator, parents).call());
+        if (childGenotypes!=null) {
+          for (G childGenotype : childGenotypes) {
+            children.addAll(individualFromGenotypeCallable(childGenotype, generation, mappingCache, fitnessCache, listeners, operator, parents).call());
+          }
         }
         Utils.broadcast(new OperatorApplicationEvent<>(parents, children, operator, elapsed, generation, evolver, null), listeners);
         return children;

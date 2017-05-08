@@ -14,6 +14,6 @@ import java.util.List;
  */
 public interface PopulationInitializer<G> {
     
-  public List<G> getGenotypes(int n, Validator<G> genotypeValidator);
+  public List<G> build(int n, Validator<G> genotypeValidator);
   
 }

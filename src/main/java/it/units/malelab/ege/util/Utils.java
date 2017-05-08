@@ -332,5 +332,46 @@ public class Utils {
     }
 
   }
+  
+  public static <T> boolean validate(Node<T> tree, Grammar<T> grammar) {
+    if (tree==null) {
+      return false;
+    }
+    if (!tree.getContent().equals(grammar.getStartingSymbol())) {
+      return false;
+    }
+    Set<T> terminals = new LinkedHashSet<>();
+    for (List<List<T>> options : grammar.getRules().values()) {
+      for (List<T> option : options) {
+        terminals.addAll(option);
+      }
+    }
+    terminals.removeAll(grammar.getRules().keySet());
+    return innerValidate(tree, grammar, terminals);
+  }
+  
+  private static <T> boolean innerValidate(Node<T> tree, Grammar<T> grammar, Set<T> terminals) {
+    //validate node content
+    if (!grammar.getRules().keySet().contains(tree.getContent())&&!terminals.contains(tree.getContent())) {
+      return false;
+    }
+    if (terminals.contains(tree.getContent())) {
+      return true;
+    }
+    //validate node children sequence (option)
+    List<T> childContents = new ArrayList<>();
+    for (Node<T> child : tree.getChildren()) {
+      childContents.add(child.getContent());
+    }
+    if (!grammar.getRules().get(tree.getContent()).contains(childContents)) {
+      return false;
+    }
+    for (Node<T> child : tree.getChildren()) {
+      if (!innerValidate(child, grammar, terminals)) {
+        return false;
+      }
+    }
+    return true;
+  }
 
 }

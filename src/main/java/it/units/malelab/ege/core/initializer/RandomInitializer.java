@@ -5,7 +5,6 @@
  */
 package it.units.malelab.ege.core.initializer;
 
-import it.units.malelab.ege.core.initializer.PopulationInitializer;
 import it.units.malelab.ege.core.Validator;
 import it.units.malelab.ege.core.Factory;
 import java.util.ArrayList;
@@ -27,7 +26,7 @@ public class RandomInitializer<G> implements PopulationInitializer<G> {
   }
 
   @Override
-  public List<G> getGenotypes(int n, Validator<G> genotypeValidator) {
+  public List<G> build(int n, Validator<G> genotypeValidator) {
     List<G> genotypes = new ArrayList<>(n);
     for (int i = 0; i<n; i++) {
       while (true) {

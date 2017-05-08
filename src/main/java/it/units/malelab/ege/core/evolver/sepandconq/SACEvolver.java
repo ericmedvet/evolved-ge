@@ -13,8 +13,6 @@ import it.units.malelab.ege.core.fitness.BinaryClassification;
 import it.units.malelab.ege.core.fitness.FitnessComputer;
 import it.units.malelab.ege.core.fitness.MultiObjectiveFitness;
 import it.units.malelab.ege.core.listener.EvolverListener;
-import it.units.malelab.ege.core.listener.event.GenerationEvent;
-import it.units.malelab.ege.util.Utils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

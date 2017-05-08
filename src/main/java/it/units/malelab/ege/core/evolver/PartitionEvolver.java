@@ -47,7 +47,7 @@ public class PartitionEvolver<G, T, F extends Fitness> extends StandardEvolver<G
     //initialize population
     int births = 0;
     List<Callable<List<Individual<G, T, F>>>> tasks = new ArrayList<>();
-    for (G genotype : configuration.getPopulationInitializer().getGenotypes(configuration.getPopulationSize(), configuration.getInitGenotypeValidator())) {
+    for (G genotype : configuration.getPopulationInitializer().build(configuration.getPopulationSize(), configuration.getInitGenotypeValidator())) {
       tasks.add(individualFromGenotypeCallable(genotype, 0, mappingCache, fitnessCache, listeners, null, null));
       births = births + 1;
     }

@@ -26,7 +26,7 @@ public class QuantizedBitsInitializer implements PopulationInitializer<BitsGenot
   }  
 
   @Override
-  public List<BitsGenotype> getGenotypes(int n, Validator<BitsGenotype> genotypeValidator) {
+  public List<BitsGenotype> build(int n, Validator<BitsGenotype> genotypeValidator) {
     List<BitsGenotype> genotypes = new ArrayList<>(n);
     int pieces = (int)Math.ceil(Math.log(n)/Math.log(2d));
     for (int i = 0; i<n; i++) {
