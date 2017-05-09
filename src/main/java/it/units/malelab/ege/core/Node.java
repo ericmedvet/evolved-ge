@@ -26,6 +26,17 @@ public class Node<T> implements Sequence<T> {
     this.content = content;
   }
   
+  public Node(Node<T> original) {
+    if (original==null) {
+      this.content = null;
+      return;
+    }
+    this.content = original.getContent();
+    for (Node<T> child : original.getChildren()) {
+      children.add(new Node<>(child));
+    }
+  }
+  
   public T getContent() {
     return content;
   }
@@ -133,7 +144,5 @@ public class Node<T> implements Sequence<T> {
   public int length() {
     return leaves().size();
   }
-  
-  
     
 }

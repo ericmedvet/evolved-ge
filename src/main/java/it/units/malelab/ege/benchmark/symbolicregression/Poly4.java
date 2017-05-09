@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.benchmark;
+package it.units.malelab.ege.benchmark.symbolicregression;
 
 import it.units.malelab.ege.benchmark.fitness.SymbolicRegression;
 import it.units.malelab.ege.core.Problem;
@@ -37,7 +37,7 @@ public class Poly4 extends Problem<String, NumericFitness> {
     super(Utils.parseFromFile(new File("grammars/symbolic-regression-classic4.bnf")),
             new SymbolicRegression(
                     TARGET_FUNCTION,
-                    new LinkedHashMap<>(MathUtils.varValuesMap("x", MathUtils.uniformSample(-1, 1, .1)))),
+                    new LinkedHashMap<>(MathUtils.valuesMap("x", MathUtils.equispacedValues(-1, 1, .1)))),
             null,
             MathUtils.phenotypePrinter());
   }

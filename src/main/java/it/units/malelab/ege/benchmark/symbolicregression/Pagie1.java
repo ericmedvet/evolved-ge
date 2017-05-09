@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.benchmark;
+package it.units.malelab.ege.benchmark.symbolicregression;
 
 import it.units.malelab.ege.benchmark.fitness.SymbolicRegression;
 import it.units.malelab.ege.core.Problem;
@@ -18,32 +18,34 @@ import java.util.LinkedHashMap;
  *
  * @author eric
  */
-public class HarmonicCurve extends Problem<String, NumericFitness> {
+public class Pagie1 extends Problem<String, NumericFitness> {
 
   private final static SymbolicRegression.TargetFunction TARGET_FUNCTION = new SymbolicRegression.TargetFunction() {
     @Override
     public double compute(double... v) {
-      double s = 0;
-      for (double i = 1; i < v[0]; i++) {
-        s = s + 1 / i;
-      }
-      return s;
+      return 1 / (1 + Math.pow(v[0], -4)) + 1 / (1 + Math.pow(v[1], -4));
     }
 
     @Override
     public String[] varNames() {
-      return new String[]{"x"};
+      return new String[]{"x", "y"};
     }
   };
 
-  public HarmonicCurve() throws IOException {
-    super(Utils.parseFromFile(new File("grammars/symbolic-regression-harmonic.bnf")),
+  public Pagie1() throws IOException {
+    super(Utils.parseFromFile(new File("grammars/symbolic-regression-pagie1.bnf")),
             new SymbolicRegression(
                     TARGET_FUNCTION,
-                    new LinkedHashMap<>(MathUtils.varValuesMap("x", MathUtils.uniformSample(1, 50, 1)))),
+                    new LinkedHashMap<>(MathUtils.combinedValuesMap(
+                            MathUtils.valuesMap("x", MathUtils.equispacedValues(-5, 5, 0.4)),
+                            MathUtils.valuesMap("y", MathUtils.equispacedValues(-5, 5, 0.4))
+                    ))),
             new SymbolicRegression(
                     TARGET_FUNCTION,
-                    new LinkedHashMap<>(MathUtils.varValuesMap("x", MathUtils.uniformSample(51, 100, 1)))),
+                    new LinkedHashMap<>(MathUtils.combinedValuesMap(
+                            MathUtils.valuesMap("x", MathUtils.equispacedValues(-5, 5, 0.1)),
+                            MathUtils.valuesMap("y", MathUtils.equispacedValues(-5, 5, 0.1))
+                    ))),
             MathUtils.phenotypePrinter());
   }
 

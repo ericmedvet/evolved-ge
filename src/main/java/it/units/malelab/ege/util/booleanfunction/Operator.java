@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.util.symbolicregression;
+package it.units.malelab.ege.util.booleanfunction;
 
 /**
  *
@@ -11,20 +11,10 @@ package it.units.malelab.ege.util.symbolicregression;
  */
 public enum Operator implements Element {
   
-  ADDITION("+"),
-  SUBTRACTION("-"),
-  DIVISION("/"),
-  PROT_DIVISION("p/"),
-  MULTIPLICATION("*"),
-  LOG("log"),
-  PROT_LOG("plog"),
-  EXP("exp"),
-  SIN("sin"),
-  COS("cos"),
-  INVERSE("1/"),
-  OPPOSITE("_"),
-  SQRT("√"),
-  SQ("²");
+  AND(".and"),
+  OR(".or"),
+  NOT(".not"),
+  IF(".if");
   
   private final String string;
 

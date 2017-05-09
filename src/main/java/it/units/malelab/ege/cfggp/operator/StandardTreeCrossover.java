@@ -18,11 +18,11 @@ import java.util.Random;
  *
  * @author eric
  */
-public class StandardCrossover<T> extends AbstractCrossover<Node<T>> {
+public class StandardTreeCrossover<T> extends AbstractCrossover<Node<T>> {
 
   private final int maxDepth;
 
-  public StandardCrossover(int maxDepth, Random random) {
+  public StandardTreeCrossover(int maxDepth, Random random) {
     super(random);
     this.maxDepth = maxDepth;
   }
@@ -30,8 +30,8 @@ public class StandardCrossover<T> extends AbstractCrossover<Node<T>> {
   @Override
   public List<Node<T>> apply(List<Node<T>> parents) {
     //build maps of leaf-subtrees
-    Node<T> child1 = clone(parents.get(0));
-    Node<T> child2 = clone(parents.get(1));
+    Node<T> child1 = new Node<>(parents.get(0));
+    Node<T> child2 = new Node<>(parents.get(1));
     child1.propagateParentship();
     child2.propagateParentship();
     Multimap<T, Node<T>> child1subtrees = ArrayListMultimap.create();
@@ -81,14 +81,6 @@ public class StandardCrossover<T> extends AbstractCrossover<Node<T>> {
     children.add(child1);
     children.add(child2);
     return children;
-  }
-
-  private Node<T> clone(Node<T> tree) {
-    Node<T> clonedTree = new Node<>(tree.getContent());
-    for (Node<T> child : tree.getChildren()) {
-      clonedTree.getChildren().add(clone(child));
-    }
-    return clonedTree;
   }
 
   private void populateMultimap(Node<T> node, Multimap<T, Node<T>> multimap) {

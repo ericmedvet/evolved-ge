@@ -43,7 +43,6 @@ public class LexicoGraphicalMOComparatorTest {
    */
   @Test
   public void testCompare() {
-    System.out.println("compare");
     MultiObjectiveFitness f1 = new MultiObjectiveFitness(2, 4, 5);
     MultiObjectiveFitness f2 = new MultiObjectiveFitness(2, 3, 6);
     MultiObjectiveFitness f3 = new MultiObjectiveFitness(2, 3, 6);
