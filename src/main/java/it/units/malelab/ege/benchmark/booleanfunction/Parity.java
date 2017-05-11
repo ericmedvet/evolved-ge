@@ -8,7 +8,6 @@ package it.units.malelab.ege.benchmark.booleanfunction;
 import it.units.malelab.ege.benchmark.fitness.ParityErrors;
 import it.units.malelab.ege.core.Grammar;
 import it.units.malelab.ege.core.Problem;
-import it.units.malelab.ege.core.fitness.FitnessComputer;
 import it.units.malelab.ege.core.fitness.NumericFitness;
 import it.units.malelab.ege.util.Utils;
 import it.units.malelab.ege.util.booleanfunction.BooleanUtils;

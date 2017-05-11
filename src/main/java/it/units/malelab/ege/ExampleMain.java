@@ -6,6 +6,7 @@
 package it.units.malelab.ege;
 
 import it.units.malelab.ege.benchmark.BinaryRegex;
+import it.units.malelab.ege.benchmark.KLandscapes;
 import it.units.malelab.ege.benchmark.symbolicregression.HarmonicCurve;
 import it.units.malelab.ege.benchmark.Text;
 import it.units.malelab.ege.benchmark.booleanfunction.Parity;
@@ -76,7 +77,8 @@ public class ExampleMain {
     //solveBinaryRegexSAC();
     //solveText();
     //solveTextCfgGp();
-    solveParityCfgGp();
+    //solveParityCfgGp();
+    new KLandscapes(3);
   }
 
   private static void solveHarmonicCurve() throws IOException, InterruptedException, ExecutionException {
