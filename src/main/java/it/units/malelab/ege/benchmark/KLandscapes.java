@@ -40,15 +40,18 @@ public class KLandscapes extends Problem<String, NumericFitness> {
     
     System.out.println(buildGrammar(nTerminals, nNonTerminals, arity));
     Grammar<String> g = buildGrammar(nTerminals, nNonTerminals, arity);
-    FitnessComputer<String, NumericFitness> fc1 = getFitnessComputer(1, nTerminals, nNonTerminals, arity, vRange, wRange);
-    FitnessComputer<String, NumericFitness> fc3 = getFitnessComputer(3, nTerminals, nNonTerminals, arity, vRange, wRange);
+    //FitnessComputer<String, NumericFitness> fc1 = getFitnessComputer(1, nTerminals, nNonTerminals, arity, vRange, wRange);
+    //FitnessComputer<String, NumericFitness> fc3 = getFitnessComputer(3, nTerminals, nNonTerminals, arity, vRange, wRange);
     
     Random r = new Random(1);
     for (int i = 0; i<10; i++) {
       Node<String> ot = (new GrowTreeFactory<>(10, g)).build(r);
+      System.out.printf("OT: %s%n", ot);
+      ot.propagateParentship();
+      Utils.prettyPrintTree(ot, System.out);
       Node<String> tt = transform(ot);
-      //System.out.printf("OT: %s%n", ot);
-      System.out.printf("TT: %s\tf1(t)=%f\tf5(t)=%f\t%n", tt, fc1.compute(ot).getValue(), fc3.compute(ot).getValue());
+      //System.out.printf("TT: %s\tf1(t)=%f\tf5(t)=%f\t%n", tt, fc1.compute(ot).getValue(), fc3.compute(ot).getValue());
+      System.out.printf("TT: %s%n", tt);
       //System.out.println();
     }
   }
@@ -88,11 +91,11 @@ public class KLandscapes extends Problem<String, NumericFitness> {
     };
   }
   
-  private static double f(Node<String> tree, int k, Map<String, Double> v, Map<Pair<String, String>, Double> w) {
+  protected static double f(Node<String> tree, int k, Map<String, Double> v, Map<Pair<String, String>, Double> w) {
     return 1d/(1d+(double)Math.abs(k-tree.depth()))*maxFK(tree, k, v, w);
   }
   
-  private static double fK(Node<String> tree, int k, Map<String, Double> v, Map<Pair<String, String>, Double> w) {
+  protected static double fK(Node<String> tree, int k, Map<String, Double> v, Map<Pair<String, String>, Double> w) {
     if (k==0) {
       return v.get(tree.getContent());
     }
@@ -103,7 +106,7 @@ public class KLandscapes extends Problem<String, NumericFitness> {
     return sum;
   }
   
-  private static Node<String> optimum(int k, int nTerminals, int nNonTerminals, int arity, Map<String, Double> v, Map<Pair<String, String>, Double> w) {
+  protected static Node<String> optimum(int k, int nTerminals, int nNonTerminals, int arity, Map<String, Double> v, Map<Pair<String, String>, Double> w) {
     Node<String> optimum = null;
     double maxFitness = Double.NEGATIVE_INFINITY;
     for (int d = 1; d<=k+1; d++) {
@@ -137,7 +140,7 @@ public class KLandscapes extends Problem<String, NumericFitness> {
     return optimum;    
   }
   
-  private static Node<String> levelEqualTree(int[] indexes, int arity) {
+  protected static Node<String> levelEqualTree(int[] indexes, int arity) {
     if (indexes.length==1) {
       return new Node<>("t"+indexes[0]);
     }
@@ -148,7 +151,7 @@ public class KLandscapes extends Problem<String, NumericFitness> {
     return node;
   }
     
-  private static double maxFK(Node<String> tree, int k, Map<String, Double> v, Map<Pair<String, String>, Double> w) {
+  protected static double maxFK(Node<String> tree, int k, Map<String, Double> v, Map<Pair<String, String>, Double> w) {
     double max = fK(tree, k, v, w);
     for (Node<String> child : tree.getChildren()) {
       max = Math.max(max, maxFK(child, k, v, w));
@@ -159,8 +162,7 @@ public class KLandscapes extends Problem<String, NumericFitness> {
   private static Grammar<String> buildGrammar(int nTerminals, int nNonTerminals, int arity) {
     Grammar<String> grammar = new Grammar<>();
     grammar.setStartingSymbol("N");
-    grammar.getRules().put("N", l(l("n", "C"), l("t", "E")));
-    grammar.getRules().put("C", l(r(arity, "N")));
+    grammar.getRules().put("N", l(c(l("n"), r(arity, "N")), l("t")));
     List<List<String>> nonTerminalConstOptions = new ArrayList<>();
     for (int i = 0; i < nNonTerminals; i++) {
       nonTerminalConstOptions.add(l("n"+i));
@@ -178,6 +180,14 @@ public class KLandscapes extends Problem<String, NumericFitness> {
     return Arrays.asList(ts);
   }
 
+  private static <T> List<T> c(List<T>... tss) {
+    List<T> list = new ArrayList<>();
+    for (List<T> ts : tss) {
+      list.addAll(ts);
+    }
+    return list;
+  }
+
   private static <T> List<T> r(int n, T... ts) {
     List<T> list = new ArrayList<>(n*ts.length);
     for (int i = 0; i<n; i++) {
@@ -186,12 +196,16 @@ public class KLandscapes extends Problem<String, NumericFitness> {
     return list;
   }
 
-  private static Node<String> transform(Node<String> original) {
+  protected static Node<String> transform(Node<String> original) {
+    
+    
     Node<String> node = new Node<>(original.getChildren().get(0).getChildren().get(0).getContent());
-    if (original.getChildren().get(1).getContent().equals("C")) {
+    if (original.getChildren().size()>1) {
       //is a non terminal node
-      for (Node<String> orginalChild : original.getChildren().get(1).getChildren()) {
-        node.getChildren().add(transform(orginalChild));
+      for (Node<String> orginalChild : original.getChildren()) {
+        if (original.getContent().equals("N")) {
+          node.getChildren().add(transform(orginalChild));
+        }
       }
     }
     return node;
