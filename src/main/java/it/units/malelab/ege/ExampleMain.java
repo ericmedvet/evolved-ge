@@ -78,7 +78,7 @@ public class ExampleMain {
     //solveText();
     //solveTextCfgGp();
     //solveParityCfgGp();
-    new KLandscapes(3);
+    solveKLandscapesCfgGp();
   }
 
   private static void solveHarmonicCurve() throws IOException, InterruptedException, ExecutionException {
@@ -360,6 +360,44 @@ public class ExampleMain {
   private static void solveParityCfgGp() throws IOException, InterruptedException, ExecutionException {
     Random random = new Random(1l);
     Problem<String, NumericFitness> problem = new Parity(5);
+    int maxDepth = 16;
+    StandardConfiguration<Node<String>, String, NumericFitness> configuration = new StandardConfiguration<>(
+            500,
+            50,
+            new MultiInitializer<>(new Utils.MapBuilder<PopulationInitializer<Node<String>>, Double>()
+                    .put(new RandomInitializer<>(random, new GrowTreeFactory<>(maxDepth, problem.getGrammar())), 0.5)
+                    .put(new RandomInitializer<>(random, new FullTreeFactory<>(maxDepth, problem.getGrammar())), 0.5)
+                    .build()
+            ),
+            new Any<Node<String>>(),
+            new CfgGpMapper<String>(),
+            new Utils.MapBuilder<GeneticOperator<Node<String>>, Double>()
+                    .put(new StandardTreeCrossover<String>(maxDepth, random), 0.8d)
+                    .put(new StandardTreeMutation<>(maxDepth, problem.getGrammar(), random), 0.2d)
+                    .build(),
+            new ComparableRanker<>(new IndividualComparator<Node<String>, String, NumericFitness>(IndividualComparator.Attribute.FITNESS)),
+            new Tournament<Individual<Node<String>, String, NumericFitness>>(3, random),
+            new LastWorst<Individual<Node<String>, String, NumericFitness>>(),
+            500,
+            true,
+            problem);
+    List<EvolverListener<Node<String>, String, NumericFitness>> listeners = new ArrayList<>();
+    listeners.add(new CollectorGenerationLogger<>(
+            Collections.EMPTY_MAP, System.out, true, 10, " ", " | ",
+            new Population<BitsGenotype, String, NumericFitness>(),
+            new NumericFirstBest<BitsGenotype, String>(false, problem.getTestingFitnessComputer(), "%6.2f"),
+            new Diversity<BitsGenotype, String, NumericFitness>(),
+            new BestPrinter<BitsGenotype, String, NumericFitness>(problem.getPhenotypePrinter(), "%30.30s")
+    ));
+    Evolver<Node<String>, String, NumericFitness> evolver = new StandardEvolver<>(
+            1, configuration, random, false);
+    List<Node<String>> bests = evolver.solve(listeners);
+    System.out.printf("Found %d solutions.%n", bests.size());
+  }
+
+  private static void solveKLandscapesCfgGp() throws IOException, InterruptedException, ExecutionException {
+    Random random = new Random(1l);
+    Problem<String, NumericFitness> problem = new KLandscapes(8);
     int maxDepth = 16;
     StandardConfiguration<Node<String>, String, NumericFitness> configuration = new StandardConfiguration<>(
             500,
