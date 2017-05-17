@@ -8,6 +8,7 @@ package it.units.malelab.ege.benchmark.booleanfunction;
 import it.units.malelab.ege.cfggp.initializer.GrowTreeFactory;
 import it.units.malelab.ege.core.Grammar;
 import it.units.malelab.ege.core.Node;
+import it.units.malelab.ege.core.PhenotypePrinter;
 import it.units.malelab.ege.core.Problem;
 import it.units.malelab.ege.core.fitness.NumericFitness;
 import it.units.malelab.ege.util.Utils;
@@ -34,12 +35,27 @@ public class MultipleOutputParallelMultiplier extends Problem<String, NumericFit
     System.out.println(mopm.getLearningFitnessComputer().compute(t));
   }
 
-  public MultipleOutputParallelMultiplier(int size) throws IOException {
+  public MultipleOutputParallelMultiplier(final int size) throws IOException {
     super(
             buildGrammar(size),
             new MOPMErrors(size),
             null,
-            BooleanUtils.phenotypePrinter()
+            new PhenotypePrinter<String>() {
+              @Override
+              public String toString(Node<String> node) {
+                if (Node.EMPTY_TREE.equals(node)) {
+                  return null;
+                }
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i<size; i++) {
+                  if (i>0) {
+                    sb.append(":");                    
+                  }
+                  sb.append(BooleanUtils.transform(node.getChildren().get(i)));
+                }
+                return sb.toString();
+              }
+            }
     );
   }
 

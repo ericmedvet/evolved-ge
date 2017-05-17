@@ -96,7 +96,7 @@ public class BooleanUtils {
     if (string.equals("1")) {
       return new Constant(true);
     }
-    if (string.matches("[a-zA-Z]\\w*")) {
+    if (string.matches("[a-zA-Z]+[0-9.]+")) {
       return new Variable(string);
     }
     return new Decoration(string);
