@@ -5,7 +5,6 @@
  */
 package it.units.malelab.ege.benchmark.booleanfunction;
 
-import it.units.malelab.ege.benchmark.fitness.ParityErrors;
 import it.units.malelab.ege.core.Grammar;
 import it.units.malelab.ege.core.Problem;
 import it.units.malelab.ege.core.fitness.NumericFitness;

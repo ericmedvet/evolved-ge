@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.benchmark.fitness;
+package it.units.malelab.ege.benchmark.booleanfunction;
 
 import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.core.fitness.FitnessComputer;
@@ -19,8 +19,8 @@ public class ParityErrors implements FitnessComputer<String, NumericFitness> {
   
   private final int size;
   
-  private Map<String, boolean[]> cases;
-  private boolean[] expectedResult;
+  private final Map<String, boolean[]> cases;
+  private final boolean[] expectedResult;
 
   public ParityErrors(int size) {
     this.size = size;

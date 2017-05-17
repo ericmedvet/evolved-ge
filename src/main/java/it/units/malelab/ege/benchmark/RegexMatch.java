@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.benchmark.fitness;
+package it.units.malelab.ege.benchmark;
 
 import it.units.malelab.ege.core.fitness.BinaryClassification;
 import it.units.malelab.ege.core.Node;

@@ -1,5 +1,6 @@
-package it.units.malelab.ege.benchmark.fitness;
+package it.units.malelab.ege.benchmark.pathfinding;
 
+import it.units.malelab.ege.benchmark.pathfinding.Trail;
 import it.units.malelab.ege.core.fitness.FitnessComputer;
 import it.units.malelab.ege.core.fitness.NumericFitness;
 import it.units.malelab.ege.core.Node;

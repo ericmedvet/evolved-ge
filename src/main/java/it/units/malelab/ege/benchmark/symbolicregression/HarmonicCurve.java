@@ -5,7 +5,6 @@
  */
 package it.units.malelab.ege.benchmark.symbolicregression;
 
-import it.units.malelab.ege.benchmark.fitness.SymbolicRegression;
 import it.units.malelab.ege.core.Problem;
 import it.units.malelab.ege.core.fitness.NumericFitness;
 import it.units.malelab.ege.util.Utils;
@@ -19,6 +18,8 @@ import java.util.LinkedHashMap;
  * @author eric
  */
 public class HarmonicCurve extends Problem<String, NumericFitness> {
+  
+  //AKA Keijzer-6
 
   private final static SymbolicRegression.TargetFunction TARGET_FUNCTION = new SymbolicRegression.TargetFunction() {
     @Override

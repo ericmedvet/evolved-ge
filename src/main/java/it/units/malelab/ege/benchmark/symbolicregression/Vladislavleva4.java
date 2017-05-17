@@ -5,7 +5,6 @@
  */
 package it.units.malelab.ege.benchmark.symbolicregression;
 
-import it.units.malelab.ege.benchmark.fitness.SymbolicRegression;
 import it.units.malelab.ege.core.Problem;
 import it.units.malelab.ege.core.fitness.NumericFitness;
 import it.units.malelab.ege.util.Utils;

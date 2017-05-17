@@ -12,7 +12,9 @@ package it.units.malelab.ege.util.booleanfunction;
 public enum Operator implements Element {
   
   AND(".and"),
+  AND1NOT(".and1not"),
   OR(".or"),
+  XOR(".xor"),
   NOT(".not"),
   IF(".if");
   

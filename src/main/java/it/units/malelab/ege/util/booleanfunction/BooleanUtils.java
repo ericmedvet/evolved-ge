@@ -16,48 +16,56 @@ import java.util.Map;
  * @author eric
  */
 public class BooleanUtils {
-  
+
   public static boolean[] compute(Node<Element> node, Map<String, boolean[]> values, int length) {
     if (node.getContent() instanceof Decoration) {
       return null;
     }
     if (node.getContent() instanceof Variable) {
       boolean[] result = values.get(node.getContent().toString());
-      if (result==null) {
+      if (result == null) {
         throw new RuntimeException(String.format("Undefined variable: %s", node.getContent().toString()));
       }
       return result;
     }
     boolean[] result = new boolean[length];
     if (node.getContent() instanceof Constant) {
-      Arrays.fill(result, ((Constant)node.getContent()).getValue());
+      Arrays.fill(result, ((Constant) node.getContent()).getValue());
       return result;
     }
     boolean[][] childrenValues = new boolean[node.getChildren().size()][];
     int i = 0;
     for (Node<Element> child : node.getChildren()) {
       boolean[] childValues = compute(child, values, length);
-      if (childValues!=null) {
+      if (childValues != null) {
         childrenValues[i] = childValues;
-        i = i+1;
+        i = i + 1;
       }
     }
-    for (int j = 0; j<result.length; j++) {
+    for (int j = 0; j < result.length; j++) {
       boolean[] operands = new boolean[childrenValues.length];
-      for (int k = 0; k<operands.length; k++) {
+      for (int k = 0; k < operands.length; k++) {
         operands[k] = childrenValues[k][j];
       }
-      result[j] = compute((Operator)node.getContent(), operands);
+      result[j] = compute((Operator) node.getContent(), operands);
     }
     return result;
   }
-  
+
   private static boolean compute(Operator operator, boolean... operands) {
-    switch(operator) {
-      case AND: return operands[0]&&operands[1];
-      case OR: return operands[0]||operands[1];
-      case NOT: return !operands[0];
-      case IF: return operands[0]?operands[1]:operands[2];
+    switch (operator) {
+      case AND:
+        return operands[0] && operands[1];
+      case AND1NOT:
+        return (!operands[0]) && operands[1];
+      case OR:
+        return operands[0] || operands[1];
+      case XOR:
+        return operands[0] ^ operands[1];
+      case NOT:
+        return !operands[0];
+      case IF:
+        return operands[0] ? operands[1] : operands[2];
     }
     return false;
   }
@@ -66,16 +74,16 @@ public class BooleanUtils {
     if (stringNode.getChildren().isEmpty()) {
       return new Node<>(fromString(stringNode.getContent()));
     }
-    if (stringNode.getChildren().size()==1) {
+    if (stringNode.getChildren().size() == 1) {
       return transform(stringNode.getChildren().get(0));
     }
     Node<Element> node = transform(stringNode.getChildren().get(0));
-    for (int i = 1; i<stringNode.getChildren().size(); i++) {
+    for (int i = 1; i < stringNode.getChildren().size(); i++) {
       node.getChildren().add(transform(stringNode.getChildren().get(i)));
     }
     return node;
   }
-  
+
   private static Element fromString(String string) {
     for (Operator operator : Operator.values()) {
       if (operator.toString().equals(string)) {
@@ -93,7 +101,7 @@ public class BooleanUtils {
     }
     return new Decoration(string);
   }
-    
+
   public static PhenotypePrinter<String> phenotypePrinter() {
     return new PhenotypePrinter<String>() {
       @Override
@@ -105,18 +113,26 @@ public class BooleanUtils {
       }
     };
   }
-  
+
   public static Map<String, boolean[]> buildCompleteCases(String... names) {
     Map<String, boolean[]> map = new LinkedHashMap<>();
     for (String name : names) {
-      map.put(name, new boolean[(int)Math.pow(2, names.length)]);
+      map.put(name, new boolean[(int) Math.pow(2, names.length)]);
     }
-    for (int i = 0; i<Math.pow(2, names.length); i++) {
-      for (int j = 0; j<names.length; j++) {
-        map.get(names[j])[i] = (i&(int)Math.pow(2, j))>0;
+    for (int i = 0; i < Math.pow(2, names.length); i++) {
+      for (int j = 0; j < names.length; j++) {
+        map.get(names[j])[i] = (i & (int) Math.pow(2, j)) > 0;
       }
     }
     return map;
   }
-  
+
+  public static boolean[] toBinary(int input, int size) {
+    boolean[] bits = new boolean[size];
+    for (int i = size-1; i >= 0; i--) {
+      bits[i] = (input & (1 << i)) != 0;
+    }
+    return bits;
+  }
+
 }

@@ -5,7 +5,6 @@
  */
 package it.units.malelab.ege.benchmark;
 
-import it.units.malelab.ege.benchmark.fitness.RegexMatch;
 import it.units.malelab.ege.core.LeavesJoiner;
 import it.units.malelab.ege.core.Problem;
 import it.units.malelab.ege.core.fitness.BinaryClassification;
