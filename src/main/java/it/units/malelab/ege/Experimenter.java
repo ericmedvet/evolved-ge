@@ -219,18 +219,9 @@ public class Experimenter {
                     problem);
             evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
           }
-          //prepare listeners
-          List<EvolverListener<?, String, NumericFitness>> listeners = new ArrayList<>();
-          listeners.add(new CollectorGenerationLogger<>(
-                  Collections.EMPTY_MAP, System.out, true, 10, " ", " | ",
-                  new Population<BitsGenotype, String, NumericFitness>(),
-                  new NumericFirstBest<BitsGenotype, String>(false, problem.getTestingFitnessComputer(), "%6.2f"),
-                  new Diversity<BitsGenotype, String, NumericFitness>(),
-                  new BestPrinter<BitsGenotype, String, NumericFitness>(problem.getPhenotypePrinter(), "%30.30s")
-          ));
           //go
-          List<Node<String>> bests = evolver.solve(listeners);
-          System.out.printf("Found %d solutions.%n", bests.size());
+          //List<Node<String>> bests = evolver.solve(listeners);
+          //System.out.printf("Found %d solutions.%n", bests.size());
         }
       }
     }
