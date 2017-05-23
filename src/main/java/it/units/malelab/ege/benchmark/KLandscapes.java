@@ -42,10 +42,10 @@ public class KLandscapes extends Problem<String, NumericFitness> {
             getFitnessComputer(k, nTerminals, nNonTerminals, arity, vRange, wRange),
             null,
             new PhenotypePrinter<String>() {
-              @Override
-              public String toString(Node<String> node) {
-                return transform(node).toString();
-              }
+      @Override
+      public String toString(Node<String> node) {
+        return transform(node).toString();
+      }
     });
   }
 
@@ -187,6 +187,9 @@ public class KLandscapes extends Problem<String, NumericFitness> {
   }
 
   protected static Node<String> transform(Node<String> original) {
+    if (Node.EMPTY_TREE.equals(original)) {
+      return Node.EMPTY_TREE;
+    }
     Node<String> node = new Node<>(original.getChildren().get(0).getChildren().get(0).getContent());
     if (original.getChildren().size() > 1) {
       //is a non terminal node
