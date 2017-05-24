@@ -42,6 +42,8 @@ import java.util.concurrent.TimeUnit;
 public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F> {
 
   protected static final int CACHE_SIZE = 10000;
+  public final static String MAPPING_CACHE_NAME = "mapping";
+  public final static String FITNESS_CACHE_NAME = "fitness";
 
   private final StandardConfiguration<G, T, F> configuration;
   protected final ExecutorService executor;
@@ -62,8 +64,8 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
 
   @Override
   public List<Node<T>> solve(List<EvolverListener<G, T, F>> listeners) throws InterruptedException, ExecutionException {
-    LoadingCache<G, Pair<Node<T>, Map<String, Object>>> mappingCache = CacheBuilder.newBuilder().maximumSize(CACHE_SIZE).build(getMappingCacheLoader());
-    LoadingCache<Node<T>, F> fitnessCache = CacheBuilder.newBuilder().maximumSize(CACHE_SIZE).build(getFitnessCacheLoader());
+    LoadingCache<G, Pair<Node<T>, Map<String, Object>>> mappingCache = CacheBuilder.newBuilder().maximumSize(CACHE_SIZE).recordStats().build(getMappingCacheLoader());
+    LoadingCache<Node<T>, F> fitnessCache = CacheBuilder.newBuilder().maximumSize(CACHE_SIZE).recordStats().build(getFitnessCacheLoader());
     //initialize population
     int births = 0;
     List<Callable<List<Individual<G, T, F>>>> tasks = new ArrayList<>();
@@ -73,8 +75,8 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
     }
     List<Individual<G, T, F>> population = new ArrayList<>(Utils.getAll(executor.invokeAll(tasks)));
     int lastBroadcastGeneration = (int) Math.floor(births / configuration.getPopulationSize());
-    Utils.broadcast(new EvolutionStartEvent<>(this, null), listeners);
-    Utils.broadcast(new GenerationEvent<>(configuration.getRanker().rank(population), lastBroadcastGeneration, this, null), listeners);
+    Utils.broadcast(new EvolutionStartEvent<>(this, cacheStats(mappingCache, fitnessCache)), listeners);
+    Utils.broadcast(new GenerationEvent<>(configuration.getRanker().rank(population), lastBroadcastGeneration, this, cacheStats(mappingCache, fitnessCache)), listeners);
     //iterate
     while (Math.round(births / configuration.getPopulationSize()) < configuration.getNumberOfGenerations()) {
       int currentGeneration = (int) Math.floor(births / configuration.getPopulationSize());
@@ -119,14 +121,14 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
       }
       if ((int) Math.floor(births / configuration.getPopulationSize()) > lastBroadcastGeneration) {
         lastBroadcastGeneration = (int) Math.floor(births / configuration.getPopulationSize());
-        Utils.broadcast(new GenerationEvent<>((List) rankedPopulation, lastBroadcastGeneration, this, null), listeners);
+        Utils.broadcast(new GenerationEvent<>((List) rankedPopulation, lastBroadcastGeneration, this, cacheStats(mappingCache, fitnessCache)), listeners);
       }
     }
     //end
     executor.shutdown();
     List<Node<T>> bestPhenotypes = new ArrayList<>();
     List<List<Individual<G, T, F>>> rankedPopulation = configuration.getRanker().rank(population);
-    Utils.broadcast(new EvolutionEndEvent<>((List) rankedPopulation, configuration.getNumberOfGenerations(), this, null), listeners);
+    Utils.broadcast(new EvolutionEndEvent<>((List) rankedPopulation, configuration.getNumberOfGenerations(), this, cacheStats(mappingCache, fitnessCache)), listeners);
     for (Individual<G, T, F> individual : rankedPopulation.get(0)) {
       bestPhenotypes.add(individual.getPhenotype());
     }
@@ -186,6 +188,13 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
         return Collections.singletonList(individual);
       }
     };
+  }
+  
+  protected Map<String, Object> cacheStats(LoadingCache mappingCache, LoadingCache fitnessCache) {
+    Map<String, Object> map = new LinkedHashMap<>();
+    map.put(MAPPING_CACHE_NAME, mappingCache.stats());
+    map.put(FITNESS_CACHE_NAME, fitnessCache.stats());
+    return map;
   }
 
   protected Callable<List<Individual<G, T, F>>> operatorApplicationCallable(

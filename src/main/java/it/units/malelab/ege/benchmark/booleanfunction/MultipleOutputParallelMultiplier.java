@@ -5,7 +5,6 @@
  */
 package it.units.malelab.ege.benchmark.booleanfunction;
 
-import it.units.malelab.ege.cfggp.initializer.GrowTreeFactory;
 import it.units.malelab.ege.core.Grammar;
 import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.core.PhenotypePrinter;
@@ -18,22 +17,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 
 /**
  *
  * @author eric
  */
 public class MultipleOutputParallelMultiplier extends Problem<String, NumericFitness> {
-
-  public static void main(String[] args) throws IOException {
-    MultipleOutputParallelMultiplier mopm = new MultipleOutputParallelMultiplier(2);
-    Grammar<String> g = mopm.getGrammar();
-    System.out.println(g);
-    Node<String> t = (new GrowTreeFactory<String>(16, g)).build(new Random(1l));
-    System.out.println(t);
-    System.out.println(mopm.getLearningFitnessComputer().compute(t));
-  }
 
   public MultipleOutputParallelMultiplier(final int size) throws IOException {
     super(

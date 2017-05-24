@@ -7,9 +7,11 @@ package it.units.malelab.ege.ge.listener.collector;
 
 import it.units.malelab.ege.core.Individual;
 import it.units.malelab.ege.core.fitness.Fitness;
-import it.units.malelab.ege.core.listener.collector.PopulationInfoCollector;
+import it.units.malelab.ege.core.listener.collector.Collector;
+import it.units.malelab.ege.core.listener.event.GenerationEvent;
 import it.units.malelab.ege.ge.genotype.BitsGenotype;
 import it.units.malelab.ege.ge.mapper.MultiMapper;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +20,7 @@ import java.util.Map;
  *
  * @author eric
  */
-public class MultiMapperInfo<G extends BitsGenotype, T, F extends Fitness> implements PopulationInfoCollector<G, T, F> {
+public class MultiMapperInfo<G extends BitsGenotype, T, F extends Fitness> implements Collector<G, T, F> {
 
   private final int mappers;
 
@@ -27,7 +29,8 @@ public class MultiMapperInfo<G extends BitsGenotype, T, F extends Fitness> imple
   }
 
   @Override
-  public Map<String, Object> collect(List<List<Individual<G, T, F>>> rankedPopulation) {
+  public Map<String, Object> collect(GenerationEvent<G, T, F> event) {
+    List<List<Individual<G, T, F>>> rankedPopulation = new ArrayList<>(event.getRankedPopulation());
     Individual<G, T, F> best = rankedPopulation.get(0).get(0);
     Map<String, Object> indexes = new LinkedHashMap<>();
     int[] counts = new int[mappers];

@@ -5,18 +5,17 @@
  */
 package it.units.malelab.ege.core.listener.collector;
 
-import it.units.malelab.ege.core.Individual;
 import it.units.malelab.ege.core.fitness.Fitness;
-import java.util.List;
+import it.units.malelab.ege.core.listener.event.GenerationEvent;
 import java.util.Map;
 
 /**
  *
  * @author eric
  */
-public interface PopulationInfoCollector<G, T, F extends Fitness> {
+public interface Collector<G, T, F extends Fitness> {
   
   public Map<String, String> getFormattedNames();
-  public Map<String, Object> collect(List<List<Individual<G, T, F>>> rankedPopulation);
+  public Map<String, Object> collect(GenerationEvent<G, T, F> generationEvent);  
   
 }

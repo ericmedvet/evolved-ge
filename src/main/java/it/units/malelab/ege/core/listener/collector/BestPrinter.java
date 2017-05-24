@@ -8,6 +8,8 @@ package it.units.malelab.ege.core.listener.collector;
 import it.units.malelab.ege.core.Individual;
 import it.units.malelab.ege.core.PhenotypePrinter;
 import it.units.malelab.ege.core.fitness.Fitness;
+import it.units.malelab.ege.core.listener.event.GenerationEvent;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +18,7 @@ import java.util.Map;
  *
  * @author eric
  */
-public class BestPrinter<G, T, F extends Fitness> implements PopulationInfoCollector<G, T, F>{
+public class BestPrinter<G, T, F extends Fitness> implements Collector<G, T, F>{
   
   private final PhenotypePrinter<T> phenotypePrinter;
   private final String format;
@@ -27,7 +29,8 @@ public class BestPrinter<G, T, F extends Fitness> implements PopulationInfoColle
   }
   
   @Override
-  public Map<String, Object> collect(List<List<Individual<G, T, F>>> rankedPopulation) {
+  public Map<String, Object> collect(GenerationEvent<G, T, F> event) {
+    List<List<Individual<G, T, F>>> rankedPopulation = new ArrayList<>(event.getRankedPopulation());
     Individual<G, T, F> best = rankedPopulation.get(0).get(0);
     return (Map)Collections.singletonMap("best.phenotype", phenotypePrinter.toString(best.getPhenotype()));
   }  

@@ -9,6 +9,8 @@ import it.units.malelab.ege.core.Individual;
 import it.units.malelab.ege.core.Sequence;
 import it.units.malelab.ege.core.fitness.Fitness;
 import it.units.malelab.ege.core.fitness.FitnessComputer;
+import it.units.malelab.ege.core.listener.event.GenerationEvent;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,7 +19,7 @@ import java.util.Map;
  *
  * @author eric
  */
-public abstract class Best<G extends Sequence, T, F extends Fitness> implements PopulationInfoCollector<G, T, F>{
+public abstract class Best<G extends Sequence, T, F extends Fitness> implements Collector<G, T, F>{
   
   private final boolean ancestry;
   private final FitnessComputer<T, F> validationFitnessComputer;
@@ -28,7 +30,8 @@ public abstract class Best<G extends Sequence, T, F extends Fitness> implements 
   }
   
   @Override
-  public Map<String, Object> collect(List<List<Individual<G, T, F>>> rankedPopulation) {
+  public Map<String, Object> collect(GenerationEvent<G, T, F> event) {
+    List<List<Individual<G, T, F>>> rankedPopulation = new ArrayList<>(event.getRankedPopulation());
     Individual<G, T, F> best = rankedPopulation.get(0).get(0);
     Map<String, Object> indexes = new LinkedHashMap<>();
     for (Map.Entry<String, Object> fitnessEntry : getFitnessIndexes(best.getFitness()).entrySet()) {

@@ -8,6 +8,8 @@ package it.units.malelab.ege.core.listener.collector;
 import it.units.malelab.ege.core.Individual;
 import it.units.malelab.ege.core.fitness.Fitness;
 import it.units.malelab.ege.core.Node;
+import it.units.malelab.ege.core.listener.event.GenerationEvent;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,10 +20,11 @@ import java.util.Set;
  *
  * @author eric
  */
-public class Diversity<G, T, F extends Fitness> implements PopulationInfoCollector<G, T, F> {
+public class Diversity<G, T, F extends Fitness> implements Collector<G, T, F> {
 
   @Override
-  public Map<String, Object> collect(List<List<Individual<G, T, F>>> rankedPopulation) {
+  public Map<String, Object> collect(GenerationEvent<G, T, F> event) {
+    List<List<Individual<G, T, F>>> rankedPopulation = new ArrayList<>(event.getRankedPopulation());
     Set<G> genotypes = new HashSet<>();
     Set<Node<T>> phenotypes = new HashSet<>();
     Set<F> fitnesses = new HashSet<>();

@@ -5,9 +5,8 @@
  */
 package it.units.malelab.ege.core.listener;
 
-import it.units.malelab.ege.core.Individual;
 import it.units.malelab.ege.core.fitness.Fitness;
-import it.units.malelab.ege.core.listener.collector.PopulationInfoCollector;
+import it.units.malelab.ege.core.listener.collector.Collector;
 import it.units.malelab.ege.core.listener.event.EvolutionEvent;
 import it.units.malelab.ege.core.listener.event.GenerationEvent;
 import java.io.PrintStream;
@@ -31,7 +30,7 @@ public class CollectorGenerationLogger<G, T, F extends Fitness> extends Abstract
   private final int headerInterval;
   private final String innerSeparator;
   private final String outerSeparator;
-  private final List<PopulationInfoCollector<G, T, F>> collectors;
+  private final List<Collector<G, T, F>> collectors;
 
   private final List<Map<String, String>> formattedNames;
   private int lines;
@@ -43,7 +42,7 @@ public class CollectorGenerationLogger<G, T, F extends Fitness> extends Abstract
           int headerInterval,
           String innerSeparator,
           String outerSeparator,
-          PopulationInfoCollector<G, T, F>... collectors) {
+          Collector<G, T, F>... collectors) {
     super((Class) GenerationEvent.class);
     this.constants = new LinkedHashMap<>(constants);
     this.ps = ps;
@@ -53,7 +52,7 @@ public class CollectorGenerationLogger<G, T, F extends Fitness> extends Abstract
     this.outerSeparator = outerSeparator;
     this.collectors = Arrays.asList(collectors);
     formattedNames = new ArrayList<>(this.collectors.size());
-    for (PopulationInfoCollector<G, T, F> collector : collectors) {
+    for (Collector<G, T, F> collector : collectors) {
       Map<String, String> localFormattedNames = new LinkedHashMap<>();
       for (String name : collector.getFormattedNames().keySet()) {
         localFormattedNames.put(name, formatName(name, collector.getFormattedNames().get(name)));
@@ -66,7 +65,6 @@ public class CollectorGenerationLogger<G, T, F extends Fitness> extends Abstract
   @Override
   public void listen(EvolutionEvent<G, T, F> event) {
     int generation = ((GenerationEvent) event).getGeneration();
-    List<List<Individual<G, T, F>>> rankedPopulation = new ArrayList<>(((GenerationEvent) event).getRankedPopulation());
     if ((headerInterval == 0 && lines == 0) || ((headerInterval > 0) && ((generation - 1) % headerInterval == 0))) {
       //print header: generation
       ps.print(format ? "gen" : "generation");
@@ -99,10 +97,10 @@ public class CollectorGenerationLogger<G, T, F extends Fitness> extends Abstract
       }
       ps.println();
     }
-    //print header: generation
+    //print values: generation
     ps.print(format ? String.format("%3d", generation) : generation);
     ps.print(outerSeparator);
-    //print header: constants
+    //print values: constants
     int k = 0;
     for (String name : constants.keySet()) {
       ps.print(pad(constants.get(name).toString(), name.length()));
@@ -114,10 +112,10 @@ public class CollectorGenerationLogger<G, T, F extends Fitness> extends Abstract
     if (k > 0) {
       ps.print(outerSeparator);
     }
-    //print header: collectors
+    //print values: collectors
     for (int i = 0; i < formattedNames.size(); i++) {
       int j = 0;
-      Map<String, Object> values = collectors.get(i).collect(rankedPopulation);
+      Map<String, Object> values = collectors.get(i).collect((GenerationEvent)event);
       for (String name : formattedNames.get(i).keySet()) {
         if (format) {
           String value = String.format(collectors.get(i).getFormattedNames().get(name), values.get(name));

@@ -58,8 +58,8 @@ public class PartitionEvolver<G, T, F extends Fitness> extends StandardEvolver<G
     //trim partitions
     trimPartitions(partitionedPopulation);
     int lastBroadcastGeneration = (int) Math.floor(births / configuration.getPopulationSize());
-    Utils.broadcast(new EvolutionStartEvent<>(this, null), (List) listeners);
-    Utils.broadcast(new GenerationEvent<>(configuration.getRanker().rank(all(partitionedPopulation)), lastBroadcastGeneration, this, null), (List) listeners);
+    Utils.broadcast(new EvolutionStartEvent<>(this, cacheStats(mappingCache, fitnessCache)), (List) listeners);
+    Utils.broadcast(new GenerationEvent<>(configuration.getRanker().rank(all(partitionedPopulation)), lastBroadcastGeneration, this, cacheStats(mappingCache, fitnessCache)), (List) listeners);
     //iterate
     while (Math.round(births / configuration.getPopulationSize()) < configuration.getNumberOfGenerations()) {
       int currentGeneration = (int) Math.floor(births / configuration.getPopulationSize());
@@ -130,11 +130,11 @@ public class PartitionEvolver<G, T, F extends Fitness> extends StandardEvolver<G
       trimPartitions(partitionedPopulation);
       if ((int) Math.floor(births / configuration.getPopulationSize()) > lastBroadcastGeneration) {
         lastBroadcastGeneration = (int) Math.floor(births / configuration.getPopulationSize());
-        Utils.broadcast(new GenerationEvent<>(configuration.getRanker().rank(all(partitionedPopulation)), lastBroadcastGeneration, this, null), (List) listeners);
+        Utils.broadcast(new GenerationEvent<>(configuration.getRanker().rank(all(partitionedPopulation)), lastBroadcastGeneration, this, cacheStats(mappingCache, fitnessCache)), (List) listeners);
       }
     }
     //end
-    Utils.broadcast(new EvolutionEndEvent<>(configuration.getRanker().rank(all(partitionedPopulation)), configuration.getNumberOfGenerations(), this, null), (List) listeners);
+    Utils.broadcast(new EvolutionEndEvent<>(configuration.getRanker().rank(all(partitionedPopulation)), configuration.getNumberOfGenerations(), this, cacheStats(mappingCache, fitnessCache)), (List) listeners);
     executor.shutdown();
     List<Node<T>> bestPhenotypes = new ArrayList<>();
     List<List<Individual<G, T, F>>> rankedPopulation = configuration.getRanker().rank(all(partitionedPopulation));

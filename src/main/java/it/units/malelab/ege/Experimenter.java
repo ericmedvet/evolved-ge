@@ -31,8 +31,8 @@ import it.units.malelab.ege.core.initializer.PopulationInitializer;
 import it.units.malelab.ege.core.initializer.RandomInitializer;
 import it.units.malelab.ege.core.listener.CollectorGenerationLogger;
 import it.units.malelab.ege.core.listener.EvolverListener;
-import it.units.malelab.ege.core.listener.WithConstants;
 import it.units.malelab.ege.core.listener.collector.BestPrinter;
+import it.units.malelab.ege.core.listener.collector.CacheStatistics;
 import it.units.malelab.ege.core.listener.collector.Diversity;
 import it.units.malelab.ege.core.listener.collector.NumericFirstBest;
 import it.units.malelab.ege.core.listener.collector.Population;
@@ -60,7 +60,6 @@ import it.units.malelab.ege.util.Utils;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -87,7 +86,7 @@ public class Experimenter {
             "sr-keijzer6", "sr-nguyen7", "sr-pagie1", "sr-vladislavleva4",
             "other-klandscapes3", "other-klandscapes7", "other-text"
     );
-    List<String> methods = Lists.newArrayList("ge-8", "pige-16", "sge-6", "hge", "whge-3", "cfggp-16");
+    List<String> methods = Lists.newArrayList("ge-8", "pige-16", "sge-6", "hge", "whge-3", "cfggp-12");
     PrintStream filePrintStream = null;
     if (args.length > 0) {
       filePrintStream = new PrintStream(args[0]);
@@ -204,8 +203,8 @@ public class Experimenter {
                       true,
                       problem);
               evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
-            } else if (methodName.equals("cfggp-16")) {
-              int maxDepth = 16;
+            } else if (methodName.equals("cfggp-12")) {
+              int maxDepth = 12;
               StandardConfiguration<Node<String>, String, NumericFitness> configuration = new StandardConfiguration<>(
                       populationSize, generations,
                       new MultiInitializer<>(new Utils.MapBuilder<PopulationInitializer<Node<String>>, Double>()
@@ -234,14 +233,16 @@ public class Experimenter {
                     new Population(),
                     new NumericFirstBest(false, problem.getTestingFitnessComputer(), "%6.2f"),
                     new Diversity(),
-                    new BestPrinter(problem.getPhenotypePrinter(), "%30.30s")
+                    new BestPrinter(problem.getPhenotypePrinter(), "%30.30s"),
+                    new CacheStatistics()
             ));
             if (filePrintStream != null) {
               listeners.add(new CollectorGenerationLogger<>(
                       constants, filePrintStream, false, header ? 0 : -1, ";", ";",
                       new Population(),
                       new NumericFirstBest(false, problem.getTestingFitnessComputer(), "%6.2f"),
-                      new Diversity()
+                      new Diversity(),
+                      new CacheStatistics()
               ));
             }
             evolver.solve(listeners);
