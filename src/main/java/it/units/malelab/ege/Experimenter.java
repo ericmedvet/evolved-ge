@@ -79,7 +79,7 @@ public class Experimenter {
     final int genotypeSize = 1024;
     final int populationSize = 500;
     final int generations = 50;
-    final int runs = 5;
+    final int runs = 30;
     //prepare problems and methods
     List<String> problems = Lists.newArrayList(
             "bool-parity5", "bool-mopm3",

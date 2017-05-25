@@ -67,13 +67,11 @@ public abstract class Best<G extends Sequence, T, F extends Fitness> implements 
               augmentFitnessName("best.fitness", fitnessEntry.getKey()),
               fitnessEntry.getValue());
     }
-    if (validationFitnessComputer!=null) {
-      for (Map.Entry<String, String> fitnessEntry : getFitnessFormattedNames().entrySet()) {
-        formattedNames.put(
-                augmentFitnessName("best.validation.fitness", fitnessEntry.getKey()),
-                fitnessEntry.getValue());
-      }      
-    }
+    for (Map.Entry<String, String> fitnessEntry : getFitnessFormattedNames().entrySet()) {
+      formattedNames.put(
+              augmentFitnessName("best.validation.fitness", fitnessEntry.getKey()),
+              fitnessEntry.getValue());
+    }      
     formattedNames.put("best.genotype.length", "%4d");
     formattedNames.put("best.phenotype.length", "%3d");
     formattedNames.put("best.phenotype.size", "%3d");
