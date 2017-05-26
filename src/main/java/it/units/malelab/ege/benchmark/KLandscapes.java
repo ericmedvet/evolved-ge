@@ -80,7 +80,7 @@ public class KLandscapes extends Problem<String, NumericFitness> {
 
       @Override
       public NumericFitness worstValue() {
-        return new NumericFitness(0);
+        return new NumericFitness(Double.POSITIVE_INFINITY);
       }
     };
   }

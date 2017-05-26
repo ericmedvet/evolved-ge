@@ -87,6 +87,8 @@ public class Experimenter {
             "other-klandscapes3", "other-klandscapes7", "other-text"
     );
     List<String> methods = Lists.newArrayList("ge-8", "pige-16", "sge-6", "hge", "whge-3", "cfggp-12");
+    problems = Lists.newArrayList("other-klandscapes3", "other-klandscapes7");
+    methods = Lists.newArrayList("ge-8", "pige-16");
     PrintStream filePrintStream = null;
     if (args.length > 0) {
       filePrintStream = new PrintStream(args[0]);
