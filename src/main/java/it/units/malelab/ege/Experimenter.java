@@ -87,8 +87,11 @@ public class Experimenter {
             "other-klandscapes3", "other-klandscapes7", "other-text"
     );
     List<String> methods = Lists.newArrayList("ge-8", "pige-16", "sge-6", "hge", "whge-3", "cfggp-12");
-    problems = Lists.newArrayList("other-klandscapes3", "other-klandscapes7");
-    methods = Lists.newArrayList("ge-8", "pige-16");
+    methods = Lists.newArrayList(
+            "whge-1", "whge-2", "whge-4", "whge-5", "whge-6", "whge-7",
+            "sge-3", "sge-4", "sge-5", "sge-7", "sge-8", "sge-9",
+            "cfggp-4", "cfggp-6", "cfggp-8", "cfggp-10", "cfggp-14", "cfggp-16"
+    );
     PrintStream filePrintStream = null;
     if (args.length > 0) {
       filePrintStream = new PrintStream(args[0]);
@@ -129,12 +132,13 @@ public class Experimenter {
             }
             //build configuration and evolver
             Evolver evolver = null;
-            if (methodName.equals("ge-8")) {
+            if (methodName.startsWith("ge-")) {
+              int codonSize = Integer.parseInt(methodName.replace("ge-", ""));
               StandardConfiguration<BitsGenotype, String, NumericFitness> configuration = new StandardConfiguration<>(
                       populationSize, generations,
                       new RandomInitializer<>(random, new BitsGenotypeFactory(genotypeSize)),
                       new Any<BitsGenotype>(),
-                      new StandardGEMapper<>(8, 1, problem.getGrammar()),
+                      new StandardGEMapper<>(codonSize, 1, problem.getGrammar()),
                       new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
                               .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
                               .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
@@ -144,12 +148,13 @@ public class Experimenter {
                       true,
                       problem);
               evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
-            } else if (methodName.equals("pige-16")) {
+            } else if (methodName.startsWith("pige-")) {
+              int codonSize = Integer.parseInt(methodName.replace("pige-", ""));
               StandardConfiguration<BitsGenotype, String, NumericFitness> configuration = new StandardConfiguration<>(
                       populationSize, generations,
                       new RandomInitializer<>(random, new BitsGenotypeFactory(genotypeSize)),
                       new Any<BitsGenotype>(),
-                      new PiGEMapper<>(8, 1, problem.getGrammar()),
+                      new PiGEMapper<>(codonSize, 1, problem.getGrammar()),
                       new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
                               .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
                               .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
@@ -159,8 +164,9 @@ public class Experimenter {
                       true,
                       problem);
               evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
-            } else if (methodName.equals("sge-6")) {
-              Mapper<SGEGenotype<String>, String> mapper = new SGEMapper<>(6, problem.getGrammar());
+            } else if (methodName.startsWith("sge-")) {
+              int depth = Integer.parseInt(methodName.replace("sge-", ""));
+              Mapper<SGEGenotype<String>, String> mapper = new SGEMapper<>(depth, problem.getGrammar());
               StandardConfiguration<SGEGenotype<String>, String, NumericFitness> configuration = new StandardConfiguration<>(
                       populationSize, generations,
                       new RandomInitializer<>(random, new SGEGenotypeFactory<>((SGEMapper<String>) mapper)),
@@ -190,12 +196,13 @@ public class Experimenter {
                       true,
                       problem);
               evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
-            } else if (methodName.equals("whge-3")) {
+            } else if (methodName.startsWith("whge-")) {
+              int depth = Integer.parseInt(methodName.replace("whge-", ""));
               StandardConfiguration<BitsGenotype, String, NumericFitness> configuration = new StandardConfiguration<>(
                       populationSize, generations,
                       new RandomInitializer<>(random, new BitsGenotypeFactory(genotypeSize)),
                       new Any<BitsGenotype>(),
-                      new WeightedHierarchicalMapper<>(3, problem.getGrammar()),
+                      new WeightedHierarchicalMapper<>(depth, problem.getGrammar()),
                       new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
                               .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
                               .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
@@ -205,8 +212,8 @@ public class Experimenter {
                       true,
                       problem);
               evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
-            } else if (methodName.equals("cfggp-12")) {
-              int maxDepth = 12;
+            } else if (methodName.startsWith("cfggp-")) {
+              int maxDepth = Integer.parseInt(methodName.replace("cfggp-", ""));
               StandardConfiguration<Node<String>, String, NumericFitness> configuration = new StandardConfiguration<>(
                       populationSize, generations,
                       new MultiInitializer<>(new Utils.MapBuilder<PopulationInitializer<Node<String>>, Double>()
