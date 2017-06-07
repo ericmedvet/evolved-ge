@@ -8,7 +8,6 @@ package it.units.malelab.ege.core.listener.event;
 import it.units.malelab.ege.core.evolver.Evolver;
 import it.units.malelab.ege.core.fitness.Fitness;
 import it.units.malelab.ege.core.Node;
-import it.units.malelab.ege.core.listener.event.TimeEvent;
 import java.util.Map;
 
 /**

@@ -31,12 +31,15 @@ import it.units.malelab.ege.core.initializer.PopulationInitializer;
 import it.units.malelab.ege.core.initializer.RandomInitializer;
 import it.units.malelab.ege.core.listener.CollectorGenerationLogger;
 import it.units.malelab.ege.core.listener.EvolverListener;
+import it.units.malelab.ege.core.listener.PropertiesListener;
 import it.units.malelab.ege.core.listener.collector.BestPrinter;
 import it.units.malelab.ege.core.listener.collector.CacheStatistics;
 import it.units.malelab.ege.core.listener.collector.Diversity;
 import it.units.malelab.ege.core.listener.collector.NumericFirstBest;
 import it.units.malelab.ege.core.listener.collector.Population;
 import it.units.malelab.ege.core.mapper.Mapper;
+import it.units.malelab.ege.core.operator.AbstractCrossover;
+import it.units.malelab.ege.core.operator.AbstractMutation;
 import it.units.malelab.ege.core.operator.GeneticOperator;
 import it.units.malelab.ege.core.ranker.ComparableRanker;
 import it.units.malelab.ege.core.selector.IndividualComparator;
@@ -57,6 +60,10 @@ import it.units.malelab.ege.ge.operator.ProbabilisticMutation;
 import it.units.malelab.ege.ge.operator.SGECrossover;
 import it.units.malelab.ege.ge.operator.SGEMutation;
 import it.units.malelab.ege.util.Utils;
+import it.units.malelab.ege.util.distance.BitsGenotypeEditDistance;
+import it.units.malelab.ege.util.distance.BitsGenotypeHammingDistance;
+import it.units.malelab.ege.util.distance.SGEGenotypeHammingDistance;
+import it.units.malelab.ege.util.distance.TreeEditDistance;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -78,8 +85,8 @@ public class Experimenter {
     Random random = new Random(1);
     final int genotypeSize = 1024;
     final int populationSize = 500;
-    final int generations = 50;
-    final int runs = 30;
+    final int generations = 10;
+    final int runs = 1;
     //prepare problems and methods
     List<String> problems = Lists.newArrayList(
             "bool-parity5", "bool-mopm3",
@@ -87,11 +94,11 @@ public class Experimenter {
             "other-klandscapes3", "other-klandscapes7", "other-text"
     );
     List<String> methods = Lists.newArrayList("ge-8", "pige-16", "sge-6", "hge", "whge-3", "cfggp-12");
-    methods = Lists.newArrayList(
+    /*methods = Lists.newArrayList(
             "whge-1", "whge-2", "whge-4", "whge-5", "whge-6", "whge-7",
             "sge-3", "sge-4", "sge-5", "sge-7", "sge-8", "sge-9",
-            "cfggp-4", "cfggp-6", "cfggp-8", "cfggp-10", "cfggp-14", "cfggp-16"
-    );
+            "cfggp-4", "cfggp-6", "cfggp-8", "cfggp-10"
+    );*/
     PrintStream filePrintStream = null;
     if (args.length > 0) {
       filePrintStream = new PrintStream(args[0]);
@@ -132,6 +139,7 @@ public class Experimenter {
             }
             //build configuration and evolver
             Evolver evolver = null;
+            PropertiesListener propertiesListener = null;
             if (methodName.startsWith("ge-")) {
               int codonSize = Integer.parseInt(methodName.replace("ge-", ""));
               StandardConfiguration<BitsGenotype, String, NumericFitness> configuration = new StandardConfiguration<>(
@@ -148,6 +156,14 @@ public class Experimenter {
                       true,
                       problem);
               evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
+              propertiesListener = new PropertiesListener(
+                      NumericFitness.comparator(),
+                      new BitsGenotypeEditDistance(),
+                      new TreeEditDistance<>(),
+                      new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
+                        .put(AbstractCrossover.class, "crossover")
+                        .put(AbstractMutation.class, "mutation").build()
+              );
             } else if (methodName.startsWith("pige-")) {
               int codonSize = Integer.parseInt(methodName.replace("pige-", ""));
               StandardConfiguration<BitsGenotype, String, NumericFitness> configuration = new StandardConfiguration<>(
@@ -164,6 +180,14 @@ public class Experimenter {
                       true,
                       problem);
               evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
+              propertiesListener = new PropertiesListener(
+                      NumericFitness.comparator(),
+                      new BitsGenotypeEditDistance(),
+                      new TreeEditDistance<>(),
+                      new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
+                        .put(AbstractCrossover.class, "crossover")
+                        .put(AbstractMutation.class, "mutation").build()
+              );
             } else if (methodName.startsWith("sge-")) {
               int depth = Integer.parseInt(methodName.replace("sge-", ""));
               Mapper<SGEGenotype<String>, String> mapper = new SGEMapper<>(depth, problem.getGrammar());
@@ -181,6 +205,14 @@ public class Experimenter {
                       true,
                       problem);
               evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
+              propertiesListener = new PropertiesListener(
+                      NumericFitness.comparator(),
+                      new SGEGenotypeHammingDistance<>(),
+                      new TreeEditDistance<>(),
+                      new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
+                        .put(AbstractCrossover.class, "crossover")
+                        .put(AbstractMutation.class, "mutation").build()
+              );
             } else if (methodName.equals("hge")) {
               StandardConfiguration<BitsGenotype, String, NumericFitness> configuration = new StandardConfiguration<>(
                       populationSize, generations,
@@ -196,6 +228,14 @@ public class Experimenter {
                       true,
                       problem);
               evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
+              propertiesListener = new PropertiesListener(
+                      NumericFitness.comparator(),
+                      new BitsGenotypeEditDistance(),
+                      new TreeEditDistance<>(),
+                      new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
+                        .put(AbstractCrossover.class, "crossover")
+                        .put(AbstractMutation.class, "mutation").build()
+              );
             } else if (methodName.startsWith("whge-")) {
               int depth = Integer.parseInt(methodName.replace("whge-", ""));
               StandardConfiguration<BitsGenotype, String, NumericFitness> configuration = new StandardConfiguration<>(
@@ -212,6 +252,14 @@ public class Experimenter {
                       true,
                       problem);
               evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
+              propertiesListener = new PropertiesListener(
+                      NumericFitness.comparator(),
+                      new BitsGenotypeEditDistance(),
+                      new TreeEditDistance<>(),
+                      new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
+                        .put(AbstractCrossover.class, "crossover")
+                        .put(AbstractMutation.class, "mutation").build()
+              );
             } else if (methodName.startsWith("cfggp-")) {
               int maxDepth = Integer.parseInt(methodName.replace("cfggp-", ""));
               StandardConfiguration<Node<String>, String, NumericFitness> configuration = new StandardConfiguration<>(
@@ -233,6 +281,14 @@ public class Experimenter {
                       true,
                       problem);
               evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
+              propertiesListener = new PropertiesListener(
+                      NumericFitness.comparator(),
+                      new TreeEditDistance<>(),
+                      new TreeEditDistance<>(),
+                      new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
+                        .put(AbstractCrossover.class, "crossover")
+                        .put(AbstractMutation.class, "mutation").build()
+              );
             }
             //go
             //prepare listeners
@@ -242,16 +298,19 @@ public class Experimenter {
                     new Population(),
                     new NumericFirstBest(false, problem.getTestingFitnessComputer(), "%6.2f"),
                     new Diversity(),
-                    new BestPrinter(problem.getPhenotypePrinter(), "%30.30s"),
-                    new CacheStatistics()
+                    new CacheStatistics(),
+                    //propertiesListener,
+                    new BestPrinter(problem.getPhenotypePrinter(), "%30.30s")                    
             ));
+            //listeners.add(propertiesListener);
             if (filePrintStream != null) {
               listeners.add(new CollectorGenerationLogger<>(
                       constants, filePrintStream, false, header ? 0 : -1, ";", ";",
                       new Population(),
                       new NumericFirstBest(false, problem.getTestingFitnessComputer(), "%6.2f"),
                       new Diversity(),
-                      new CacheStatistics()
+                      new CacheStatistics()//,
+                      //propertiesListener
               ));
             }
             evolver.solve(listeners);

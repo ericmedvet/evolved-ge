@@ -5,6 +5,8 @@
  */
 package it.units.malelab.ege.core.fitness;
 
+import java.util.Comparator;
+
 /**
  *
  * @author eric
@@ -52,6 +54,15 @@ public class NumericFitness implements Comparable<NumericFitness>, Fitness<Doubl
       return false;
     }
     return true;
+  }
+  
+  public static Comparator<NumericFitness> comparator() {
+    return new Comparator<NumericFitness>() {
+      @Override
+      public int compare(NumericFitness f1, NumericFitness f2) {
+        return f1.compareTo(f2);
+      }      
+    };
   }
   
 }

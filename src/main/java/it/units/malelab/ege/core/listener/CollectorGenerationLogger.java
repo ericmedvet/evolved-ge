@@ -148,6 +148,9 @@ public class CollectorGenerationLogger<G, T, F extends Fitness> extends Abstract
     Matcher matcher = Pattern.compile("\\d++").matcher(format);
     if (matcher.find()) {
       int size = Integer.parseInt(matcher.group());
+      if (format.contains("+")) {
+        size = size+1;
+      }
       acronym = pad(acronym, size);
     }
     return acronym;
