@@ -88,7 +88,7 @@ public class Experimenter {
     final int genotypeSize = 1024;
     final int populationSize = 500;
     final int generations = 50;
-    final int runs = 30;
+    final int runs = 1;
     //prepare problems and methods
     List<String> problems = Lists.newArrayList(
             "bool-parity5", "bool-mopm3",
@@ -110,6 +110,9 @@ public class Experimenter {
     Distance<Node<String>> treeDistance = new CachedDistance<>(new Distance<Node<String>>() {
       @Override
       public double d(Node<String> t1, Node<String> t2) {
+        if (Node.EMPTY_TREE.equals(t1)||Node.EMPTY_TREE.equals(t2)) {
+          return Double.POSITIVE_INFINITY;
+        }
         return editDistance.d(Utils.contents(t1.leaves()), Utils.contents(t1.leaves()));
       }
     });
