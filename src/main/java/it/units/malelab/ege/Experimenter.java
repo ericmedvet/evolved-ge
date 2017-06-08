@@ -61,7 +61,9 @@ import it.units.malelab.ege.ge.operator.SGECrossover;
 import it.units.malelab.ege.ge.operator.SGEMutation;
 import it.units.malelab.ege.util.Utils;
 import it.units.malelab.ege.util.distance.BitsGenotypeEditDistance;
-import it.units.malelab.ege.util.distance.BitsGenotypeHammingDistance;
+import it.units.malelab.ege.util.distance.CachedDistance;
+import it.units.malelab.ege.util.distance.Distance;
+import it.units.malelab.ege.util.distance.EditDistance;
 import it.units.malelab.ege.util.distance.SGEGenotypeHammingDistance;
 import it.units.malelab.ege.util.distance.TreeEditDistance;
 import java.io.IOException;
@@ -85,8 +87,8 @@ public class Experimenter {
     Random random = new Random(1);
     final int genotypeSize = 1024;
     final int populationSize = 500;
-    final int generations = 10;
-    final int runs = 1;
+    final int generations = 50;
+    final int runs = 30;
     //prepare problems and methods
     List<String> problems = Lists.newArrayList(
             "bool-parity5", "bool-mopm3",
@@ -103,6 +105,16 @@ public class Experimenter {
     if (args.length > 0) {
       filePrintStream = new PrintStream(args[0]);
     }
+    //prepare distances
+    final EditDistance<String> editDistance = new EditDistance<>();
+    Distance<Node<String>> treeDistance = new CachedDistance<>(new Distance<Node<String>>() {
+      @Override
+      public double d(Node<String> t1, Node<String> t2) {
+        return editDistance.d(Utils.contents(t1.leaves()), Utils.contents(t1.leaves()));
+      }
+    });
+    Distance<BitsGenotype> bitsDistance = new CachedDistance<>(new BitsGenotypeEditDistance());
+    Distance<SGEGenotype<String>> sgeDistance = new CachedDistance<>(new SGEGenotypeHammingDistance<String>());
     //iterate
     boolean header = true;
     for (String problemName : problems) {
@@ -158,8 +170,8 @@ public class Experimenter {
               evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
               propertiesListener = new PropertiesListener(
                       NumericFitness.comparator(),
-                      new BitsGenotypeEditDistance(),
-                      new TreeEditDistance<>(),
+                      bitsDistance,
+                      treeDistance,
                       new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
                         .put(AbstractCrossover.class, "crossover")
                         .put(AbstractMutation.class, "mutation").build()
@@ -182,8 +194,8 @@ public class Experimenter {
               evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
               propertiesListener = new PropertiesListener(
                       NumericFitness.comparator(),
-                      new BitsGenotypeEditDistance(),
-                      new TreeEditDistance<>(),
+                      bitsDistance,
+                      treeDistance,
                       new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
                         .put(AbstractCrossover.class, "crossover")
                         .put(AbstractMutation.class, "mutation").build()
@@ -207,8 +219,8 @@ public class Experimenter {
               evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
               propertiesListener = new PropertiesListener(
                       NumericFitness.comparator(),
-                      new SGEGenotypeHammingDistance<>(),
-                      new TreeEditDistance<>(),
+                      sgeDistance,
+                      treeDistance,
                       new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
                         .put(AbstractCrossover.class, "crossover")
                         .put(AbstractMutation.class, "mutation").build()
@@ -230,8 +242,8 @@ public class Experimenter {
               evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
               propertiesListener = new PropertiesListener(
                       NumericFitness.comparator(),
-                      new BitsGenotypeEditDistance(),
-                      new TreeEditDistance<>(),
+                      bitsDistance,
+                      treeDistance,
                       new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
                         .put(AbstractCrossover.class, "crossover")
                         .put(AbstractMutation.class, "mutation").build()
@@ -254,8 +266,8 @@ public class Experimenter {
               evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
               propertiesListener = new PropertiesListener(
                       NumericFitness.comparator(),
-                      new BitsGenotypeEditDistance(),
-                      new TreeEditDistance<>(),
+                      bitsDistance,
+                      treeDistance,
                       new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
                         .put(AbstractCrossover.class, "crossover")
                         .put(AbstractMutation.class, "mutation").build()
@@ -283,8 +295,8 @@ public class Experimenter {
               evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
               propertiesListener = new PropertiesListener(
                       NumericFitness.comparator(),
-                      new TreeEditDistance<>(),
-                      new TreeEditDistance<>(),
+                      treeDistance,
+                      treeDistance,
                       new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
                         .put(AbstractCrossover.class, "crossover")
                         .put(AbstractMutation.class, "mutation").build()
@@ -299,18 +311,18 @@ public class Experimenter {
                     new NumericFirstBest(false, problem.getTestingFitnessComputer(), "%6.2f"),
                     new Diversity(),
                     new CacheStatistics(),
-                    //propertiesListener,
+                    propertiesListener,
                     new BestPrinter(problem.getPhenotypePrinter(), "%30.30s")                    
             ));
-            //listeners.add(propertiesListener);
+            listeners.add(propertiesListener);
             if (filePrintStream != null) {
               listeners.add(new CollectorGenerationLogger<>(
                       constants, filePrintStream, false, header ? 0 : -1, ";", ";",
                       new Population(),
                       new NumericFirstBest(false, problem.getTestingFitnessComputer(), "%6.2f"),
                       new Diversity(),
-                      new CacheStatistics()//,
-                      //propertiesListener
+                      new CacheStatistics(),
+                      propertiesListener
               ));
             }
             evolver.solve(listeners);

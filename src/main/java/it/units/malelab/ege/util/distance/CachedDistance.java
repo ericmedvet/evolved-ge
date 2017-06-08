@@ -25,7 +25,9 @@ public class CachedDistance<T> implements Distance<T> {
     cache = CacheBuilder.newBuilder().maximumSize(CACHE_SIZE).build(new CacheLoader<List<T>, Double>() {
       @Override
       public Double load(List<T> ts) throws Exception {
-        return distance.d(ts.get(0), ts.get(1));
+        double d = distance.d(ts.get(0), ts.get(1));
+        cache.put(Arrays.asList(ts.get(1), ts.get(0)), d); //put pair in the other order
+        return d;
       }
     });
   }

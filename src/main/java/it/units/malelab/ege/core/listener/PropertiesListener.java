@@ -12,7 +12,6 @@ import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.core.fitness.Fitness;
 import it.units.malelab.ege.core.listener.collector.Collector;
 import it.units.malelab.ege.core.listener.event.EvolutionEvent;
-import it.units.malelab.ege.core.listener.event.EvolutionStartEvent;
 import it.units.malelab.ege.core.listener.event.GenerationEvent;
 import it.units.malelab.ege.core.listener.event.MappingEvent;
 import it.units.malelab.ege.core.listener.event.OperatorApplicationEvent;
