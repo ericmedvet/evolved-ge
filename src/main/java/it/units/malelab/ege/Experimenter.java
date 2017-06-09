@@ -65,7 +65,6 @@ import it.units.malelab.ege.util.distance.CachedDistance;
 import it.units.malelab.ege.util.distance.Distance;
 import it.units.malelab.ege.util.distance.EditDistance;
 import it.units.malelab.ege.util.distance.SGEGenotypeHammingDistance;
-import it.units.malelab.ege.util.distance.TreeEditDistance;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -88,7 +87,7 @@ public class Experimenter {
     final int genotypeSize = 1024;
     final int populationSize = 500;
     final int generations = 50;
-    final int runs = 1;
+    final int runs = 10;
     //prepare problems and methods
     List<String> problems = Lists.newArrayList(
             "bool-parity5", "bool-mopm3",
@@ -110,19 +109,19 @@ public class Experimenter {
     Distance<Node<String>> treeDistance = new CachedDistance<>(new Distance<Node<String>>() {
       @Override
       public double d(Node<String> t1, Node<String> t2) {
-        if (Node.EMPTY_TREE.equals(t1)||Node.EMPTY_TREE.equals(t2)) {
-          return Double.POSITIVE_INFINITY;
+        if (Node.EMPTY_TREE.equals(t1) || Node.EMPTY_TREE.equals(t2)) {
+          return Double.NaN;
         }
-        return editDistance.d(Utils.contents(t1.leaves()), Utils.contents(t1.leaves()));
+        return editDistance.d(Utils.contents(t1.leaves()), Utils.contents(t2.leaves()));
       }
     });
     Distance<BitsGenotype> bitsDistance = new CachedDistance<>(new BitsGenotypeEditDistance());
     Distance<SGEGenotype<String>> sgeDistance = new CachedDistance<>(new SGEGenotypeHammingDistance<String>());
     //iterate
     boolean header = true;
-    for (String problemName : problems) {
-      for (String methodName : methods) {
-        for (int run = 0; run < runs; run++) {
+    for (int run = 0; run < runs; run++) {
+      for (String problemName : problems) {
+        for (String methodName : methods) {
           Map<String, Object> constants = new LinkedHashMap<>();
           constants.put("problem", problemName);
           constants.put("method", methodName);
@@ -176,8 +175,8 @@ public class Experimenter {
                       bitsDistance,
                       treeDistance,
                       new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
-                        .put(AbstractCrossover.class, "crossover")
-                        .put(AbstractMutation.class, "mutation").build()
+                              .put(AbstractCrossover.class, "crossover")
+                              .put(AbstractMutation.class, "mutation").build()
               );
             } else if (methodName.startsWith("pige-")) {
               int codonSize = Integer.parseInt(methodName.replace("pige-", ""));
@@ -200,8 +199,8 @@ public class Experimenter {
                       bitsDistance,
                       treeDistance,
                       new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
-                        .put(AbstractCrossover.class, "crossover")
-                        .put(AbstractMutation.class, "mutation").build()
+                              .put(AbstractCrossover.class, "crossover")
+                              .put(AbstractMutation.class, "mutation").build()
               );
             } else if (methodName.startsWith("sge-")) {
               int depth = Integer.parseInt(methodName.replace("sge-", ""));
@@ -225,8 +224,8 @@ public class Experimenter {
                       sgeDistance,
                       treeDistance,
                       new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
-                        .put(AbstractCrossover.class, "crossover")
-                        .put(AbstractMutation.class, "mutation").build()
+                              .put(AbstractCrossover.class, "crossover")
+                              .put(AbstractMutation.class, "mutation").build()
               );
             } else if (methodName.equals("hge")) {
               StandardConfiguration<BitsGenotype, String, NumericFitness> configuration = new StandardConfiguration<>(
@@ -248,8 +247,8 @@ public class Experimenter {
                       bitsDistance,
                       treeDistance,
                       new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
-                        .put(AbstractCrossover.class, "crossover")
-                        .put(AbstractMutation.class, "mutation").build()
+                              .put(AbstractCrossover.class, "crossover")
+                              .put(AbstractMutation.class, "mutation").build()
               );
             } else if (methodName.startsWith("whge-")) {
               int depth = Integer.parseInt(methodName.replace("whge-", ""));
@@ -272,8 +271,8 @@ public class Experimenter {
                       bitsDistance,
                       treeDistance,
                       new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
-                        .put(AbstractCrossover.class, "crossover")
-                        .put(AbstractMutation.class, "mutation").build()
+                              .put(AbstractCrossover.class, "crossover")
+                              .put(AbstractMutation.class, "mutation").build()
               );
             } else if (methodName.startsWith("cfggp-")) {
               int maxDepth = Integer.parseInt(methodName.replace("cfggp-", ""));
@@ -301,8 +300,8 @@ public class Experimenter {
                       treeDistance,
                       treeDistance,
                       new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
-                        .put(AbstractCrossover.class, "crossover")
-                        .put(AbstractMutation.class, "mutation").build()
+                              .put(AbstractCrossover.class, "crossover")
+                              .put(AbstractMutation.class, "mutation").build()
               );
             }
             //go
@@ -310,12 +309,10 @@ public class Experimenter {
             List<EvolverListener> listeners = new ArrayList<>();
             listeners.add(new CollectorGenerationLogger<>(
                     constants, System.out, true, 10, " ", " | ",
-                    new Population(),
                     new NumericFirstBest(false, problem.getTestingFitnessComputer(), "%6.2f"),
                     new Diversity(),
-                    new CacheStatistics(),
                     propertiesListener,
-                    new BestPrinter(problem.getPhenotypePrinter(), "%30.30s")                    
+                    new BestPrinter(problem.getPhenotypePrinter(), "%30.30s")
             ));
             listeners.add(propertiesListener);
             if (filePrintStream != null) {
