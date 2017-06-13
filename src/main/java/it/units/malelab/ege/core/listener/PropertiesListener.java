@@ -18,7 +18,6 @@ import it.units.malelab.ege.core.listener.event.MappingEvent;
 import it.units.malelab.ege.core.listener.event.OperatorApplicationEvent;
 import it.units.malelab.ege.core.operator.GeneticOperator;
 import it.units.malelab.ege.util.Pair;
-import it.units.malelab.ege.util.Utils;
 import it.units.malelab.ege.util.distance.Distance;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -208,9 +207,9 @@ public class PropertiesListener<G, T, F extends Fitness> extends AbstractListene
   }
 
   private double pearsonCorrelation(List<Pair<Double, Double>> values) {
-    if (values.isEmpty()) {
+    if (values.isEmpty()||values.size()==1) {
       return Double.NaN;
-    }
+    }    
     double[] x = new double[values.size()];
     double[] y = new double[values.size()];
     for (int i = 0; i < values.size(); i++) {

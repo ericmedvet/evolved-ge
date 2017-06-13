@@ -84,10 +84,10 @@ public class Experimenter {
 
   public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
     Random random = new Random(1);
-    final int genotypeSize = 1024;
+    final int[] genotypeSizes = new int[]{1024};
     final int populationSize = 500;
     final int generations = 50;
-    final int runs = 10;
+    final int runs = 30;
     //prepare problems and methods
     List<String> problems = Lists.newArrayList(
             "bool-parity5", "bool-mopm3",
@@ -95,11 +95,7 @@ public class Experimenter {
             "other-klandscapes3", "other-klandscapes7", "other-text"
     );
     List<String> methods = Lists.newArrayList("ge-8", "pige-16", "sge-6", "hge", "whge-3", "cfggp-12");
-    /*methods = Lists.newArrayList(
-            "whge-1", "whge-2", "whge-4", "whge-5", "whge-6", "whge-7",
-            "sge-3", "sge-4", "sge-5", "sge-7", "sge-8", "sge-9",
-            "cfggp-4", "cfggp-6", "cfggp-8", "cfggp-10"
-    );*/
+    //methods = Lists.newArrayList("ge-8", "pige-16", "hge", "whge-3");
     PrintStream filePrintStream = null;
     if (args.length > 0) {
       filePrintStream = new PrintStream(args[0]);
@@ -122,211 +118,214 @@ public class Experimenter {
     for (int run = 0; run < runs; run++) {
       for (String problemName : problems) {
         for (String methodName : methods) {
-          Map<String, Object> constants = new LinkedHashMap<>();
-          constants.put("problem", problemName);
-          constants.put("method", methodName);
-          constants.put("run", run);
-          System.out.printf("%nProblem: %s\tMethod: %s\tRun: %d%n", problemName, methodName, run);
-          if (problemName.equals("other-binaryregex")) {
-            //manage differently, since it is multi-objective
-          } else {
-            //build problem
-            Problem<String, NumericFitness> problem = null;
-            if (problemName.equals("bool-parity5")) {
-              problem = new Parity(5);
-            } else if (problemName.equals("bool-mopm3")) {
-              problem = new MultipleOutputParallelMultiplier(3);
-            } else if (problemName.equals("sr-keijzer6")) {
-              problem = new HarmonicCurve();
-            } else if (problemName.equals("sr-nguyen7")) {
-              problem = new Nguyen7(1);
-            } else if (problemName.equals("sr-pagie1")) {
-              problem = new Pagie1();
-            } else if (problemName.equals("sr-vladislavleva4")) {
-              problem = new Vladislavleva4(1);
-            } else if (problemName.equals("other-klandscapes3")) {
-              problem = new KLandscapes(3);
-            } else if (problemName.equals("other-klandscapes7")) {
-              problem = new KLandscapes(7);
-            } else if (problemName.equals("other-text")) {
-              problem = new Text();
-            }
-            //build configuration and evolver
-            Evolver evolver = null;
-            PropertiesListener propertiesListener = null;
-            if (methodName.startsWith("ge-")) {
-              int codonSize = Integer.parseInt(methodName.replace("ge-", ""));
-              StandardConfiguration<BitsGenotype, String, NumericFitness> configuration = new StandardConfiguration<>(
-                      populationSize, generations,
-                      new RandomInitializer<>(random, new BitsGenotypeFactory(genotypeSize)),
-                      new Any<BitsGenotype>(),
-                      new StandardGEMapper<>(codonSize, 1, problem.getGrammar()),
-                      new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
-                              .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
-                              .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
-                      new ComparableRanker<>(new IndividualComparator<BitsGenotype, String, NumericFitness>(IndividualComparator.Attribute.FITNESS)),
-                      new Tournament<Individual<BitsGenotype, String, NumericFitness>>(3, random),
-                      new LastWorst<Individual<BitsGenotype, String, NumericFitness>>(), populationSize,
-                      true,
-                      problem);
-              evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
-              propertiesListener = new PropertiesListener(
-                      NumericFitness.comparator(),
-                      bitsDistance,
-                      treeDistance,
-                      new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
-                              .put(AbstractCrossover.class, "crossover")
-                              .put(AbstractMutation.class, "mutation").build()
-              );
-            } else if (methodName.startsWith("pige-")) {
-              int codonSize = Integer.parseInt(methodName.replace("pige-", ""));
-              StandardConfiguration<BitsGenotype, String, NumericFitness> configuration = new StandardConfiguration<>(
-                      populationSize, generations,
-                      new RandomInitializer<>(random, new BitsGenotypeFactory(genotypeSize)),
-                      new Any<BitsGenotype>(),
-                      new PiGEMapper<>(codonSize, 1, problem.getGrammar()),
-                      new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
-                              .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
-                              .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
-                      new ComparableRanker<>(new IndividualComparator<BitsGenotype, String, NumericFitness>(IndividualComparator.Attribute.FITNESS)),
-                      new Tournament<Individual<BitsGenotype, String, NumericFitness>>(3, random),
-                      new LastWorst<Individual<BitsGenotype, String, NumericFitness>>(), populationSize,
-                      true,
-                      problem);
-              evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
-              propertiesListener = new PropertiesListener(
-                      NumericFitness.comparator(),
-                      bitsDistance,
-                      treeDistance,
-                      new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
-                              .put(AbstractCrossover.class, "crossover")
-                              .put(AbstractMutation.class, "mutation").build()
-              );
-            } else if (methodName.startsWith("sge-")) {
-              int depth = Integer.parseInt(methodName.replace("sge-", ""));
-              Mapper<SGEGenotype<String>, String> mapper = new SGEMapper<>(depth, problem.getGrammar());
-              StandardConfiguration<SGEGenotype<String>, String, NumericFitness> configuration = new StandardConfiguration<>(
-                      populationSize, generations,
-                      new RandomInitializer<>(random, new SGEGenotypeFactory<>((SGEMapper<String>) mapper)),
-                      new Any<SGEGenotype<String>>(),
-                      mapper,
-                      new Utils.MapBuilder<GeneticOperator<SGEGenotype<String>>, Double>()
-                              .put(new SGECrossover<String>(random), 0.8d)
-                              .put(new SGEMutation<>(0.01, (SGEMapper<String>) mapper, random), 0.2d).build(),
-                      new ComparableRanker<>(new IndividualComparator<SGEGenotype<String>, String, NumericFitness>(IndividualComparator.Attribute.FITNESS)),
-                      new Tournament<Individual<SGEGenotype<String>, String, NumericFitness>>(3, random),
-                      new LastWorst<Individual<SGEGenotype<String>, String, NumericFitness>>(), populationSize,
-                      true,
-                      problem);
-              evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
-              propertiesListener = new PropertiesListener(
-                      NumericFitness.comparator(),
-                      sgeDistance,
-                      treeDistance,
-                      new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
-                              .put(AbstractCrossover.class, "crossover")
-                              .put(AbstractMutation.class, "mutation").build()
-              );
-            } else if (methodName.equals("hge")) {
-              StandardConfiguration<BitsGenotype, String, NumericFitness> configuration = new StandardConfiguration<>(
-                      populationSize, generations,
-                      new RandomInitializer<>(random, new BitsGenotypeFactory(genotypeSize)),
-                      new Any<BitsGenotype>(),
-                      new HierarchicalMapper<>(problem.getGrammar()),
-                      new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
-                              .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
-                              .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
-                      new ComparableRanker<>(new IndividualComparator<BitsGenotype, String, NumericFitness>(IndividualComparator.Attribute.FITNESS)),
-                      new Tournament<Individual<BitsGenotype, String, NumericFitness>>(3, random),
-                      new LastWorst<Individual<BitsGenotype, String, NumericFitness>>(), populationSize,
-                      true,
-                      problem);
-              evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
-              propertiesListener = new PropertiesListener(
-                      NumericFitness.comparator(),
-                      bitsDistance,
-                      treeDistance,
-                      new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
-                              .put(AbstractCrossover.class, "crossover")
-                              .put(AbstractMutation.class, "mutation").build()
-              );
-            } else if (methodName.startsWith("whge-")) {
-              int depth = Integer.parseInt(methodName.replace("whge-", ""));
-              StandardConfiguration<BitsGenotype, String, NumericFitness> configuration = new StandardConfiguration<>(
-                      populationSize, generations,
-                      new RandomInitializer<>(random, new BitsGenotypeFactory(genotypeSize)),
-                      new Any<BitsGenotype>(),
-                      new WeightedHierarchicalMapper<>(depth, problem.getGrammar()),
-                      new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
-                              .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
-                              .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
-                      new ComparableRanker<>(new IndividualComparator<BitsGenotype, String, NumericFitness>(IndividualComparator.Attribute.FITNESS)),
-                      new Tournament<Individual<BitsGenotype, String, NumericFitness>>(3, random),
-                      new LastWorst<Individual<BitsGenotype, String, NumericFitness>>(), populationSize,
-                      true,
-                      problem);
-              evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
-              propertiesListener = new PropertiesListener(
-                      NumericFitness.comparator(),
-                      bitsDistance,
-                      treeDistance,
-                      new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
-                              .put(AbstractCrossover.class, "crossover")
-                              .put(AbstractMutation.class, "mutation").build()
-              );
-            } else if (methodName.startsWith("cfggp-")) {
-              int maxDepth = Integer.parseInt(methodName.replace("cfggp-", ""));
-              StandardConfiguration<Node<String>, String, NumericFitness> configuration = new StandardConfiguration<>(
-                      populationSize, generations,
-                      new MultiInitializer<>(new Utils.MapBuilder<PopulationInitializer<Node<String>>, Double>()
-                              .put(new RandomInitializer<>(random, new GrowTreeFactory<>(maxDepth, problem.getGrammar())), 0.5)
-                              .put(new RandomInitializer<>(random, new FullTreeFactory<>(maxDepth, problem.getGrammar())), 0.5)
-                              .build()
-                      ),
-                      new Any<Node<String>>(),
-                      new CfgGpMapper<String>(),
-                      new Utils.MapBuilder<GeneticOperator<Node<String>>, Double>()
-                              .put(new StandardTreeCrossover<String>(maxDepth, random), 0.8d)
-                              .put(new StandardTreeMutation<>(maxDepth, problem.getGrammar(), random), 0.2d)
-                              .build(),
-                      new ComparableRanker<>(new IndividualComparator<Node<String>, String, NumericFitness>(IndividualComparator.Attribute.FITNESS)),
-                      new Tournament<Individual<Node<String>, String, NumericFitness>>(3, random),
-                      new LastWorst<Individual<Node<String>, String, NumericFitness>>(), populationSize,
-                      true,
-                      problem);
-              evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
-              propertiesListener = new PropertiesListener(
-                      NumericFitness.comparator(),
-                      treeDistance,
-                      treeDistance,
-                      new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
-                              .put(AbstractCrossover.class, "crossover")
-                              .put(AbstractMutation.class, "mutation").build()
-              );
-            }
-            //go
-            //prepare listeners
-            List<EvolverListener> listeners = new ArrayList<>();
-            listeners.add(new CollectorGenerationLogger<>(
-                    constants, System.out, true, 10, " ", " | ",
-                    new NumericFirstBest(false, problem.getTestingFitnessComputer(), "%6.2f"),
-                    new Diversity(),
-                    propertiesListener,
-                    new BestPrinter(problem.getPhenotypePrinter(), "%30.30s")
-            ));
-            listeners.add(propertiesListener);
-            if (filePrintStream != null) {
+          for (int genotypeSize : genotypeSizes) {
+            Map<String, Object> constants = new LinkedHashMap<>();
+            constants.put("problem", problemName);
+            constants.put("method", methodName);
+            constants.put("run", run);
+            constants.put("genotype.size", genotypeSize);
+            System.out.printf("%nProblem: %s\tMethod: %s\tRun: %d%n", problemName, methodName, run);
+            if (problemName.equals("other-binaryregex")) {
+              //manage differently, since it is multi-objective
+            } else {
+              //build problem
+              Problem<String, NumericFitness> problem = null;
+              if (problemName.equals("bool-parity5")) {
+                problem = new Parity(5);
+              } else if (problemName.equals("bool-mopm3")) {
+                problem = new MultipleOutputParallelMultiplier(3);
+              } else if (problemName.equals("sr-keijzer6")) {
+                problem = new HarmonicCurve();
+              } else if (problemName.equals("sr-nguyen7")) {
+                problem = new Nguyen7(1);
+              } else if (problemName.equals("sr-pagie1")) {
+                problem = new Pagie1();
+              } else if (problemName.equals("sr-vladislavleva4")) {
+                problem = new Vladislavleva4(1);
+              } else if (problemName.equals("other-klandscapes3")) {
+                problem = new KLandscapes(3);
+              } else if (problemName.equals("other-klandscapes7")) {
+                problem = new KLandscapes(7);
+              } else if (problemName.equals("other-text")) {
+                problem = new Text();
+              }
+              //build configuration and evolver
+              Evolver evolver = null;
+              PropertiesListener propertiesListener = null;
+              if (methodName.startsWith("ge-")) {
+                int codonSize = Integer.parseInt(methodName.replace("ge-", ""));
+                StandardConfiguration<BitsGenotype, String, NumericFitness> configuration = new StandardConfiguration<>(
+                        populationSize, generations,
+                        new RandomInitializer<>(random, new BitsGenotypeFactory(genotypeSize)),
+                        new Any<BitsGenotype>(),
+                        new StandardGEMapper<>(codonSize, 1, problem.getGrammar()),
+                        new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
+                                .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
+                                .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
+                        new ComparableRanker<>(new IndividualComparator<BitsGenotype, String, NumericFitness>(IndividualComparator.Attribute.FITNESS)),
+                        new Tournament<Individual<BitsGenotype, String, NumericFitness>>(3, random),
+                        new LastWorst<Individual<BitsGenotype, String, NumericFitness>>(), populationSize,
+                        true,
+                        problem);
+                evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
+                propertiesListener = new PropertiesListener(
+                        NumericFitness.comparator(),
+                        bitsDistance,
+                        treeDistance,
+                        new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
+                                .put(AbstractCrossover.class, "crossover")
+                                .put(AbstractMutation.class, "mutation").build()
+                );
+              } else if (methodName.startsWith("pige-")) {
+                int codonSize = Integer.parseInt(methodName.replace("pige-", ""));
+                StandardConfiguration<BitsGenotype, String, NumericFitness> configuration = new StandardConfiguration<>(
+                        populationSize, generations,
+                        new RandomInitializer<>(random, new BitsGenotypeFactory(genotypeSize)),
+                        new Any<BitsGenotype>(),
+                        new PiGEMapper<>(codonSize, 1, problem.getGrammar()),
+                        new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
+                                .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
+                                .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
+                        new ComparableRanker<>(new IndividualComparator<BitsGenotype, String, NumericFitness>(IndividualComparator.Attribute.FITNESS)),
+                        new Tournament<Individual<BitsGenotype, String, NumericFitness>>(3, random),
+                        new LastWorst<Individual<BitsGenotype, String, NumericFitness>>(), populationSize,
+                        true,
+                        problem);
+                evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
+                propertiesListener = new PropertiesListener(
+                        NumericFitness.comparator(),
+                        bitsDistance,
+                        treeDistance,
+                        new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
+                                .put(AbstractCrossover.class, "crossover")
+                                .put(AbstractMutation.class, "mutation").build()
+                );
+              } else if (methodName.startsWith("sge-")) {
+                int depth = Integer.parseInt(methodName.replace("sge-", ""));
+                Mapper<SGEGenotype<String>, String> mapper = new SGEMapper<>(depth, problem.getGrammar());
+                StandardConfiguration<SGEGenotype<String>, String, NumericFitness> configuration = new StandardConfiguration<>(
+                        populationSize, generations,
+                        new RandomInitializer<>(random, new SGEGenotypeFactory<>((SGEMapper<String>) mapper)),
+                        new Any<SGEGenotype<String>>(),
+                        mapper,
+                        new Utils.MapBuilder<GeneticOperator<SGEGenotype<String>>, Double>()
+                                .put(new SGECrossover<String>(random), 0.8d)
+                                .put(new SGEMutation<>(0.01, (SGEMapper<String>) mapper, random), 0.2d).build(),
+                        new ComparableRanker<>(new IndividualComparator<SGEGenotype<String>, String, NumericFitness>(IndividualComparator.Attribute.FITNESS)),
+                        new Tournament<Individual<SGEGenotype<String>, String, NumericFitness>>(3, random),
+                        new LastWorst<Individual<SGEGenotype<String>, String, NumericFitness>>(), populationSize,
+                        true,
+                        problem);
+                evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
+                propertiesListener = new PropertiesListener(
+                        NumericFitness.comparator(),
+                        sgeDistance,
+                        treeDistance,
+                        new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
+                                .put(AbstractCrossover.class, "crossover")
+                                .put(AbstractMutation.class, "mutation").build()
+                );
+              } else if (methodName.equals("hge")) {
+                StandardConfiguration<BitsGenotype, String, NumericFitness> configuration = new StandardConfiguration<>(
+                        populationSize, generations,
+                        new RandomInitializer<>(random, new BitsGenotypeFactory(genotypeSize)),
+                        new Any<BitsGenotype>(),
+                        new HierarchicalMapper<>(problem.getGrammar()),
+                        new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
+                                .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
+                                .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
+                        new ComparableRanker<>(new IndividualComparator<BitsGenotype, String, NumericFitness>(IndividualComparator.Attribute.FITNESS)),
+                        new Tournament<Individual<BitsGenotype, String, NumericFitness>>(3, random),
+                        new LastWorst<Individual<BitsGenotype, String, NumericFitness>>(), populationSize,
+                        true,
+                        problem);
+                evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
+                propertiesListener = new PropertiesListener(
+                        NumericFitness.comparator(),
+                        bitsDistance,
+                        treeDistance,
+                        new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
+                                .put(AbstractCrossover.class, "crossover")
+                                .put(AbstractMutation.class, "mutation").build()
+                );
+              } else if (methodName.startsWith("whge-")) {
+                int depth = Integer.parseInt(methodName.replace("whge-", ""));
+                StandardConfiguration<BitsGenotype, String, NumericFitness> configuration = new StandardConfiguration<>(
+                        populationSize, generations,
+                        new RandomInitializer<>(random, new BitsGenotypeFactory(genotypeSize)),
+                        new Any<BitsGenotype>(),
+                        new WeightedHierarchicalMapper<>(depth, problem.getGrammar()),
+                        new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
+                                .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
+                                .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
+                        new ComparableRanker<>(new IndividualComparator<BitsGenotype, String, NumericFitness>(IndividualComparator.Attribute.FITNESS)),
+                        new Tournament<Individual<BitsGenotype, String, NumericFitness>>(3, random),
+                        new LastWorst<Individual<BitsGenotype, String, NumericFitness>>(), populationSize,
+                        true,
+                        problem);
+                evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
+                propertiesListener = new PropertiesListener(
+                        NumericFitness.comparator(),
+                        bitsDistance,
+                        treeDistance,
+                        new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
+                                .put(AbstractCrossover.class, "crossover")
+                                .put(AbstractMutation.class, "mutation").build()
+                );
+              } else if (methodName.startsWith("cfggp-")) {
+                int maxDepth = Integer.parseInt(methodName.replace("cfggp-", ""));
+                StandardConfiguration<Node<String>, String, NumericFitness> configuration = new StandardConfiguration<>(
+                        populationSize, generations,
+                        new MultiInitializer<>(new Utils.MapBuilder<PopulationInitializer<Node<String>>, Double>()
+                                .put(new RandomInitializer<>(random, new GrowTreeFactory<>(maxDepth, problem.getGrammar())), 0.5)
+                                .put(new RandomInitializer<>(random, new FullTreeFactory<>(maxDepth, problem.getGrammar())), 0.5)
+                                .build()
+                        ),
+                        new Any<Node<String>>(),
+                        new CfgGpMapper<String>(),
+                        new Utils.MapBuilder<GeneticOperator<Node<String>>, Double>()
+                                .put(new StandardTreeCrossover<String>(maxDepth, random), 0.8d)
+                                .put(new StandardTreeMutation<>(maxDepth, problem.getGrammar(), random), 0.2d)
+                                .build(),
+                        new ComparableRanker<>(new IndividualComparator<Node<String>, String, NumericFitness>(IndividualComparator.Attribute.FITNESS)),
+                        new Tournament<Individual<Node<String>, String, NumericFitness>>(3, random),
+                        new LastWorst<Individual<Node<String>, String, NumericFitness>>(), populationSize,
+                        true,
+                        problem);
+                evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
+                propertiesListener = new PropertiesListener(
+                        NumericFitness.comparator(),
+                        treeDistance,
+                        treeDistance,
+                        new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
+                                .put(AbstractCrossover.class, "crossover")
+                                .put(AbstractMutation.class, "mutation").build()
+                );
+              }
+              //go
+              //prepare listeners
+              List<EvolverListener> listeners = new ArrayList<>();
               listeners.add(new CollectorGenerationLogger<>(
-                      constants, filePrintStream, false, header ? 0 : -1, ";", ";",
-                      new Population(),
+                      constants, System.out, true, 10, " ", " | ",
                       new NumericFirstBest(false, problem.getTestingFitnessComputer(), "%6.2f"),
                       new Diversity(),
-                      new CacheStatistics(),
-                      propertiesListener
+                      propertiesListener,
+                      new BestPrinter(problem.getPhenotypePrinter(), "%30.30s")
               ));
+              listeners.add(propertiesListener);
+              if (filePrintStream != null) {
+                listeners.add(new CollectorGenerationLogger<>(
+                        constants, filePrintStream, false, header ? 0 : -1, ";", ";",
+                        new Population(),
+                        new NumericFirstBest(false, problem.getTestingFitnessComputer(), "%6.2f"),
+                        new Diversity(),
+                        new CacheStatistics(),
+                        propertiesListener
+                ));
+              }
+              evolver.solve(listeners);
+              header = false;
             }
-            evolver.solve(listeners);
-            header = false;
           }
         }
       }
