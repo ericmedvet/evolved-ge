@@ -5,6 +5,7 @@
  */
 package it.units.malelab.ege.core.listener;
 
+import com.google.common.collect.ConcurrentHashMultiset;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import it.units.malelab.ege.core.Individual;
@@ -20,6 +21,7 @@ import it.units.malelab.ege.core.operator.GeneticOperator;
 import it.units.malelab.ege.util.Pair;
 import it.units.malelab.ege.util.distance.Distance;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -32,10 +34,11 @@ import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
  */
 public class PropertiesListener<G, T, F extends Fitness> extends AbstractListener<G, T, F> implements Collector<G, T, F> {
 
-  private boolean collecting = false;
   private final Map<String, List<Pair<Double, Double>>> partialDistances;
   private final Map<String, List<Pair<Double, Double>>> cumulativeDistances;
   private final Map<String, Multiset<CountType>> counts;
+
+  private boolean resetData = false;
 
   private static enum CountType {
     MAPPING, INVALID, OPERATOR_APPLICATION, REDUNDANT, BETTER_FITNESS, VALID_OPERATOR_APPLICATION
@@ -57,25 +60,29 @@ public class PropertiesListener<G, T, F extends Fitness> extends AbstractListene
     this.genotypeDistance = genotypeDistance;
     this.phenotypeDistance = phenotypeDistance;
     this.operatorNames = operatorNames;
-    partialDistances = new LinkedHashMap<>();
-    cumulativeDistances = new LinkedHashMap<>();
-    counts = new LinkedHashMap<>();
+    partialDistances = (Map) Collections.synchronizedMap(new LinkedHashMap<>());
+    cumulativeDistances = (Map) Collections.synchronizedMap(new LinkedHashMap<>());
+    counts = (Map) Collections.synchronizedMap(new LinkedHashMap<>());
+    //reset data
+    counts.put(NO_OPERATOR, (Multiset) ConcurrentHashMultiset.create());
+    for (String operatorName : operatorNames.values()) {
+      counts.put(operatorName, (Multiset) ConcurrentHashMultiset.create());
+      partialDistances.put(operatorName, Collections.synchronizedList(new ArrayList<Pair<Double, Double>>()));
+      cumulativeDistances.put(operatorName, Collections.synchronizedList(new ArrayList<Pair<Double, Double>>()));
+    }
   }
 
   @Override
-  public synchronized void listen(EvolutionEvent<G, T, F> event) {
-    if (event instanceof EvolutionStartEvent) {
-      for (String operatorName : operatorNames.values()) {
-        cumulativeDistances.put(operatorName, new ArrayList<Pair<Double, Double>>());
-      }
-    }
-    if (!collecting) {
-      collecting = true;
-      //reset data
-      counts.put(NO_OPERATOR, (Multiset) HashMultiset.create());
-      for (String operatorName : operatorNames.values()) {
-        counts.put(operatorName, (Multiset) HashMultiset.create());
-        partialDistances.put(operatorName, new ArrayList<Pair<Double, Double>>());
+  public void listen(EvolutionEvent<G, T, F> event) {
+    synchronized (this) {
+      if (resetData) {
+        resetData = false;
+        //reset data
+        counts.get(NO_OPERATOR).clear();
+        for (String operatorName : operatorNames.values()) {
+          counts.get(operatorName).clear();
+          partialDistances.get(operatorName).clear();
+        }
       }
     }
     if (event instanceof MappingEvent) {
@@ -178,7 +185,6 @@ public class PropertiesListener<G, T, F extends Fitness> extends AbstractListene
 
   @Override
   public Map<String, Object> collect(GenerationEvent<G, T, F> generationEvent) {
-    collecting = false;
     //compute aggregates
     LinkedHashMap<String, Object> values = new LinkedHashMap<>();
     values.put("properties.mapping.invalidity", (double) counts.get(NO_OPERATOR).count(CountType.INVALID) / (double) counts.get(NO_OPERATOR).count(CountType.MAPPING));
@@ -207,9 +213,9 @@ public class PropertiesListener<G, T, F extends Fitness> extends AbstractListene
   }
 
   private double pearsonCorrelation(List<Pair<Double, Double>> values) {
-    if (values.isEmpty()||values.size()==1) {
+    if (values.isEmpty() || values.size() == 1) {
       return Double.NaN;
-    }    
+    }
     double[] x = new double[values.size()];
     double[] y = new double[values.size()];
     for (int i = 0; i < values.size(); i++) {
