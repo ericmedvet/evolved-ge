@@ -18,9 +18,16 @@ import java.util.Objects;
  * @author eric
  */
 public class BitsGenotype implements Sequence<Boolean> {
-  
+
   private final int length;
   private final BitSet bitSet;
+
+  public BitsGenotype(String bits) {
+    this(bits.length());
+    for (int i = 0; i < length; i++) {
+      bitSet.set(i, bits.charAt(i)!='0');
+    }
+  }
 
   public BitsGenotype(int nBits) {
     this.length = nBits;
@@ -31,96 +38,96 @@ public class BitsGenotype implements Sequence<Boolean> {
     this.length = length;
     this.bitSet = bitSet.get(0, length);
   }
-  
+
   @Override
   public int length() {
     return length;
   }
-  
+
   public BitsGenotype slice(int fromIndex, int toIndex) {
     checkIndexes(fromIndex, toIndex);
-    return new BitsGenotype(toIndex-fromIndex, bitSet.get(fromIndex, toIndex));
+    return new BitsGenotype(toIndex - fromIndex, bitSet.get(fromIndex, toIndex));
   }
-  
+
   public int count() {
     return bitSet.cardinality();
   }
-  
+
   public int toInt() {
     BitsGenotype genotype = this;
-    if (length>Integer.SIZE/2) {
-      genotype = compress(Integer.SIZE/2);
+    if (length > Integer.SIZE / 2) {
+      genotype = compress(Integer.SIZE / 2);
     }
-    if (genotype.bitSet.toLongArray().length<=0) {
+    if (genotype.bitSet.toLongArray().length <= 0) {
       return 0;
     }
-    return (int)genotype.bitSet.toLongArray()[0];
+    return (int) genotype.bitSet.toLongArray()[0];
   }
-    
+
   public void set(int fromIndex, BitsGenotype other) {
-    checkIndexes(fromIndex, fromIndex+other.length());
-    for (int i = 0; i<other.length(); i++) {
-      bitSet.set(fromIndex+i, other.bitSet.get(i));
+    checkIndexes(fromIndex, fromIndex + other.length());
+    for (int i = 0; i < other.length(); i++) {
+      bitSet.set(fromIndex + i, other.bitSet.get(i));
     }
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append(length+":");
+    sb.append(length + ":");
     for (int i = 0; i < length; i++) {
       sb.append(bitSet.get(i) ? '1' : '0');
     }
     return sb.toString();
   }
-  
+
   @Override
   public Boolean get(int index) {
-    checkIndexes(index, index+1);
+    checkIndexes(index, index + 1);
     return bitSet.get(index);
   }
-  
+
   public void flip() {
     bitSet.flip(0, length);
   }
-  
+
   public void flip(int index) {
-    checkIndexes(index, index+1);
+    checkIndexes(index, index + 1);
     bitSet.flip(index);
   }
-  
+
   public void flip(int fromIndex, int toIndex) {
     checkIndexes(fromIndex, toIndex);
     bitSet.flip(fromIndex, toIndex);
   }
-  
+
   private void checkIndexes(int fromIndex, int toIndex) {
-    if (fromIndex>=toIndex) {
+    if (fromIndex >= toIndex) {
       throw new ArrayIndexOutOfBoundsException(String.format("from=%d >= to=%d", fromIndex, toIndex));
     }
-    if (fromIndex<0) {
+    if (fromIndex < 0) {
       throw new ArrayIndexOutOfBoundsException(String.format("from=%d < 0", fromIndex));
     }
-    if (toIndex>length) {
+    if (toIndex > length) {
       throw new ArrayIndexOutOfBoundsException(String.format("to=%d > length=%d", toIndex, length));
     }
   }
-  
+
   public BitSet asBitSet() {
     BitSet copy = new BitSet(length);
     copy.or(bitSet);
     return copy;
   }
-    
+
   public BitsGenotype compress(int newLength) {
     BitsGenotype compressed = new BitsGenotype(newLength);
     List<BitsGenotype> slices = slices(Utils.slices(Range.closedOpen(0, length), newLength));
-    for (int i = 0; i<slices.size(); i++) {
-      compressed.bitSet.set(i, slices.get(i).count()>slices.get(i).length()/2);
+    for (int i = 0; i < slices.size(); i++) {
+      compressed.bitSet.set(i, slices.get(i).count() > slices.get(i).length() / 2);
     }
     return compressed;
   }
-    
+
   public List<BitsGenotype> slices(final List<Range<Integer>> ranges) {
     List<BitsGenotype> genotypes = new ArrayList<>(ranges.size());
     for (Range<Integer> range : ranges) {
@@ -128,17 +135,17 @@ public class BitsGenotype implements Sequence<Boolean> {
     }
     return genotypes;
   }
-  
+
   public BitsGenotype slice(Range<Integer> range) {
-    if ((range.upperEndpoint()-range.lowerEndpoint())==0) {
+    if ((range.upperEndpoint() - range.lowerEndpoint()) == 0) {
       return new BitsGenotype(0);
     }
     return slice(range.lowerEndpoint(), range.upperEndpoint());
   }
-  
+
   public BitsGenotype append(BitsGenotype genotype) {
-    BitsGenotype resultGenotype = new BitsGenotype(length+genotype.length);
-    if (length>0) {
+    BitsGenotype resultGenotype = new BitsGenotype(length + genotype.length);
+    if (length > 0) {
       resultGenotype.set(0, this);
     }
     resultGenotype.set(length, genotype);
@@ -170,5 +177,5 @@ public class BitsGenotype implements Sequence<Boolean> {
     }
     return true;
   }
-    
+
 }
