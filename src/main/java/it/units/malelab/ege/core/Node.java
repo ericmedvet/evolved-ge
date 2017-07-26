@@ -100,7 +100,7 @@ public class Node<T> implements Sequence<T> {
     return max+1;
   }
   
-  public int size() {
+  public int nodeSize() {
     int size = 0;
     for (Node<T> child : children) {
       size = size+child.size();
@@ -141,7 +141,7 @@ public class Node<T> implements Sequence<T> {
   }
 
   @Override
-  public int length() {
+  public int size() {
     return leaves().size();
   }
     

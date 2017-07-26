@@ -11,6 +11,7 @@ import com.google.common.collect.Range;
 import it.units.malelab.ege.ge.genotype.BitsGenotype;
 import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.core.Grammar;
+import it.units.malelab.ege.core.mapper.Mapper;
 import it.units.malelab.ege.ge.genotype.BitsGenotypeFactory;
 import static it.units.malelab.ege.ge.mapper.StandardGEMapper.BIT_USAGES_INDEX_NAME;
 import it.units.malelab.ege.util.Utils;
@@ -30,16 +31,16 @@ import java.util.Random;
  */
 public class HierarchicalMapper<T> extends AbstractMapper<BitsGenotype, T> {
 
-  private final static boolean DEBUG = true;
+  private final static boolean DEBUG = false;
   private final static boolean RECURSIVE_DEFAULT = false;
-    
+
   private final boolean recursive;
-  private final Map<T, Integer> shortestOptionIndexMap;
+  private final Map<T, List<Integer>> shortestOptionIndexesMap;
 
   public HierarchicalMapper(Grammar<T> grammar) {
     this(grammar, RECURSIVE_DEFAULT);
   }
-  
+
   public HierarchicalMapper(Grammar<T> grammar, boolean recursive) {
     super(grammar);
     this.recursive = recursive;
@@ -85,18 +86,22 @@ public class HierarchicalMapper<T> extends AbstractMapper<BitsGenotype, T> {
       }
     }
     //build shortestOptionIndexMap
-    shortestOptionIndexMap = new LinkedHashMap<>();
+    shortestOptionIndexesMap = new LinkedHashMap<>();
     for (Map.Entry<T, List<List<T>>> rule : grammar.getRules().entrySet()) {
-      int minJumpsOptionIndex = 0;
       int minJumps = Integer.MAX_VALUE;
       for (int i = 0; i < optionJumpsToTerminalMap.get(rule.getKey()).size(); i++) {
-        int jumps = optionJumpsToTerminalMap.get(rule.getKey()).get(i);
-        if (jumps < minJumps) {
-          minJumps = jumps;
-          minJumpsOptionIndex = i;
+        int localJumps = optionJumpsToTerminalMap.get(rule.getKey()).get(i);
+        if (localJumps < minJumps) {
+          minJumps = localJumps;
         }
       }
-      shortestOptionIndexMap.put(rule.getKey(), minJumpsOptionIndex);
+      List<Integer> indexes = new ArrayList<>();
+      for (int i = 0; i < optionJumpsToTerminalMap.get(rule.getKey()).size(); i++) {
+        if (optionJumpsToTerminalMap.get(rule.getKey()).get(i) == minJumps) {
+          indexes.add(i);
+        }
+      }
+      shortestOptionIndexesMap.put(rule.getKey(), indexes);
     }
   }
 
@@ -125,10 +130,10 @@ public class HierarchicalMapper<T> extends AbstractMapper<BitsGenotype, T> {
     if (DEBUG) {
       System.out.printf("Mapping %s%n", genotype);
     }
-    int[] bitUsages = new int[genotype.length()];
+    int[] bitUsages = new int[genotype.size()];
     Node<T> tree;
     if (recursive) {
-      tree = mapRecursively(grammar.getStartingSymbol(), Range.closedOpen(0, genotype.length()), genotype, bitUsages);
+      tree = mapRecursively(grammar.getStartingSymbol(), Range.closedOpen(0, genotype.size()), genotype, bitUsages);
     } else {
       tree = mapIteratively(genotype, bitUsages);
     }
@@ -172,7 +177,7 @@ public class HierarchicalMapper<T> extends AbstractMapper<BitsGenotype, T> {
     }
     List<Integer> bestOptionIndexes = new ArrayList<>();
     for (int i = 0; i < options.size(); i++) {
-      double value = (double) slices.get(i).count() / (double) slices.get(i).length();
+      double value = (double) slices.get(i).count() / (double) slices.get(i).size();
       if (value == max) {
         bestOptionIndexes.add(i);
       } else if (value > max) {
@@ -185,20 +190,42 @@ public class HierarchicalMapper<T> extends AbstractMapper<BitsGenotype, T> {
     if (bestOptionIndexes.size() == 1) {
       if (DEBUG) {
         System.out.printf(" (%d)%n", bestOptionIndexes.get(0));
+        System.out.print("$");
+        int boi = bestOptionIndexes.get(0);
+        for (int si = 0; si < slices.size(); si++) {
+          System.out.printf("%s\\gft{%s}%s%s",
+                  si == boi ? "\\textbf{" : "",
+                  slices.get(si).toString().split(":")[1],
+                  si == boi ? "}" : "",
+                  si == slices.size() - 1 ? "" : "\\: "
+          );
+        }
+        System.out.println("$\\\\");
       }
       return options.get(bestOptionIndexes.get(0));
     }
     if (DEBUG) {
       System.out.printf(" (%d on %d)%n",
-              bestOptionIndexes.get(genotype.count() % bestOptionIndexes.size()),
+              bestOptionIndexes.get(genotype.slice(range).count() % bestOptionIndexes.size()),
               bestOptionIndexes.size()
       );
+      System.out.print("$");
+      int boi = bestOptionIndexes.get(genotype.slice(range).count() % bestOptionIndexes.size());
+      for (int si = 0; si < slices.size(); si++) {
+        System.out.printf("%s\\gft{%s}%s%s",
+                si == boi ? "\\textbf{" : "",
+                slices.get(si).toString().split(":")[1],
+                si == boi ? "}" : "",
+                si == slices.size() - 1 ? "" : "\\: "
+        );
+      }
+      System.out.println("$\\\\");
     }
-    return options.get(bestOptionIndexes.get(genotype.count() % bestOptionIndexes.size()));
+    return options.get(bestOptionIndexes.get(genotype.slice(range).count() % bestOptionIndexes.size()));
   }
-  
+
   public Node<T> mapIteratively(BitsGenotype genotype, int[] bitUsages) throws MappingException {
-    Node<EnhancedSymbol<T>> enhancedTree = new Node<>(new EnhancedSymbol<>(grammar.getStartingSymbol(), Range.closedOpen(0, genotype.length())));
+    Node<EnhancedSymbol<T>> enhancedTree = new Node<>(new EnhancedSymbol<>(grammar.getStartingSymbol(), Range.closedOpen(0, genotype.size())));
     while (true) {
       Node<EnhancedSymbol<T>> nodeToBeReplaced = null;
       for (Node<EnhancedSymbol<T>> node : enhancedTree.leaves()) {
@@ -220,9 +247,11 @@ public class HierarchicalMapper<T> extends AbstractMapper<BitsGenotype, T> {
       //get option
       List<T> symbols;
       if ((symbolRange.upperEndpoint() - symbolRange.lowerEndpoint()) < options.size()) {
-        symbols = options.get(shortestOptionIndexMap.get(symbol));
+        int count = (symbolRange.upperEndpoint() - symbolRange.lowerEndpoint() > 0) ? genotype.slice(symbolRange).count() : genotype.count();
+        int index = shortestOptionIndexesMap.get(symbol).get(count % shortestOptionIndexesMap.get(symbol).size());
+        symbols = options.get(index);
         if (DEBUG) {
-          System.out.printf("\tOPTION:%n");
+          System.out.printf("\tOPTION: (count=%d on %d)%n", count, shortestOptionIndexesMap.get(symbol).size());
         }
       } else {
         symbols = chooseOption(genotype, symbolRange, options);
@@ -258,7 +287,7 @@ public class HierarchicalMapper<T> extends AbstractMapper<BitsGenotype, T> {
     }
     //convert
     return extractFromEnhanced(enhancedTree);
-  }  
+  }
 
   public Node<T> mapRecursively(T symbol, Range<Integer> range, BitsGenotype genotype, int[] bitUsages) throws MappingException {
     Node<T> node = new Node<>(symbol);
@@ -275,9 +304,14 @@ public class HierarchicalMapper<T> extends AbstractMapper<BitsGenotype, T> {
       //get option
       List<T> symbols;
       if ((range.upperEndpoint() - range.lowerEndpoint()) < options.size()) {
-        symbols = options.get(shortestOptionIndexMap.get(symbol));
+        int count = (range.upperEndpoint() - range.lowerEndpoint() > 0) ? genotype.slice(range).count() : genotype.count();
+        int index = shortestOptionIndexesMap.get(symbol).get(count % shortestOptionIndexesMap.get(symbol).size());
+        symbols = options.get(index);
         if (DEBUG) {
-          System.out.printf("\tOPTION:%n");
+          System.out.printf("\tOPTION: (count=%d on %d)%n", count, shortestOptionIndexesMap.get(symbol).size());
+          System.out.printf("$\\gft{%s}$\\\\%n",
+                  genotype.slice(range).toString().split(":")[1]
+          );
         }
       } else {
         symbols = chooseOption(genotype, range, options);
@@ -287,7 +321,7 @@ public class HierarchicalMapper<T> extends AbstractMapper<BitsGenotype, T> {
       }
       //add children
       List<Range<Integer>> childRanges = getSlices(range, symbols);
-      if (DEBUG) {
+      if (DEBUG && false) {
         System.out.print("\tSPLIT :");
       }
       for (int i = 0; i < symbols.size(); i++) {
@@ -296,15 +330,29 @@ public class HierarchicalMapper<T> extends AbstractMapper<BitsGenotype, T> {
           childRange = Range.closedOpen(range.lowerEndpoint(), range.upperEndpoint() - 1);
           childRanges.set(i, childRange);
         }
-        if (DEBUG) {
+        if (DEBUG && false) {
           System.out.printf(" %s", genotype.slice(childRange));
           if (childRanges.get(i).equals(range) && (childRange.upperEndpoint() - childRange.lowerEndpoint() > 0)) {
             System.out.print("*");
           }
         }
       }
-      if (DEBUG) {
+      if (DEBUG && false) {
         System.out.println();
+        System.out.print("$");
+        for (int ci = 0; ci < childRanges.size(); ci++) {
+          if (childRanges.get(ci).upperEndpoint() - childRanges.get(ci).lowerEndpoint() == 0) {
+            System.out.printf("\\emptyset%s",
+                    ci == childRanges.size() - 1 ? "" : "\\: "
+            );
+          } else {
+            System.out.printf("\\gft{%s}%s",
+                    genotype.slice(childRanges.get(ci)).toString().split(":")[1],
+                    ci == childRanges.size() - 1 ? "" : "\\: "
+            );
+          }
+        }
+        System.out.println("$");
       }
       for (int i = 0; i < symbols.size(); i++) {
         node.getChildren().add(mapRecursively(symbols.get(i), childRanges.get(i), genotype, bitUsages));
@@ -313,50 +361,32 @@ public class HierarchicalMapper<T> extends AbstractMapper<BitsGenotype, T> {
     return node;
   }
 
-
-  public static void main(String[] args) throws IOException, MappingException {
-    //HierarchicalMapper mapper = new HierarchicalMapper(Utils.parseFromFile(new File("grammars/symbolic-regression-xy-nums.bnf")));
-    HierarchicalMapper mapper = new WeightedHierarchicalMapper(3, Utils.parseFromFile(new File("grammars/symbolic-regression-xy-nums.bnf")));
-    //System.out.println(mapper.map(new BitsGenotype("011010010000110101011000000000111100011001111101"), new HashMap()));
-    //BitsGenotype g = new BitsGenotype("111100011001011101011010010000110101111000000000");
-    //BitsGenotype g = new BitsGenotype("011010010000110101011000000000111100011001111101"); //125
-    BitsGenotype g = new BitsGenotype("011010010000110101011000000000111100011000000101"); //125
-    System.out.println(mapper.mapRecursively(
-            mapper.getGrammar().getStartingSymbol(),
-            Range.closedOpen(0, g.length()),
-            g,
-            new int[g.length()]
-    ));
-    if (true) {
-      return;
-    }
-    HierarchicalMapper m1 = new HierarchicalMapper(mapper.getGrammar(), true);
-    HierarchicalMapper m2 = new HierarchicalMapper(mapper.getGrammar(), false);
-    long millis1 = 0;
-    long millis2 = 0;
-    List<BitsGenotype> genos = new ArrayList<>();
-    BitsGenotypeFactory bgf = new BitsGenotypeFactory(1024);
+  public static void main(String[] args) throws IOException {
+    Grammar grammar = Utils.parseFromFile(new File("grammars/symbolic-regression-xy-nums.bnf"));
+    Mapper hge = new HierarchicalMapper(grammar);
+    Mapper whge = new WeightedHierarchicalMapper(2, grammar);
+    Mapper ge = new StandardGEMapper(8, 10, grammar);
+    Mapper pige = new PiGEMapper(16, 10, grammar);
+    BitsGenotypeFactory bgf = new BitsGenotypeFactory(48);
     Random r = new Random(1);
     Map<String, Object> report = new HashMap<>();
-    for (int i = 0; i<10000; i++) {
-      genos.add(bgf.build(r));
-    }
-    for (BitsGenotype geno : genos) {
-      if (!m1.map(geno, report).equals(m2.map(geno, report))) {
-        System.out.printf("Different result for %s%n", geno);
+    while (true) {
+      BitsGenotype g = bgf.build(r);
+      g = new BitsGenotype("111001111111000010100001011100010100110100000111");
+      try {
+        List p1 = Utils.contents(hge.map(g, report).leaves());
+        List p2 = Utils.contents(whge.map(g, report).leaves());
+        List p3 = Utils.contents(ge.map(g, report).leaves());
+        List p4 = Utils.contents(pige.map(g, report).leaves());
+        //System.out.printf("%3d %3d %3d %3d%n", p1.size(), p2.size(), p3.size(), p4.size());
+        if (p1.size() == 9 && p2.size() == 13 && p3.size() >= 9 && p4.size() >= 9) {
+          System.out.printf("%s%n%s%n%s%n%s%n%s%n", g, p1, p2, p3, p4);
+          break;
+        }
+      } catch (MappingException e) {
+        continue;
       }
     }
-    millis1 = System.currentTimeMillis();
-    for (BitsGenotype geno : genos) {
-      m1.map(geno, report);
-    }
-    millis1 = System.currentTimeMillis()-millis1;
-    millis2 = System.currentTimeMillis();
-    for (BitsGenotype geno : genos) {
-      m2.map(geno, report);
-    }
-    millis2 = System.currentTimeMillis()-millis2;
-    System.out.printf("%d vs %d%n", millis1, millis2);
   }
-  
+
 }

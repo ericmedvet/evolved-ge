@@ -6,7 +6,6 @@
 package it.units.malelab.ege.core.listener;
 
 import com.google.common.collect.ConcurrentHashMultiset;
-import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import it.units.malelab.ege.core.Individual;
 import it.units.malelab.ege.core.Node;
@@ -19,6 +18,7 @@ import it.units.malelab.ege.core.listener.event.MappingEvent;
 import it.units.malelab.ege.core.listener.event.OperatorApplicationEvent;
 import it.units.malelab.ege.core.operator.GeneticOperator;
 import it.units.malelab.ege.util.Pair;
+import it.units.malelab.ege.util.Utils;
 import it.units.malelab.ege.util.distance.Distance;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -194,10 +194,10 @@ public class PropertiesListener<G, T, F extends Fitness> extends AbstractListene
               (double) counts.get(operatorName).count(CountType.REDUNDANT) / (double) counts.get(operatorName).count(CountType.VALID_OPERATOR_APPLICATION)
       );
       values.put("properties.operator." + operatorName + ".locality",
-              pearsonCorrelation(partialDistances.get(operatorName))
+              Utils.pearsonCorrelation(partialDistances.get(operatorName))
       );
       values.put("properties.operator." + operatorName + ".locality.cumulative",
-              pearsonCorrelation(cumulativeDistances.get(operatorName))
+              Utils.pearsonCorrelation(cumulativeDistances.get(operatorName))
       );
       values.put("properties.operator." + operatorName + ".evolvability",
               (double) counts.get(operatorName).count(CountType.BETTER_FITNESS) / (double) counts.get(operatorName).count(CountType.OPERATOR_APPLICATION)
@@ -210,19 +210,6 @@ public class PropertiesListener<G, T, F extends Fitness> extends AbstractListene
       );
     }
     return values;
-  }
-
-  private double pearsonCorrelation(List<Pair<Double, Double>> values) {
-    if (values.isEmpty() || values.size() == 1) {
-      return Double.NaN;
-    }
-    double[] x = new double[values.size()];
-    double[] y = new double[values.size()];
-    for (int i = 0; i < values.size(); i++) {
-      x[i] = values.get(i).getFirst();
-      y[i] = values.get(i).getSecond();
-    }
-    return new PearsonsCorrelation().correlation(x, y);
   }
 
 }

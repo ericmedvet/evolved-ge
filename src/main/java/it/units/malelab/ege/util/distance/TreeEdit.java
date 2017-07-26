@@ -9,7 +9,7 @@ import util.LblTree;
  * @author eric
  */
 // from https://github.com/unnonouno/tree-edit-distance/blob/master/tree-edit-distance/src/treedist/TreeEditDistance.java
-public class TreeEditDistance<T> implements Distance<Node<T>> {
+public class TreeEdit<T> implements Distance<Node<T>> {
 
   @Override
   public double d(Node<T> t1, Node<T> t2) {

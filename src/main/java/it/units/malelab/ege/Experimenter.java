@@ -22,6 +22,7 @@ import it.units.malelab.ege.cfggp.operator.StandardTreeMutation;
 import it.units.malelab.ege.core.Individual;
 import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.core.Problem;
+import it.units.malelab.ege.core.Sequence;
 import it.units.malelab.ege.core.evolver.Evolver;
 import it.units.malelab.ege.core.evolver.StandardConfiguration;
 import it.units.malelab.ege.core.evolver.StandardEvolver;
@@ -60,11 +61,11 @@ import it.units.malelab.ege.ge.operator.ProbabilisticMutation;
 import it.units.malelab.ege.ge.operator.SGECrossover;
 import it.units.malelab.ege.ge.operator.SGEMutation;
 import it.units.malelab.ege.util.Utils;
-import it.units.malelab.ege.util.distance.BitsGenotypeEditDistance;
 import it.units.malelab.ege.util.distance.CachedDistance;
 import it.units.malelab.ege.util.distance.Distance;
-import it.units.malelab.ege.util.distance.EditDistance;
-import it.units.malelab.ege.util.distance.SGEGenotypeHammingDistance;
+import it.units.malelab.ege.util.distance.Edit;
+import it.units.malelab.ege.util.distance.Hamming;
+import it.units.malelab.ege.util.distance.LeavesEdit;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -101,18 +102,9 @@ public class Experimenter {
       filePrintStream = new PrintStream(args[0]);
     }
     //prepare distances
-    final EditDistance<String> editDistance = new EditDistance<>();
-    Distance<Node<String>> treeDistance = new CachedDistance<>(new Distance<Node<String>>() {
-      @Override
-      public double d(Node<String> t1, Node<String> t2) {
-        if (Node.EMPTY_TREE.equals(t1) || Node.EMPTY_TREE.equals(t2)) {
-          return Double.NaN;
-        }
-        return editDistance.d(Utils.contents(t1.leaves()), Utils.contents(t2.leaves()));
-      }
-    });
-    Distance<BitsGenotype> bitsDistance = new CachedDistance<>(new BitsGenotypeEditDistance());
-    Distance<SGEGenotype<String>> sgeDistance = new CachedDistance<>(new SGEGenotypeHammingDistance<String>());
+    Distance<Node<String>> phenotypeDistance = new CachedDistance<>(new LeavesEdit<String>());
+    Distance<Sequence<Boolean>> bitsDistance = new CachedDistance<>(new Edit<Boolean>());
+    Distance<Sequence<Integer>> sgeDistance = new CachedDistance<>(new Hamming<Integer>());
     //iterate
     boolean header = true;
     for (int run = 0; run < runs; run++) {
@@ -171,7 +163,7 @@ public class Experimenter {
                 propertiesListener = new PropertiesListener(
                         NumericFitness.comparator(),
                         bitsDistance,
-                        treeDistance,
+                        phenotypeDistance,
                         new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
                                 .put(AbstractCrossover.class, "crossover")
                                 .put(AbstractMutation.class, "mutation").build()
@@ -195,7 +187,7 @@ public class Experimenter {
                 propertiesListener = new PropertiesListener(
                         NumericFitness.comparator(),
                         bitsDistance,
-                        treeDistance,
+                        phenotypeDistance,
                         new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
                                 .put(AbstractCrossover.class, "crossover")
                                 .put(AbstractMutation.class, "mutation").build()
@@ -220,7 +212,7 @@ public class Experimenter {
                 propertiesListener = new PropertiesListener(
                         NumericFitness.comparator(),
                         sgeDistance,
-                        treeDistance,
+                        phenotypeDistance,
                         new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
                                 .put(AbstractCrossover.class, "crossover")
                                 .put(AbstractMutation.class, "mutation").build()
@@ -243,7 +235,7 @@ public class Experimenter {
                 propertiesListener = new PropertiesListener(
                         NumericFitness.comparator(),
                         bitsDistance,
-                        treeDistance,
+                        phenotypeDistance,
                         new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
                                 .put(AbstractCrossover.class, "crossover")
                                 .put(AbstractMutation.class, "mutation").build()
@@ -267,7 +259,7 @@ public class Experimenter {
                 propertiesListener = new PropertiesListener(
                         NumericFitness.comparator(),
                         bitsDistance,
-                        treeDistance,
+                        phenotypeDistance,
                         new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
                                 .put(AbstractCrossover.class, "crossover")
                                 .put(AbstractMutation.class, "mutation").build()
@@ -295,8 +287,8 @@ public class Experimenter {
                 evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
                 propertiesListener = new PropertiesListener(
                         NumericFitness.comparator(),
-                        treeDistance,
-                        treeDistance,
+                        phenotypeDistance,
+                        phenotypeDistance,
                         new Utils.MapBuilder<Class<? extends GeneticOperator>, String>()
                                 .put(AbstractCrossover.class, "crossover")
                                 .put(AbstractMutation.class, "mutation").build()

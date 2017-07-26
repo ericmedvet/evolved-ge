@@ -72,7 +72,7 @@ public class EvolutionImageSaverListener<G extends Sequence, T, F extends Fitnes
     //update best usages
     Individual<G, T, F> best = rankedPopulation.get(0).get(0);
     if (types.contains(ImageType.BEST_USAGE)) {
-      double[] bestUsages = new double[best.getGenotype().length()];
+      double[] bestUsages = new double[best.getGenotype().size()];
       int[] bitUsages = (int[]) best.getOtherInfo().get(StandardGEMapper.BIT_USAGES_INDEX_NAME);
       if (bitUsages != null) {
         double maxUsage = 0;
@@ -87,20 +87,20 @@ public class EvolutionImageSaverListener<G extends Sequence, T, F extends Fitnes
     }
     //update diversities
     if (types.contains(ImageType.DIVERSITY) || types.contains(ImageType.DU)) {
-      Multiset[] symbols = new Multiset[best.getGenotype().length()];
+      Multiset[] symbols = new Multiset[best.getGenotype().size()];
       for (int i = 0; i < symbols.length; i++) {
         symbols[i] = HashMultiset.create();
       }
-      double[] counts = new double[best.getGenotype().length()];
+      double[] counts = new double[best.getGenotype().size()];
       for (List<Individual<G, T, F>> rank : rankedPopulation) {
         for (Individual<G, T, F> individual : rank) {
-          for (int i = 0; i < Math.min(best.getGenotype().length(), individual.getGenotype().length()); i++) {
+          for (int i = 0; i < Math.min(best.getGenotype().size(), individual.getGenotype().size()); i++) {
             counts[i] = counts[i] + 1;
             symbols[i].add(individual.getGenotype().get(i));
           }
         }
       }
-      double[] diversities = new double[best.getGenotype().length()];
+      double[] diversities = new double[best.getGenotype().size()];
       for (int i = 0; i < symbols.length; i++) {
         diversities[i] = multisetDiversity(symbols[i]);
       }
@@ -108,7 +108,7 @@ public class EvolutionImageSaverListener<G extends Sequence, T, F extends Fitnes
     }
     //update usages
     if (types.contains(ImageType.USAGE) || types.contains(ImageType.DU)) {
-      double[] usages = new double[best.getGenotype().length()];
+      double[] usages = new double[best.getGenotype().size()];
       double count = 0;
       for (List<Individual<G, T, F>> rank : rankedPopulation) {
         for (Individual<G, T, F> individual : rank) {

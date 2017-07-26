@@ -26,12 +26,12 @@ public class SparseFlipMutation extends AbstractMutation<BitsGenotype> {
   @Override
   public List<BitsGenotype> apply(List<BitsGenotype> parents) {
     BitsGenotype parent = parents.get(0);
-    BitsGenotype child = new BitsGenotype(parent.length());
+    BitsGenotype child = new BitsGenotype(parent.size());
     child.set(0, parent);
-    int size = Math.max(1, random.nextInt(child.length()));
+    int size = Math.max(1, random.nextInt(child.size()));
     Set<Integer> indexes = new HashSet<>();
     while (indexes.size()<size) {
-      indexes.add(random.nextInt(child.length()));
+      indexes.add(random.nextInt(child.size()));
     }
     for (int index : indexes) {
       child.flip(index);

@@ -12,6 +12,6 @@ package it.units.malelab.ege.core;
 public interface Sequence<T> {
   
   public T get(int index);
-  public int length();
+  public int size();
   
 }

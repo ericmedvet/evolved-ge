@@ -31,7 +31,7 @@ public class QuantizedBitsInitializer implements PopulationInitializer<BitsGenot
     int pieces = (int)Math.ceil(Math.log(n)/Math.log(2d));
     for (int i = 0; i<n; i++) {
       BitsGenotype genotype = new BitsGenotype(size);
-      List<BitsGenotype> slices = genotype.slices(Utils.slices(Range.closedOpen(0, genotype.length()), pieces));
+      List<BitsGenotype> slices = genotype.slices(Utils.slices(Range.closedOpen(0, genotype.size()), pieces));
       int b = 0;
       int v = i;
       for (int j = slices.size()-1; j>=0; j--) {
@@ -40,7 +40,7 @@ public class QuantizedBitsInitializer implements PopulationInitializer<BitsGenot
           v = v-(int)Math.pow(2, j);
         }
         genotype.set(b, slices.get(j));
-        b = b+slices.get(j).length();
+        b = b+slices.get(j).size();
       }
       genotypes.add(genotype);
     }

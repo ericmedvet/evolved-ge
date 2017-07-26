@@ -85,13 +85,13 @@ public class BitsSGEMapper<T> extends AbstractMapper<BitsGenotype, T> {
 
   @Override
   public Node<T> map(BitsGenotype genotype, Map<String, Object> report) throws MappingException {
-    int[] bitUsages = new int[genotype.length()];
+    int[] bitUsages = new int[genotype.size()];
     //transform genotypes in ints
-    if (genotype.length() < overallSize) {
-      throw new MappingException(String.format("Short genotype (%d<%d)", genotype.length(), overallSize));
+    if (genotype.size() < overallSize) {
+      throw new MappingException(String.format("Short genotype (%d<%d)", genotype.size(), overallSize));
     }
     Map<Pair<T, Integer>, List<Range<Integer>>> codonRanges = new LinkedHashMap<>();
-    List<Range<Integer>> nonTerminalRanges = Utils.slices(Range.closedOpen(0, genotype.length()), nonTerminalSizes);
+    List<Range<Integer>> nonTerminalRanges = Utils.slices(Range.closedOpen(0, genotype.size()), nonTerminalSizes);
     for (int i = 0; i < nonTerminals.size(); i++) {
       //int codonSize = (int) Math.max(Math.ceil(Math.log10(nonRecursiveGrammar.getRules().get(nonTerminals.get(i)).size()) / Math.log10(2)), 1);
       List<Range<Integer>> boundaries = Utils.slices(nonTerminalRanges.get(i), nonTerminalCodonsNumbers.get(i));

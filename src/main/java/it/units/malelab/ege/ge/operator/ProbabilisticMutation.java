@@ -27,9 +27,9 @@ public class ProbabilisticMutation extends AbstractMutation<BitsGenotype> {
   @Override
   public List<BitsGenotype> apply(List<BitsGenotype> parents) {
     BitsGenotype parent = parents.get(0);
-    BitsGenotype child = new BitsGenotype(parent.length());
+    BitsGenotype child = new BitsGenotype(parent.size());
     child.set(0, parent);
-    for (int i = 0; i<child.length(); i++) {
+    for (int i = 0; i<child.size(); i++) {
       if (random.nextDouble()<p) {
         child.flip(i);
       }

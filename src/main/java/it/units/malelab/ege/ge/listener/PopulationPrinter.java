@@ -42,9 +42,9 @@ public class PopulationPrinter<G extends BitsGenotype, T, F extends Fitness> ext
         //genotype
         int[] bitUsages = (int[]) individual.getOtherInfo().get(StandardGEMapper.BIT_USAGES_INDEX_NAME);
         if (bitUsages == null) {
-          bitUsages = new int[genotype.length()];
+          bitUsages = new int[genotype.size()];
         }
-        for (int i = 0; i < genotype.length(); i++) {
+        for (int i = 0; i < genotype.size(); i++) {
           ps.print(CHARS[bitUsages[i] > 0 ? 0 : 1][genotype.get(i) ? 0 : 1]);
         }
         ps.printf(" -> %s%n", Utils.contents(individual.getPhenotype().leaves()));

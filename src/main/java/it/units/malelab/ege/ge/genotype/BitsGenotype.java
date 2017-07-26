@@ -40,7 +40,7 @@ public class BitsGenotype implements Sequence<Boolean> {
   }
 
   @Override
-  public int length() {
+  public int size() {
     return length;
   }
 
@@ -65,8 +65,8 @@ public class BitsGenotype implements Sequence<Boolean> {
   }
 
   public void set(int fromIndex, BitsGenotype other) {
-    checkIndexes(fromIndex, fromIndex + other.length());
-    for (int i = 0; i < other.length(); i++) {
+    checkIndexes(fromIndex, fromIndex + other.size());
+    for (int i = 0; i < other.size(); i++) {
       bitSet.set(fromIndex + i, other.bitSet.get(i));
     }
   }
@@ -123,7 +123,7 @@ public class BitsGenotype implements Sequence<Boolean> {
     BitsGenotype compressed = new BitsGenotype(newLength);
     List<BitsGenotype> slices = slices(Utils.slices(Range.closedOpen(0, length), newLength));
     for (int i = 0; i < slices.size(); i++) {
-      compressed.bitSet.set(i, slices.get(i).count() > slices.get(i).length() / 2);
+      compressed.bitSet.set(i, slices.get(i).count() > slices.get(i).size() / 2);
     }
     return compressed;
   }

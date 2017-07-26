@@ -25,19 +25,19 @@ public class Population<G extends Sequence, T, F extends Fitness> implements Col
     List<List<Individual<G, T, F>>> rankedPopulation = new ArrayList<>(event.getRankedPopulation());
     Map<String, Object> indexes = new LinkedHashMap<>();
     double count = 0;
-    double genoLengthSum = 0;
-    double phenoLengthSum = 0;
+    double genoSizeSum = 0;
+    double phenoSizeSum = 0;
     double birthDateSum = 0;
     for (List<Individual<G, T, F>> rank : rankedPopulation) {
       for (Individual<G, T, F> individual : rank) {
         count = count+1;
-        genoLengthSum = genoLengthSum+individual.getGenotype().length();
-        phenoLengthSum = phenoLengthSum+individual.getPhenotype().length();
+        genoSizeSum = genoSizeSum+individual.getGenotype().size();
+        phenoSizeSum = phenoSizeSum+individual.getPhenotype().size();
         birthDateSum = birthDateSum+individual.getBirthDate();
       }
     }
-    indexes.put("population.genotype.length.average", (int)Math.round(genoLengthSum / count));
-    indexes.put("population.phenotype.length.average", (int)Math.round(phenoLengthSum / count));
+    indexes.put("population.genotype.size.average", (int)Math.round(genoSizeSum / count));
+    indexes.put("population.phenotype.size.average", (int)Math.round(phenoSizeSum / count));
     indexes.put("population.birthDate.average", (int)Math.round(birthDateSum / count));
     indexes.put("population.size", (int)count);
     indexes.put("population.ranks", rankedPopulation.size());
@@ -49,8 +49,8 @@ public class Population<G extends Sequence, T, F extends Fitness> implements Col
     LinkedHashMap<String, String> formattedNames = new LinkedHashMap<>();
     formattedNames.put("population.size", "%5d");
     formattedNames.put("population.ranks", "%3d");
-    formattedNames.put("population.genotype.length.average", "%5d");
-    formattedNames.put("population.phenotype.length.average", "%4d");
+    formattedNames.put("population.genotype.size.average", "%5d");
+    formattedNames.put("population.phenotype.size.average", "%4d");
     formattedNames.put("population.birthDate.average", "%3d");
     return formattedNames;
   }

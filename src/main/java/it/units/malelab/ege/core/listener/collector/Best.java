@@ -47,9 +47,9 @@ public abstract class Best<G extends Sequence, T, F extends Fitness> implements 
                 fitnessEntry.getValue());
       }
     }
-    indexes.put("best.genotype.length", best.getGenotype().length());
+    indexes.put("best.genotype.size", best.getGenotype().size());
     indexes.put("best.phenotype.size", best.getPhenotype().size());
-    indexes.put("best.phenotype.length", best.getPhenotype().length());
+    indexes.put("best.phenotype.nodeSize", best.getPhenotype().nodeSize());
     indexes.put("best.phenotype.depth", best.getPhenotype().depth());
     indexes.put("best.birth", best.getBirthDate());
     if (ancestry) {
@@ -72,9 +72,9 @@ public abstract class Best<G extends Sequence, T, F extends Fitness> implements 
               augmentFitnessName("best.validation.fitness", fitnessEntry.getKey()),
               fitnessEntry.getValue());
     }      
-    formattedNames.put("best.genotype.length", "%4d");
-    formattedNames.put("best.phenotype.length", "%3d");
+    formattedNames.put("best.genotype.size", "%4d");
     formattedNames.put("best.phenotype.size", "%3d");
+    formattedNames.put("best.phenotype.nodeSize", "%3d");
     formattedNames.put("best.phenotype.depth", "%2d");
     formattedNames.put("best.birth", "%3d");
     if (ancestry) {

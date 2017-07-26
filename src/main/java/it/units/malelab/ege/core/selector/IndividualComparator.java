@@ -51,7 +51,7 @@ public class IndividualComparator<G, T, F extends Fitness> implements Comparator
         v = Integer.compare(i1.getPhenotype().size(), i2.getPhenotype().size());
       } else if (entry.getKey().equals(Attribute.GENO_SIZE)) {
         if (i1.getGenotype() instanceof Sequence) {
-          v = Integer.compare(((Sequence)i1.getGenotype()).length(), ((Sequence)i2.getGenotype()).length());
+          v = Integer.compare(((Sequence)i1.getGenotype()).size(), ((Sequence)i2.getGenotype()).size());
         } else {
           v = 0;
         }

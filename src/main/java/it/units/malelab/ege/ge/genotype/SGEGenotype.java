@@ -42,7 +42,7 @@ public class SGEGenotype<T> implements Sequence<Integer> {
   }
 
   @Override
-  public int length() {
+  public int size() {
     int length = 0;
     for (List<Integer> gene : genes.values()) {
       length = length+gene.size();

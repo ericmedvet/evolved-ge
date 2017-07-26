@@ -5,18 +5,19 @@
  */
 package it.units.malelab.ege.util.distance;
 
+import it.units.malelab.ege.core.Sequence;
 import java.util.List;
 
 /**
  *
  * @author eric
  */
-public class EditDistance<T> implements Distance<List<T>> {
+public class Edit<T> implements Distance<Sequence<T>> {
 
   //from https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#Java
   @Override
-  public double d(List<T> ts1, List<T> ts2) {
-    int len0 = ts1.size() + 1;
+  public double d(Sequence<T> ts1, Sequence<T> ts2) {
+    int len0 = ts1.size()+ 1;
     int len1 = ts2.size()+ 1;
     int[] cost = new int[len0];
     int[] newcost = new int[len0];

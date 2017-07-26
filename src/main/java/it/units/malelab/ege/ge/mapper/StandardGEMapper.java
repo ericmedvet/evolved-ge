@@ -32,9 +32,9 @@ public class StandardGEMapper<T> extends AbstractMapper<BitsGenotype, T> {
 
   @Override
   public Node<T> map(BitsGenotype genotype, Map<String, Object> report) throws MappingException {
-    int[] bitUsages = new int[genotype.length()];
-    if (genotype.length()<codonLenght) {
-      throw new MappingException(String.format("Short genotype (%d<%d)", genotype.length(), codonLenght));
+    int[] bitUsages = new int[genotype.size()];
+    if (genotype.size()<codonLenght) {
+      throw new MappingException(String.format("Short genotype (%d<%d)", genotype.size(), codonLenght));
     }
     Node<T> tree = new Node<>(grammar.getStartingSymbol());
     int currentCodonIndex = 0;
@@ -51,15 +51,27 @@ public class StandardGEMapper<T> extends AbstractMapper<BitsGenotype, T> {
         break;
       }
       //get codon index and option
-      if ((currentCodonIndex+1)*codonLenght>genotype.length()) {
+      if ((currentCodonIndex+1)*codonLenght>genotype.size()) {
         wraps = wraps+1;
         currentCodonIndex = 0;
         if (wraps>maxWraps) {
           throw new MappingException(String.format("Too many wraps (%d>%d)", wraps, maxWraps));
         }
       }
+      
       List<List<T>> options = grammar.getRules().get(nodeToBeReplaced.getContent());
       int optionIndex = genotype.slice(currentCodonIndex*codonLenght, (currentCodonIndex+1)*codonLenght).toInt()%options.size();
+      /*
+      System.out.printf("i=%3d g_i=%3d |r_s|=%2d j=%2d w=%2d %s %s%n",
+              currentCodonIndex,
+              genotype.slice(currentCodonIndex*codonLenght, (currentCodonIndex+1)*codonLenght).toInt(),
+              options.size(),
+              optionIndex,
+              wraps,
+              genotype.slice(currentCodonIndex*codonLenght, (currentCodonIndex+1)*codonLenght),
+              tree.leaves()
+              );
+      */
       //update usages
       for (int i = currentCodonIndex*codonLenght; i<(currentCodonIndex+1)*codonLenght; i++) {
         bitUsages[i] = bitUsages[i]+1;

@@ -9,6 +9,7 @@ import com.google.common.collect.Range;
 import it.units.malelab.ege.core.Individual;
 import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.core.Grammar;
+import it.units.malelab.ege.core.Sequence;
 import it.units.malelab.ege.core.listener.EvolverListener;
 import it.units.malelab.ege.core.listener.event.EvolutionEvent;
 import java.io.BufferedReader;
@@ -29,6 +30,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.regex.Pattern;
+import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 
 /**
  *
@@ -314,27 +316,27 @@ public class Utils {
     return ranges;
   }
 
-  public static class MapBuilder<K, V>  {
-    
+  public static class MapBuilder<K, V> {
+
     private LinkedHashMap<K, V> map;
 
     public MapBuilder() {
       map = new LinkedHashMap<>();
     }
-    
-    public MapBuilder<K,V> put(K key, V value) {
+
+    public MapBuilder<K, V> put(K key, V value) {
       map.put(key, value);
       return this;
     }
-    
+
     public Map<K, V> build() {
       return map;
     }
 
   }
-  
+
   public static <T> boolean validate(Node<T> tree, Grammar<T> grammar) {
-    if (tree==null) {
+    if (tree == null) {
       return false;
     }
     if (!tree.getContent().equals(grammar.getStartingSymbol())) {
@@ -349,10 +351,10 @@ public class Utils {
     terminals.removeAll(grammar.getRules().keySet());
     return innerValidate(tree, grammar, terminals);
   }
-  
+
   private static <T> boolean innerValidate(Node<T> tree, Grammar<T> grammar, Set<T> terminals) {
     //validate node content
-    if (!grammar.getRules().keySet().contains(tree.getContent())&&!terminals.contains(tree.getContent())) {
+    if (!grammar.getRules().keySet().contains(tree.getContent()) && !terminals.contains(tree.getContent())) {
       return false;
     }
     if (terminals.contains(tree.getContent())) {
@@ -374,4 +376,30 @@ public class Utils {
     return true;
   }
 
+  public static double pearsonCorrelation(List<Pair<Double, Double>> values) {
+    if (values.isEmpty() || values.size() == 1) {
+      return Double.NaN;
+    }
+    double[] x = new double[values.size()];
+    double[] y = new double[values.size()];
+    for (int i = 0; i < values.size(); i++) {
+      x[i] = values.get(i).getFirst();
+      y[i] = values.get(i).getSecond();
+    }
+    return new PearsonsCorrelation().correlation(x, y);
+  }
+  
+  public static <T> Sequence<T> fromList(final List<T> list) {
+    return new Sequence<T>() {
+      @Override
+      public T get(int index) {
+        return list.get(index);
+      }
+      @Override
+      public int size() {
+        return list.size();
+      }
+    };
+  }
+  
 }

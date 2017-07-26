@@ -36,13 +36,13 @@ public class BitsSGECrossover extends AbstractCrossover<BitsGenotype> {
   public List<BitsGenotype> apply(List<BitsGenotype> parents) {
     BitsGenotype parent1 = parents.get(0);
     BitsGenotype parent2 = parents.get(1);
-    if (Math.min(parent1.length(), parent2.length())<overallSize) {
+    if (Math.min(parent1.size(), parent2.size())<overallSize) {
       //should be an exception
       return parents;
     }
     int nonTerminalIndex = random.nextInt(nonTerminalSizes.size());
-    List<BitsGenotype> parent1Slices = parent1.slices(Utils.slices(Range.closedOpen(0, parent1.length()), nonTerminalSizes));
-    List<BitsGenotype> parent2Slices = parent2.slices(Utils.slices(Range.closedOpen(0, parent2.length()), nonTerminalSizes));
+    List<BitsGenotype> parent1Slices = parent1.slices(Utils.slices(Range.closedOpen(0, parent1.size()), nonTerminalSizes));
+    List<BitsGenotype> parent2Slices = parent2.slices(Utils.slices(Range.closedOpen(0, parent2.size()), nonTerminalSizes));
     BitsGenotype child1 = new BitsGenotype(0);
     BitsGenotype child2 = new BitsGenotype(0);
     for (int i = 0; i<parent1Slices.size(); i++) {

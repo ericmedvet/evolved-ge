@@ -56,9 +56,9 @@ public class BreathFirstMapper<T> extends AbstractMapper<BitsGenotype, T> {
 
   @Override
   public Node<T> map(BitsGenotype genotype, Map<String, Object> report) throws MappingException {
-    int[] bitUsages = new int[genotype.length()];
-    if (genotype.length()<codonLenght) {
-      throw new MappingException(String.format("Short genotype (%d<%d)", genotype.length(), codonLenght));
+    int[] bitUsages = new int[genotype.size()];
+    if (genotype.size()<codonLenght) {
+      throw new MappingException(String.format("Short genotype (%d<%d)", genotype.size(), codonLenght));
     }
     Node<EnhancedSymbol<T>> enhancedTree = new Node<>(new EnhancedSymbol<>(grammar.getStartingSymbol(), 0));
     int currentCodonIndex = 0;
@@ -76,7 +76,7 @@ public class BreathFirstMapper<T> extends AbstractMapper<BitsGenotype, T> {
         break;
       }
       //get codon index and option
-      if ((currentCodonIndex + 1) * codonLenght > genotype.length()) {
+      if ((currentCodonIndex + 1) * codonLenght > genotype.size()) {
         wraps = wraps + 1;
         currentCodonIndex = 0;
         if (wraps > maxWraps) {

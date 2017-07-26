@@ -10,7 +10,7 @@ import it.units.malelab.ege.core.Problem;
 import it.units.malelab.ege.core.fitness.LeafContentsDistance;
 import it.units.malelab.ege.core.fitness.NumericFitness;
 import it.units.malelab.ege.util.Utils;
-import it.units.malelab.ege.util.distance.EditDistance;
+import it.units.malelab.ege.util.distance.Edit;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -27,7 +27,7 @@ public class Text extends Problem<String, NumericFitness> {
 
   public Text(String target) throws IOException {
     super(Utils.parseFromFile(new File("grammars/text.bnf")),
-            new LeafContentsDistance<>(Arrays.asList(target.replace(" ", "_").split("")), new EditDistance<String>()),
+            new LeafContentsDistance<>(Utils.fromList(Arrays.asList(target.replace(" ", "_").split(""))), new Edit<String>()),
             null,
             new LeavesJoiner<String>()
     );
