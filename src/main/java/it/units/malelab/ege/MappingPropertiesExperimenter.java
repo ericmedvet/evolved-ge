@@ -172,7 +172,7 @@ public class MappingPropertiesExperimenter {
           c = c+1;
         }
         System.out.println(Arrays.toString(sizes));
-        double nonUniformity = Math.sqrt(StatUtils.variance(sizes));
+        double nonUniformity = Math.sqrt(StatUtils.variance(sizes)); //-> https://en.wikipedia.org/wiki/Coefficient_of_variation
         //compute locality
         filePrintStream.printf("%s;%s;invalidity;%6.4f %n", problemName, methodName, invalidity);
         filePrintStream.printf("%s;%s;redundancy;%6.4f %n", problemName, methodName, redundancy);
