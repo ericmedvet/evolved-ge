@@ -66,7 +66,7 @@ public class BreathFirstMapper<T> extends AbstractMapper<BitsGenotype, T> {
     while (true) {
       int minDepth = Integer.MAX_VALUE;
       Node<EnhancedSymbol<T>> nodeToBeReplaced = null;
-      for (Node<EnhancedSymbol<T>> node : enhancedTree.leaves()) {
+      for (Node<EnhancedSymbol<T>> node : enhancedTree.leafNodes()) {
         if (grammar.getRules().keySet().contains(node.getContent().getSymbol())&&(node.getContent().getDepth()<minDepth)) {
           nodeToBeReplaced = node;
           minDepth = node.getContent().getDepth();

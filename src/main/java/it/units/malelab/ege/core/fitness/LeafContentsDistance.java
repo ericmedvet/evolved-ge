@@ -27,7 +27,7 @@ public class LeafContentsDistance<T> implements FitnessComputer<T, NumericFitnes
 
   @Override
   public NumericFitness compute(Node<T> phenotype) {
-    double d = distance.d(Utils.fromList(Utils.contents(phenotype.leaves())), target);
+    double d = distance.d(Utils.fromList(Utils.contents(phenotype.leafNodes())), target);
     return new NumericFitness(d);
   }
 

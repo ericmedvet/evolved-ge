@@ -49,7 +49,7 @@ public class SGEMapper<T> extends AbstractMapper<SGEGenotype<T>, T> {
     Node<Pair<T, Integer>> tree = new Node<>(nonRecursiveGrammar.getStartingSymbol());
     while (true) {
       Node<Pair<T, Integer>> nodeToBeReplaced = null;
-      for (Node<Pair<T, Integer>> node : tree.leaves()) {
+      for (Node<Pair<T, Integer>> node : tree.leafNodes()) {
         if (nonRecursiveGrammar.getRules().keySet().contains(node.getContent())) {
           nodeToBeReplaced = node;
           break;

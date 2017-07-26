@@ -41,7 +41,7 @@ public class StandardGEMapper<T> extends AbstractMapper<BitsGenotype, T> {
     int wraps = 0;
     while (true) {
       Node<T> nodeToBeReplaced = null;
-      for (Node<T> node : tree.leaves()) {
+      for (Node<T> node : tree.leafNodes()) {
         if (grammar.getRules().keySet().contains(node.getContent())) {
           nodeToBeReplaced = node;
           break;

@@ -20,9 +20,9 @@ public class LeavesEdit<T> implements Distance<Node<T>> {
   @Override
   public double d(Node<T> t1, Node<T> t2) {
     if (Node.EMPTY_TREE.equals(t1) || Node.EMPTY_TREE.equals(t2)) {
-      return Double.NaN;
+      return Math.max(t1.leafContents().size(), t2.leafContents().size());
     }
-    return distance.d(Utils.fromList(Utils.contents(t1.leaves())), Utils.fromList(Utils.contents(t2.leaves())));
+    return distance.d(t1.leafContents(), t2.leafContents());
   }
 
 }

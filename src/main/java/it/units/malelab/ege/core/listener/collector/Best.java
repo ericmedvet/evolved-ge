@@ -48,7 +48,7 @@ public abstract class Best<G extends Sequence, T, F extends Fitness> implements 
       }
     }
     indexes.put("best.genotype.size", best.getGenotype().size());
-    indexes.put("best.phenotype.size", best.getPhenotype().size());
+    indexes.put("best.phenotype.size", best.getPhenotype().leafNodes().size());
     indexes.put("best.phenotype.nodeSize", best.getPhenotype().nodeSize());
     indexes.put("best.phenotype.depth", best.getPhenotype().depth());
     indexes.put("best.birth", best.getBirthDate());

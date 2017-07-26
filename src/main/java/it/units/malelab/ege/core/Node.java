@@ -5,6 +5,7 @@
  */
 package it.units.malelab.ege.core;
 
+import it.units.malelab.ege.util.Utils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -14,7 +15,7 @@ import java.util.Objects;
  *
  * @author eric
  */
-public class Node<T> implements Sequence<T> {
+public class Node<T> {
   
   public static Node EMPTY_TREE = new Node(null);
   
@@ -45,13 +46,13 @@ public class Node<T> implements Sequence<T> {
     return children;
   }
   
-  public List<Node<T>> leaves() {
+  public List<Node<T>> leafNodes() {
     if (children.isEmpty()) {
       return Collections.singletonList(this);
     }
     List<Node<T>> childContents = new ArrayList<>();
     for (Node<T> child : children) {
-      childContents.addAll(child.leaves());
+      childContents.addAll(child.leafNodes());
     }
     return childContents;
   }
@@ -103,7 +104,7 @@ public class Node<T> implements Sequence<T> {
   public int nodeSize() {
     int size = 0;
     for (Node<T> child : children) {
-      size = size+child.size();
+      size = size+child.nodeSize();
     }
     return size+1;
   }
@@ -133,16 +134,10 @@ public class Node<T> implements Sequence<T> {
     }
     return true;
   }
-
-  @Override
-  public T get(int index) {
-    Node<T> leaf = leaves().get(index);
-    return leaf.getContent();
+  
+  public Sequence<T> leafContents() {
+    final List<Node<T>> leafNodes = leafNodes();
+    return Utils.fromList(Utils.contents(leafNodes));
   }
 
-  @Override
-  public int size() {
-    return leaves().size();
-  }
-    
 }

@@ -18,7 +18,7 @@ import java.util.Random;
  * @author eric
  */
 public class SGEGenotypeFactory<T> implements Factory<SGEGenotype<T>> {
-  
+
   private final SGEMapper<T> mapper;
 
   public SGEGenotypeFactory(SGEMapper<T> mapper) {
@@ -37,5 +37,15 @@ public class SGEGenotypeFactory<T> implements Factory<SGEGenotype<T>> {
     }
     return genotype;
   }
-  
+
+  public int getBitSize() {
+    double sum = 0;
+    for (Map.Entry<Pair<T, Integer>, List<Integer>> entry : mapper.getGenesBound().entrySet()) {
+      for (int bound : entry.getValue()) {
+        sum = sum + Math.log10((double)bound)/Math.log10(2d);
+      }
+    }
+    return (int) Math.round(sum);
+  }
+
 }

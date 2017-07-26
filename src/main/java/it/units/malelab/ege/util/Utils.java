@@ -262,7 +262,7 @@ public class Utils {
       ps.print(" ");
     }
     ps.printf("'%20.20s' (%3d w/ %10.10s) f=%5.5s%n",
-            individual.getPhenotype().leaves(),
+            individual.getPhenotype().leafNodes(),
             individual.getBirthDate(),
             individual.getFitness());
     for (Individual<?, ?, ?> parent : individual.getParents()) {

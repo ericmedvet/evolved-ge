@@ -228,7 +228,7 @@ public class HierarchicalMapper<T> extends AbstractMapper<BitsGenotype, T> {
     Node<EnhancedSymbol<T>> enhancedTree = new Node<>(new EnhancedSymbol<>(grammar.getStartingSymbol(), Range.closedOpen(0, genotype.size())));
     while (true) {
       Node<EnhancedSymbol<T>> nodeToBeReplaced = null;
-      for (Node<EnhancedSymbol<T>> node : enhancedTree.leaves()) {
+      for (Node<EnhancedSymbol<T>> node : enhancedTree.leafNodes()) {
         if (grammar.getRules().keySet().contains(node.getContent().getSymbol())) {
           nodeToBeReplaced = node;
           break;
@@ -374,10 +374,10 @@ public class HierarchicalMapper<T> extends AbstractMapper<BitsGenotype, T> {
       BitsGenotype g = bgf.build(r);
       g = new BitsGenotype("111001111111000010100001011100010100110100000111");
       try {
-        List p1 = Utils.contents(hge.map(g, report).leaves());
-        List p2 = Utils.contents(whge.map(g, report).leaves());
-        List p3 = Utils.contents(ge.map(g, report).leaves());
-        List p4 = Utils.contents(pige.map(g, report).leaves());
+        List p1 = Utils.contents(hge.map(g, report).leafNodes());
+        List p2 = Utils.contents(whge.map(g, report).leafNodes());
+        List p3 = Utils.contents(ge.map(g, report).leafNodes());
+        List p4 = Utils.contents(pige.map(g, report).leafNodes());
         //System.out.printf("%3d %3d %3d %3d%n", p1.size(), p2.size(), p3.size(), p4.size());
         if (p1.size() == 9 && p2.size() == 13 && p3.size() >= 9 && p4.size() >= 9) {
           System.out.printf("%s%n%s%n%s%n%s%n%s%n", g, p1, p2, p3, p4);

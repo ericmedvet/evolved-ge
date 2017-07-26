@@ -14,7 +14,7 @@ public class LeavesJoiner<T> implements PhenotypePrinter<T> {
   @Override
   public String toString(Node<T> node) {
     StringBuilder sb = new StringBuilder();
-    for (Node<T> leaf : node.leaves()) {
+    for (Node<T> leaf : node.leafNodes()) {
       sb.append(leaf.getContent().toString());
     }
     return sb.toString();

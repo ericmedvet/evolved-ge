@@ -32,7 +32,7 @@ public class RegexMatch extends BinaryClassification<String, String> {
       @Override
       public boolean classify(String instance, Node<String> classifier) {
         StringBuilder sb = new StringBuilder();
-        for (String leaf : Utils.contents(classifier.leaves())) {
+        for (String leaf : Utils.contents(classifier.leafNodes())) {
           sb.append(leaf);
         }
         return instance.matches(sb.toString());
