@@ -11,9 +11,8 @@ import java.util.Set;
  *
  * @author eric
  */
-public interface Sequence<T> {
+public interface ConstrainedSequence<T> extends Sequence<T> {
   
-  public T get(int index);
-  public int size();
+  public Set<T> domain(int index);
   
 }

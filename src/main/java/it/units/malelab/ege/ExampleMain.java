@@ -42,8 +42,10 @@ import it.units.malelab.ege.core.initializer.PopulationInitializer;
 import it.units.malelab.ege.ge.genotype.BitsGenotype;
 import it.units.malelab.ege.ge.genotype.BitsGenotypeFactory;
 import it.units.malelab.ege.core.initializer.RandomInitializer;
+import it.units.malelab.ege.core.listener.EvolutionImageSaverListener;
 import it.units.malelab.ege.core.listener.collector.BestPrinter;
 import it.units.malelab.ege.core.listener.collector.MultiObjectiveFitnessFirstBest;
+import it.units.malelab.ege.core.mapper.Mapper;
 import it.units.malelab.ege.ge.genotype.validator.Any;
 import it.units.malelab.ege.core.operator.GeneticOperator;
 import it.units.malelab.ege.core.ranker.ComparableRanker;
@@ -51,15 +53,24 @@ import it.units.malelab.ege.core.ranker.ComparatorChain;
 import it.units.malelab.ege.core.ranker.LexicoGraphicalMOComparator;
 import it.units.malelab.ege.core.ranker.ParetoRanker;
 import it.units.malelab.ege.core.selector.FirstBest;
+import it.units.malelab.ege.ge.genotype.SGEGenotype;
+import it.units.malelab.ege.ge.genotype.SGEGenotypeFactory;
+import it.units.malelab.ege.ge.mapper.HierarchicalMapper;
+import it.units.malelab.ege.ge.mapper.PiGEMapper;
+import it.units.malelab.ege.ge.mapper.SGEMapper;
+import it.units.malelab.ege.ge.mapper.StandardGEMapper;
 import it.units.malelab.ege.ge.mapper.WeightedHierarchicalMapper;
 import it.units.malelab.ege.ge.operator.LengthPreservingTwoPointsCrossover;
 import it.units.malelab.ege.ge.operator.ProbabilisticMutation;
+import it.units.malelab.ege.ge.operator.SGECrossover;
+import it.units.malelab.ege.ge.operator.SGEMutation;
 import it.units.malelab.ege.util.Utils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
 
@@ -78,7 +89,9 @@ public class ExampleMain {
     //solveText();
     //solveTextCfgGp();
     //solveParityCfgGp();
-    solveKLandscapesCfgGp();
+    //solveKLandscapesCfgGp();
+    //doImagesBits();
+    doImages();
   }
 
   private static void solveHarmonicCurve() throws IOException, InterruptedException, ExecutionException {
@@ -428,6 +441,81 @@ public class ExampleMain {
             new BestPrinter<BitsGenotype, String, NumericFitness>(problem.getPhenotypePrinter(), "%30.30s")
     ));
     Evolver<Node<String>, String, NumericFitness> evolver = new StandardEvolver<>(
+            1, configuration, random, false);
+    List<Node<String>> bests = evolver.solve(listeners);
+    System.out.printf("Found %d solutions.%n", bests.size());
+  }
+
+  private static void doImagesBits() throws IOException, InterruptedException, ExecutionException {
+    Random random = new Random(1l);
+    Problem<String, NumericFitness> problem = new KLandscapes(7);
+    StandardConfiguration<BitsGenotype, String, NumericFitness> configuration = new StandardConfiguration<>(
+            500,
+            50,
+            new RandomInitializer<>(random, new BitsGenotypeFactory(256)),
+            new Any<BitsGenotype>(),
+            //new StandardGEMapper<>(8, 1, problem.getGrammar()),
+            new WeightedHierarchicalMapper<>(3, problem.getGrammar()),
+            //new HierarchicalMapper<>(problem.getGrammar()),
+            //new PiGEMapper<>(16,1,problem.getGrammar()),
+            new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
+                    .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
+                    .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
+            new ComparableRanker<>(new IndividualComparator<BitsGenotype, String, NumericFitness>(IndividualComparator.Attribute.FITNESS)),
+            new Tournament<Individual<BitsGenotype, String, NumericFitness>>(3, random),
+            new LastWorst<Individual<BitsGenotype, String, NumericFitness>>(),
+            500,
+            true,
+            problem);
+    List<EvolverListener<BitsGenotype, String, NumericFitness>> listeners = new ArrayList<>();
+    listeners.add(new CollectorGenerationLogger<>(
+            Collections.EMPTY_MAP, System.out, true, 10, " ", " | ",
+            new Population<BitsGenotype, String, NumericFitness>(),
+            new NumericFirstBest<BitsGenotype, String>(false, problem.getTestingFitnessComputer(), "%6.2f"),
+            new Diversity<BitsGenotype, String, NumericFitness>(),
+            new BestPrinter<BitsGenotype, String, NumericFitness>(problem.getPhenotypePrinter(), "%30.30s")
+    ));
+    listeners.add(new EvolutionImageSaverListener<>(
+            (Map) Collections.singletonMap("name", "whge3-kland7"),
+            "/home/eric/experiments/ge/images/tcyb",
+            EvolutionImageSaverListener.ImageType.DU));
+    Evolver<BitsGenotype, String, NumericFitness> evolver = new StandardEvolver<>(
+            1, configuration, random, false);
+    List<Node<String>> bests = evolver.solve(listeners);
+    System.out.printf("Found %d solutions.%n", bests.size());
+  }
+
+  private static void doImages() throws IOException, InterruptedException, ExecutionException {
+    Random random = new Random(1l);
+    Problem<String, NumericFitness> problem = new KLandscapes(7);
+    SGEMapper<String> mapper = new SGEMapper<>(8, problem.getGrammar());
+    StandardConfiguration<SGEGenotype<String>, String, NumericFitness> configuration = new StandardConfiguration<>(
+            500, 50,
+            new RandomInitializer<>(random, new SGEGenotypeFactory<>((SGEMapper<String>) mapper)),
+            new Any<SGEGenotype<String>>(),
+            mapper,
+            new Utils.MapBuilder<GeneticOperator<SGEGenotype<String>>, Double>()
+                    .put(new SGECrossover<String>(random), 0.8d)
+                    .put(new SGEMutation<>(0.01, (SGEMapper<String>) mapper, random), 0.2d).build(),
+            new ComparableRanker<>(new IndividualComparator<SGEGenotype<String>, String, NumericFitness>(IndividualComparator.Attribute.FITNESS)),
+            new Tournament<Individual<SGEGenotype<String>, String, NumericFitness>>(3, random),
+            new LastWorst<Individual<SGEGenotype<String>, String, NumericFitness>>(),
+            500,
+            true,
+            problem);
+    List<EvolverListener<SGEGenotype<String>, String, NumericFitness>> listeners = new ArrayList<>();
+    listeners.add(new CollectorGenerationLogger<>(
+            Collections.EMPTY_MAP, System.out, true, 10, " ", " | ",
+            new Population<SGEGenotype<String>, String, NumericFitness>(),
+            new NumericFirstBest<SGEGenotype<String>, String>(false, problem.getTestingFitnessComputer(), "%6.2f"),
+            new Diversity<SGEGenotype<String>, String, NumericFitness>(),
+            new BestPrinter<SGEGenotype<String>, String, NumericFitness>(problem.getPhenotypePrinter(), "%30.30s")
+    ));
+    listeners.add(new EvolutionImageSaverListener<>(
+            (Map) Collections.singletonMap("name", "sge8-kland7"),
+            "/home/eric/experiments/ge/images/tcyb",
+            EvolutionImageSaverListener.ImageType.DU));
+    Evolver<SGEGenotype<String>, String, NumericFitness> evolver = new StandardEvolver<>(
             1, configuration, random, false);
     List<Node<String>> bests = evolver.solve(listeners);
     System.out.printf("Found %d solutions.%n", bests.size());

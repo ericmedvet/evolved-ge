@@ -27,8 +27,8 @@ public class SGEGenotypeFactory<T> implements Factory<SGEGenotype<T>> {
 
   @Override
   public SGEGenotype<T> build(Random random) {
-    SGEGenotype<T> genotype = new SGEGenotype<>();
-    for (Map.Entry<Pair<T, Integer>, List<Integer>> entry : mapper.getGenesBound().entrySet()) {
+    SGEGenotype<T> genotype = new SGEGenotype<>(mapper.getGeneBounds());
+    for (Map.Entry<Pair<T, Integer>, List<Integer>> entry : mapper.getGeneBounds().entrySet()) {
       List<Integer> values = new ArrayList<>(entry.getValue().size());
       for (int bound : entry.getValue()) {
         values.add(random.nextInt(bound));
@@ -40,7 +40,7 @@ public class SGEGenotypeFactory<T> implements Factory<SGEGenotype<T>> {
 
   public int getBitSize() {
     double sum = 0;
-    for (Map.Entry<Pair<T, Integer>, List<Integer>> entry : mapper.getGenesBound().entrySet()) {
+    for (Map.Entry<Pair<T, Integer>, List<Integer>> entry : mapper.getGeneBounds().entrySet()) {
       for (int bound : entry.getValue()) {
         sum = sum + Math.log10((double)bound)/Math.log10(2d);
       }

@@ -6,21 +6,33 @@
 package it.units.malelab.ege.ge.genotype;
 
 import com.google.common.collect.Range;
-import it.units.malelab.ege.core.Sequence;
+import it.units.malelab.ege.core.ConstrainedSequence;
 import it.units.malelab.ege.util.Utils;
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  *
  * @author eric
  */
-public class BitsGenotype implements Sequence<Boolean> {
+public class BitsGenotype implements ConstrainedSequence<Boolean> {
 
   private final int length;
   private final BitSet bitSet;
+  
+  private final static Set<Boolean> DOMAIN;
+  
+  static {
+    Set<Boolean> domain = new LinkedHashSet<>();
+    domain.add(Boolean.TRUE);
+    domain.add(Boolean.FALSE);
+    DOMAIN = Collections.unmodifiableSet(domain);
+  }
 
   public BitsGenotype(String bits) {
     this(bits.length());
@@ -176,6 +188,11 @@ public class BitsGenotype implements Sequence<Boolean> {
       return false;
     }
     return true;
+  }
+
+  @Override
+  public Set<Boolean> domain(int index) {
+    return DOMAIN;
   }
 
 }

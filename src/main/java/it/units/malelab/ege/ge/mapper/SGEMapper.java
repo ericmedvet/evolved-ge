@@ -14,6 +14,7 @@ import it.units.malelab.ege.util.Pair;
 import it.units.malelab.ege.util.Utils;
 import it.units.malelab.ege.ge.genotype.SGEGenotype;
 import it.units.malelab.ege.core.Grammar;
+import static it.units.malelab.ege.ge.mapper.StandardGEMapper.BIT_USAGES_INDEX_NAME;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -26,24 +27,30 @@ import java.util.Map;
 public class SGEMapper<T> extends AbstractMapper<SGEGenotype<T>, T> {
 
   private final Grammar<Pair<T, Integer>> nonRecursiveGrammar;
-  private final Map<Pair<T, Integer>, List<Integer>> genesBound;
+  private final Map<Pair<T, Integer>, List<Integer>> geneBounds;
   private final int maxDepth;
+  private Map<Pair<T, Integer>, Integer> geneFirstIndexes;
 
   public SGEMapper(int maxDepth, Grammar<T> grammar) {
     super(grammar);
     this.maxDepth = maxDepth;
     nonRecursiveGrammar = Utils.resolveRecursiveGrammar(grammar, maxDepth);
-    genesBound = new LinkedHashMap<>();
+    geneBounds = new LinkedHashMap<>();
+    geneFirstIndexes = new LinkedHashMap<>();
+    int counter = 0;
     for (Map.Entry<Pair<T, Integer>, List<List<Pair<T, Integer>>>> entry : nonRecursiveGrammar.getRules().entrySet()) {
       List<Integer> bounds = new ArrayList<>();
       for (int i = 0; i<maximumExpansions(entry.getKey(), nonRecursiveGrammar); i++) {
         bounds.add(entry.getValue().size());
       }
-      genesBound.put(entry.getKey(), bounds);
+      geneBounds.put(entry.getKey(), bounds);
+      geneFirstIndexes.put(entry.getKey(), counter);
+      counter = counter+bounds.size();
     }
   }
 
   public Node<T> map(SGEGenotype<T> genotype, Map<String, Object> report) throws MappingException {
+    int[] usages = new int[genotype.size()];
     //map
     Multiset<Pair<T, Integer>> expandedSymbols = LinkedHashMultiset.create();
     Node<Pair<T, Integer>> tree = new Node<>(nonRecursiveGrammar.getStartingSymbol());
@@ -61,6 +68,8 @@ public class SGEMapper<T> extends AbstractMapper<SGEGenotype<T>, T> {
       //get codon
       List<Integer> values = genotype.getGenes().get(nodeToBeReplaced.getContent());
       int value = values.get(expandedSymbols.count(nodeToBeReplaced.getContent()));
+      int usageIndex = geneFirstIndexes.get(nodeToBeReplaced.getContent())+expandedSymbols.count(nodeToBeReplaced.getContent());
+      usages[usageIndex] = usages[usageIndex]+1;
       List<List<Pair<T, Integer>>> options = nonRecursiveGrammar.getRules().get(nodeToBeReplaced.getContent());
       int optionIndex = value;
       //add children
@@ -70,6 +79,7 @@ public class SGEMapper<T> extends AbstractMapper<SGEGenotype<T>, T> {
       }
       expandedSymbols.add(nodeToBeReplaced.getContent());
     }
+    report.put(BIT_USAGES_INDEX_NAME, usages);
     return transform(tree);
   }
   
@@ -105,8 +115,8 @@ public class SGEMapper<T> extends AbstractMapper<SGEGenotype<T>, T> {
     return count;
   }
 
-  public Map<Pair<T, Integer>, List<Integer>> getGenesBound() {
-    return genesBound;
+  public Map<Pair<T, Integer>, List<Integer>> getGeneBounds() {
+    return geneBounds;
   }
 
   @Override

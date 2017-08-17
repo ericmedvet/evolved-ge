@@ -36,7 +36,7 @@ public class SGEMutation<T> extends AbstractMutation<SGEGenotype<T>> {
     for (Map.Entry<Pair<T, Integer>, List<Integer>> entry : child.getGenes().entrySet()) {
       for (int i = 0; i<entry.getValue().size(); i++) {
         if (random.nextDouble()<p) {
-          int bound = mapper.getGenesBound().get(entry.getKey()).get(i);
+          int bound = mapper.getGeneBounds().get(entry.getKey()).get(i);
           entry.getValue().set(i, random.nextInt(bound));
         }
       }

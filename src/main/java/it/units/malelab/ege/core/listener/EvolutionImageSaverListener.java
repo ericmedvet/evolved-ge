@@ -7,8 +7,8 @@ package it.units.malelab.ege.core.listener;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
+import it.units.malelab.ege.core.ConstrainedSequence;
 import it.units.malelab.ege.core.Individual;
-import it.units.malelab.ege.core.Sequence;
 import it.units.malelab.ege.core.fitness.Fitness;
 import it.units.malelab.ege.core.listener.event.EvolutionEndEvent;
 import it.units.malelab.ege.core.listener.event.EvolutionEvent;
@@ -24,19 +24,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.imageio.ImageIO;
-import org.apache.commons.math3.stat.descriptive.moment.Variance;
+import org.apache.commons.math3.stat.StatUtils;
 
 /**
  *
  * @author eric
  */
-public class EvolutionImageSaverListener<G extends Sequence, T, F extends Fitness> extends AbstractListener<G, T, F> implements WithConstants {
+public class EvolutionImageSaverListener<G extends ConstrainedSequence, T, F extends Fitness> extends AbstractListener<G, T, F> implements WithConstants {
 
   public static enum ImageType {
-
     DIVERSITY,
     USAGE,
     DU,
@@ -87,9 +88,11 @@ public class EvolutionImageSaverListener<G extends Sequence, T, F extends Fitnes
     }
     //update diversities
     if (types.contains(ImageType.DIVERSITY) || types.contains(ImageType.DU)) {
+      Set[] domains = new Set[best.getGenotype().size()];
       Multiset[] symbols = new Multiset[best.getGenotype().size()];
       for (int i = 0; i < symbols.length; i++) {
         symbols[i] = HashMultiset.create();
+        domains[i] = new LinkedHashSet();
       }
       double[] counts = new double[best.getGenotype().size()];
       for (List<Individual<G, T, F>> rank : rankedPopulation) {
@@ -97,12 +100,13 @@ public class EvolutionImageSaverListener<G extends Sequence, T, F extends Fitnes
           for (int i = 0; i < Math.min(best.getGenotype().size(), individual.getGenotype().size()); i++) {
             counts[i] = counts[i] + 1;
             symbols[i].add(individual.getGenotype().get(i));
+            domains[i].addAll(individual.getGenotype().domain(i));
           }
         }
       }
       double[] diversities = new double[best.getGenotype().size()];
       for (int i = 0; i < symbols.length; i++) {
-        diversities[i] = multisetDiversity(symbols[i]);
+        diversities[i] = multisetDiversity(symbols[i], domains[i]);
       }
       evolutionDiversities.add(diversities);
     }
@@ -133,28 +137,25 @@ public class EvolutionImageSaverListener<G extends Sequence, T, F extends Fitnes
       evolutionUsages.add(usages);
     }
     if (event instanceof EvolutionEndEvent) {
-      //save and clear
-      if (!evolutionBestUsages.isEmpty()) {
-        //save
-        String baseFileName = "";
-        for (Object value : constants.values()) {
-          baseFileName = baseFileName + value.toString() + "-";
-        }
-        if (types.contains(ImageType.DIVERSITY)) {
-          saveCSV(basePath + File.separator + baseFileName + "diversitiy.csv", toArray(evolutionDiversities));
-          saveImage(basePath + File.separator + baseFileName + "diversity.png", toArray(evolutionDiversities));
-        }
-        if (types.contains(ImageType.USAGE)) {
-          saveImage(basePath + File.separator + baseFileName + "usage.png", toArray(evolutionUsages));
-          saveCSV(basePath + File.separator + baseFileName + "usage.csv", toArray(evolutionUsages));
-        }
-        if (types.contains(ImageType.DU)) {
-          saveImage(basePath + File.separator + baseFileName + "diversity_usage.png", toArray(evolutionDiversities), toArray(evolutionUsages));
-        }
-        if (types.contains(ImageType.BEST_USAGE)) {
-          saveImage(basePath + File.separator + baseFileName + "bestUsage.png", toArray(evolutionBestUsages));
-          saveCSV(basePath + File.separator + baseFileName + "bestUsage.csv", toArray(evolutionBestUsages));
-        }
+      //save
+      String baseFileName = "";
+      for (Object value : constants.values()) {
+        baseFileName = baseFileName + value.toString() + "-";
+      }
+      if (types.contains(ImageType.DIVERSITY)) {
+        saveCSV(basePath + File.separator + baseFileName + "diversitiy.csv", toArray(evolutionDiversities));
+        saveImage(basePath + File.separator + baseFileName + "diversity.png", toArray(evolutionDiversities));
+      }
+      if (types.contains(ImageType.USAGE)) {
+        saveImage(basePath + File.separator + baseFileName + "usage.png", toArray(evolutionUsages));
+        saveCSV(basePath + File.separator + baseFileName + "usage.csv", toArray(evolutionUsages));
+      }
+      if (types.contains(ImageType.DU)) {
+        saveImage(basePath + File.separator + baseFileName + "diversity_usage.png", toArray(evolutionDiversities), toArray(evolutionUsages));
+      }
+      if (types.contains(ImageType.BEST_USAGE)) {
+        saveImage(basePath + File.separator + baseFileName + "bestUsage.png", toArray(evolutionBestUsages));
+        saveCSV(basePath + File.separator + baseFileName + "bestUsage.csv", toArray(evolutionBestUsages));
       }
       //clear
       evolutionBestUsages.clear();
@@ -235,14 +236,21 @@ public class EvolutionImageSaverListener<G extends Sequence, T, F extends Fitnes
     ImageIO.write(bi, "PNG", new File(fileName));
   }
 
-  private double multisetDiversity(Multiset m) {
-    // TODO make a sound function which outputs on [0, 1]
-    double[] counts = new double[m.elementSet().size()];
+  private double multisetDiversity(Multiset m, Set d) {
+    double[] counts = new double[d.size()];
     int i = 0;
-    for (Object distinctElement : m.elementSet()) {
-      counts[i] = m.count(distinctElement);
+    for (Object possibleValue : d) {
+      counts[i] = m.count(possibleValue);
+      i = i + 1;
     }
-    return (new Variance()).evaluate(counts);
+    double sumOfSquares = 0;
+    double sum = m.size();
+    double mean = m.size() / counts.length;
+    for (double count : counts) {
+      sumOfSquares = sumOfSquares + Math.pow(count - mean, 2);
+    }
+    double normalizedVar = sumOfSquares / (sum * sum * (1 - 1 / (double) counts.length));
+    return Math.max(Math.min(1 - normalizedVar, 1d), 0d);
   }
 
 }
