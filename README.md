@@ -19,6 +19,7 @@ Moreover, beyond the mapper, it can operate with different EA-related settings:
 * different replacement strategies, different selection criteria, different genetic operators.
 
 Finally, it can be easily configured and instrumented to output several metrics describing ongoing evolutions.
+Among them, there is the visualization tool called DU Map [7].
 
 Defining a problem
 ==================
@@ -131,3 +132,4 @@ References
 4. Lourenço, Nuno, Francisco B. Pereira, and Ernesto Costa. "SGE: a structured representation for grammatical evolution." International Conference on Artificial Evolution (Evolution Artificielle). Springer International Publishing, 2015.
 5. Medvet, Eric. "Hierarchical Grammatical Evolution." ACM Genetic and Evolutionary Computation Conference (GECCO), 2017
 6. Medvet, Eric, Alberto Bartoli, and Giovanni Squillero. "An Effective Diversity Promotion Mechanism in Grammatical Evolution" ACM Genetic and Evolutionary Computation Conference (GECCO), 2017
+7. Medvet, Tušar. "The DU Map: A Visualization to Gain Insights into Genotype-Phenotype Mapping and Diversity." 8th annual workshop on Visualisation in Genetic and Evolutionary Computation (VizGEC), 2017
