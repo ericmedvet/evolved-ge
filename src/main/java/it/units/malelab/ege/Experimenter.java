@@ -88,14 +88,14 @@ public class Experimenter {
     final int[] genotypeSizes = new int[]{1024};
     final int populationSize = 500;
     final int generations = 50;
-    final int runs = 30;
+    final int runs = 10;
     //prepare problems and methods
     List<String> problems = Lists.newArrayList(
             "bool-parity5", "bool-mopm3",
             "sr-keijzer6", "sr-nguyen7", "sr-pagie1", "sr-vladislavleva4",
             "other-klandscapes3", "other-klandscapes7", "other-text"
     );
-    List<String> methods = Lists.newArrayList("ge-8", "pige-16", "sge-6", "hge", "whge-3", "cfggp-12");
+    List<String> methods = Lists.newArrayList("whge-3", "whge-2");
     //methods = Lists.newArrayList("ge-8", "pige-16", "hge", "whge-3");
     PrintStream filePrintStream = null;
     if (args.length > 0) {
@@ -159,7 +159,7 @@ public class Experimenter {
                         new LastWorst<Individual<BitsGenotype, String, NumericFitness>>(), populationSize,
                         true,
                         problem);
-                evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
+                evolver = new StandardEvolver<>(configuration, N_THREADS, random, false);
                 propertiesListener = new PropertiesListener(
                         NumericFitness.comparator(),
                         bitsDistance,
@@ -183,7 +183,7 @@ public class Experimenter {
                         new LastWorst<Individual<BitsGenotype, String, NumericFitness>>(), populationSize,
                         true,
                         problem);
-                evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
+                evolver = new StandardEvolver<>(configuration, N_THREADS, random, false);
                 propertiesListener = new PropertiesListener(
                         NumericFitness.comparator(),
                         bitsDistance,
@@ -208,7 +208,7 @@ public class Experimenter {
                         new LastWorst<Individual<SGEGenotype<String>, String, NumericFitness>>(), populationSize,
                         true,
                         problem);
-                evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
+                evolver = new StandardEvolver<>(configuration, N_THREADS, random, false);
                 propertiesListener = new PropertiesListener(
                         NumericFitness.comparator(),
                         sgeDistance,
@@ -231,7 +231,7 @@ public class Experimenter {
                         new LastWorst<Individual<BitsGenotype, String, NumericFitness>>(), populationSize,
                         true,
                         problem);
-                evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
+                evolver = new StandardEvolver<>(configuration, N_THREADS, random, false);
                 propertiesListener = new PropertiesListener(
                         NumericFitness.comparator(),
                         bitsDistance,
@@ -246,7 +246,7 @@ public class Experimenter {
                         populationSize, generations,
                         new RandomInitializer<>(random, new BitsGenotypeFactory(genotypeSize)),
                         new Any<BitsGenotype>(),
-                        new WeightedHierarchicalMapper<>(depth, problem.getGrammar()),
+                        new WeightedHierarchicalMapper<>(depth, true, true, problem.getGrammar()),
                         new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
                                 .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
                                 .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
@@ -255,7 +255,7 @@ public class Experimenter {
                         new LastWorst<Individual<BitsGenotype, String, NumericFitness>>(), populationSize,
                         true,
                         problem);
-                evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
+                evolver = new StandardEvolver<>(configuration, N_THREADS, random, false);
                 propertiesListener = new PropertiesListener(
                         NumericFitness.comparator(),
                         bitsDistance,
@@ -284,7 +284,7 @@ public class Experimenter {
                         new LastWorst<Individual<Node<String>, String, NumericFitness>>(), populationSize,
                         true,
                         problem);
-                evolver = new StandardEvolver<>(N_THREADS, configuration, random, false);
+                evolver = new StandardEvolver<>(configuration, N_THREADS, random, false);
                 propertiesListener = new PropertiesListener(
                         NumericFitness.comparator(),
                         phenotypeDistance,
@@ -301,7 +301,7 @@ public class Experimenter {
                       constants, System.out, true, 10, " ", " | ",
                       new NumericFirstBest(false, problem.getTestingFitnessComputer(), "%6.2f"),
                       new Diversity(),
-                      propertiesListener,
+                      //propertiesListener,
                       new BestPrinter(problem.getPhenotypePrinter(), "%30.30s")
               ));
               listeners.add(propertiesListener);
@@ -311,8 +311,8 @@ public class Experimenter {
                         new Population(),
                         new NumericFirstBest(false, problem.getTestingFitnessComputer(), "%6.2f"),
                         new Diversity(),
-                        new CacheStatistics(),
-                        propertiesListener
+                        //propertiesListener,
+                        new CacheStatistics()
                 ));
               }
               evolver.solve(listeners);

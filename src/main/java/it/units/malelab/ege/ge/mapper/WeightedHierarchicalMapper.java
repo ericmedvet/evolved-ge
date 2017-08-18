@@ -7,6 +7,7 @@ package it.units.malelab.ege.ge.mapper;
 
 import com.google.common.collect.Range;
 import it.units.malelab.ege.core.Grammar;
+import it.units.malelab.ege.ge.genotype.BitsGenotype;
 import it.units.malelab.ege.util.Utils;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,10 +22,18 @@ public class WeightedHierarchicalMapper<T> extends HierarchicalMapper<T> {
 
   private final Map<T, Integer> weightsMap;
   private final int maxDepth;
-
+  private final boolean weightOptions;
+  private final boolean weightChildren;
+  
   public WeightedHierarchicalMapper(int maxDepth, Grammar<T> grammar) {
+    this(maxDepth, false, true, grammar);
+  }
+
+  public WeightedHierarchicalMapper(int maxDepth, boolean weightOptions, boolean weightChildren, Grammar<T> grammar) {
     super(grammar);
     this.maxDepth = maxDepth;
+    this.weightOptions = weightOptions;
+    this.weightChildren = weightChildren;
     weightsMap = new HashMap<>();
     for (List<List<T>> options : grammar.getRules().values()) {
       for (List<T> option : options) {
@@ -44,25 +53,28 @@ public class WeightedHierarchicalMapper<T> extends HierarchicalMapper<T> {
 
   private int countOptions(T symbol, int level, int maxLevel) {
     List<List<T>> options = grammar.getRules().get(symbol);
-    if (options==null) {
+    if (options == null) {
       return 1;
     }
-    if (level>=maxLevel) {
+    if (level >= maxLevel) {
       return options.size();
     }
     int count = 0;
     for (List<T> option : options) {
       for (T optionSymbol : option) {
-        count = count+countOptions(optionSymbol, level+1, maxLevel);
-      }      
+        count = count + countOptions(optionSymbol, level + 1, maxLevel);
+      }
     }
     return count;
   }
 
   @Override
-  protected List<Range<Integer>> getSlices(Range<Integer> range, List<T> symbols) {
+  protected List<Range<Integer>> getChildrenSlices(Range<Integer> range, List<T> symbols) {
+    if (!weightChildren) {
+      return super.getChildrenSlices(range, symbols);
+    }
     List<Range<Integer>> ranges;
-    if (symbols.size()>(range.upperEndpoint()-range.lowerEndpoint())) {
+    if (symbols.size() > (range.upperEndpoint() - range.lowerEndpoint())) {
       ranges = new ArrayList<>(symbols.size());
       for (T symbol : symbols) {
         ranges.add(Range.closedOpen(range.lowerEndpoint(), range.lowerEndpoint()));
@@ -71,10 +83,10 @@ public class WeightedHierarchicalMapper<T> extends HierarchicalMapper<T> {
       List<Integer> sizes = new ArrayList<>(symbols.size());
       int overallWeight = 0;
       for (T symbol : symbols) {
-        overallWeight = overallWeight+weightsMap.get(symbol);
+        overallWeight = overallWeight + weightsMap.get(symbol);
       }
       for (T symbol : symbols) {
-        sizes.add((int)Math.floor((double)weightsMap.get(symbol)/(double)overallWeight*(double)(range.upperEndpoint()-range.lowerEndpoint())));
+        sizes.add((int) Math.floor((double) weightsMap.get(symbol) / (double) overallWeight * (double) (range.upperEndpoint() - range.lowerEndpoint())));
       }
       ranges = Utils.slices(range, sizes);
     }
@@ -82,8 +94,32 @@ public class WeightedHierarchicalMapper<T> extends HierarchicalMapper<T> {
   }
 
   @Override
-  public String toString() {
-    return "WeightedHierarchicalMapper{" + "maxDepth=" + maxDepth + '}';
+  protected double optionSliceWeigth(BitsGenotype slice) {
+    if (!weightOptions) {
+      return super.optionSliceWeigth(slice);
+    }
+    return (double) slice.count();
   }
-  
+
+  @Override
+  protected List<Range<Integer>> getOptionSlices(Range<Integer> range, List<List<T>> options) {
+    if (!weightOptions) {
+      return super.getOptionSlices(range, options);
+    }
+    List<Integer> sizes = new ArrayList<>(options.size());
+    for (List<T> option : options) {
+      int w = 1;
+      for (T symbol : option) {
+        w = w * Math.max(weightsMap.getOrDefault(symbol, 1), 1);
+      }
+      sizes.add(w);
+    }
+    return Utils.slices(range, sizes);
+  }
+
+  @Override
+  public String toString() {
+    return "WeightedHierarchicalMapper{" + "maxDepth=" + maxDepth + ", weightOptions=" + weightOptions + ", weightChildren=" + weightChildren + '}';
+  }
+
 }

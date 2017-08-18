@@ -7,7 +7,6 @@ package it.units.malelab.ege.util.distance;
 
 import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.core.Sequence;
-import it.units.malelab.ege.util.Utils;
 
 /**
  *

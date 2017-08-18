@@ -28,8 +28,8 @@ public class SACEvolver<I, G, T, F extends MultiObjectiveFitness> extends Partit
   private final SACConfiguration<I, G, T, F> configuration;
   private final int numberOfThreads;
 
-  public SACEvolver(int numberOfThreads, SACConfiguration<I, G, T, F> configuration, Random random, boolean saveAncestry) {
-    super(numberOfThreads, configuration, random, saveAncestry);
+  public SACEvolver(SACConfiguration<I, G, T, F> configuration, int numberOfThreads, Random random, boolean saveAncestry) {
+    super(configuration, numberOfThreads, random, saveAncestry);
     this.configuration = configuration;
     this.numberOfThreads = numberOfThreads;
   }
@@ -75,7 +75,7 @@ public class SACEvolver<I, G, T, F extends MultiObjectiveFitness> extends Partit
               )
       );
       //obtain bests
-      PartitionEvolver<G, T, F> partitionEvolver = new PartitionEvolver<>(numberOfThreads, innerConfiguration, random, saveAncestry);
+      PartitionEvolver<G, T, F> partitionEvolver = new PartitionEvolver<>(innerConfiguration, numberOfThreads, random, saveAncestry);
       List<Node<T>> bests = partitionEvolver.solve(listeners);
       Node<T> best = bests.get(0);      
       //remove positives

@@ -50,7 +50,7 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
   protected final Random random;
   protected final boolean saveAncestry;
 
-  public StandardEvolver(int numberOfThreads, StandardConfiguration<G, T, F> configuration, Random random, boolean saveAncestry) {
+  public StandardEvolver(StandardConfiguration<G, T, F> configuration, int numberOfThreads, Random random, boolean saveAncestry) {
     this.configuration = configuration;
     executor = Executors.newFixedThreadPool(numberOfThreads);
     this.random = random;

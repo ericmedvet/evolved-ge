@@ -15,7 +15,7 @@ import java.util.Objects;
  *
  * @author eric
  */
-public class Node<T> {
+public class Node<T> implements Sequence<T> {
   
   public static Node EMPTY_TREE = new Node(null);
   
@@ -139,5 +139,15 @@ public class Node<T> {
     final List<Node<T>> leafNodes = leafNodes();
     return Utils.fromList(Utils.contents(leafNodes));
   }
+
+  @Override
+  public T get(int index) {
+    return leafContents().get(index);
+  }
+
+  @Override
+  public int size() {
+    return leafContents().size();
+  }  
 
 }

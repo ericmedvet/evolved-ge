@@ -35,8 +35,8 @@ public class PartitionEvolver<G, T, F extends Fitness> extends StandardEvolver<G
 
   private final PartitionConfiguration<G, T, F> configuration;
 
-  public PartitionEvolver(int numberOfThreads, PartitionConfiguration<G, T, F> configuration, Random random, boolean saveAncestry) {
-    super(numberOfThreads, configuration, random, saveAncestry);
+  public PartitionEvolver(PartitionConfiguration<G, T, F> configuration, int numberOfThreads, Random random, boolean saveAncestry) {
+    super(configuration, numberOfThreads, random, saveAncestry);
     this.configuration = configuration;
   }
 

@@ -136,7 +136,7 @@ public class MappingPropertiesExperimenter {
         } else if (mapperName.split("-")[0].equals("hge")) {
           mapper = new HierarchicalMapper<>(problem.getGrammar());
         } else if (mapperName.split("-")[0].equals("whge")) {
-          mapper = new WeightedHierarchicalMapper<>(mapperMainParam, problem.getGrammar());
+          mapper = new WeightedHierarchicalMapper<>(mapperMainParam, false, true, problem.getGrammar());
         }
         //prepare things
         Random random = new Random(1);

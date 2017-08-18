@@ -21,6 +21,9 @@ import it.units.malelab.ege.core.evolver.Evolver;
 import it.units.malelab.ege.core.Problem;
 import it.units.malelab.ege.core.fitness.NumericFitness;
 import it.units.malelab.ege.core.Node;
+import it.units.malelab.ege.core.Sequence;
+import it.units.malelab.ege.core.evolver.DeterministicCrowdingConfiguration;
+import it.units.malelab.ege.core.evolver.DeterministicCrowdingEvolver;
 import it.units.malelab.ege.core.evolver.PartitionConfiguration;
 import it.units.malelab.ege.core.evolver.PartitionEvolver;
 import it.units.malelab.ege.core.listener.CollectorGenerationLogger;
@@ -45,7 +48,6 @@ import it.units.malelab.ege.core.initializer.RandomInitializer;
 import it.units.malelab.ege.core.listener.EvolutionImageSaverListener;
 import it.units.malelab.ege.core.listener.collector.BestPrinter;
 import it.units.malelab.ege.core.listener.collector.MultiObjectiveFitnessFirstBest;
-import it.units.malelab.ege.core.mapper.Mapper;
 import it.units.malelab.ege.ge.genotype.validator.Any;
 import it.units.malelab.ege.core.operator.GeneticOperator;
 import it.units.malelab.ege.core.ranker.ComparableRanker;
@@ -55,16 +57,15 @@ import it.units.malelab.ege.core.ranker.ParetoRanker;
 import it.units.malelab.ege.core.selector.FirstBest;
 import it.units.malelab.ege.ge.genotype.SGEGenotype;
 import it.units.malelab.ege.ge.genotype.SGEGenotypeFactory;
-import it.units.malelab.ege.ge.mapper.HierarchicalMapper;
-import it.units.malelab.ege.ge.mapper.PiGEMapper;
 import it.units.malelab.ege.ge.mapper.SGEMapper;
-import it.units.malelab.ege.ge.mapper.StandardGEMapper;
 import it.units.malelab.ege.ge.mapper.WeightedHierarchicalMapper;
 import it.units.malelab.ege.ge.operator.LengthPreservingTwoPointsCrossover;
 import it.units.malelab.ege.ge.operator.ProbabilisticMutation;
 import it.units.malelab.ege.ge.operator.SGECrossover;
 import it.units.malelab.ege.ge.operator.SGEMutation;
 import it.units.malelab.ege.util.Utils;
+import it.units.malelab.ege.util.distance.Distance;
+import it.units.malelab.ege.util.distance.Hamming;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -91,7 +92,8 @@ public class ExampleMain {
     //solveParityCfgGp();
     //solveKLandscapesCfgGp();
     //doImagesBits();
-    doImages();
+    //doImages();
+    solveTextDC();
   }
 
   private static void solveHarmonicCurve() throws IOException, InterruptedException, ExecutionException {
@@ -103,7 +105,7 @@ public class ExampleMain {
             new RandomInitializer<>(random, new BitsGenotypeFactory(256)),
             new Any<BitsGenotype>(),
             //new StandardGEMapper<>(8, 5, problem.getGrammar()),
-            new WeightedHierarchicalMapper<>(3, problem.getGrammar()),
+            new WeightedHierarchicalMapper<>(3, false, true, problem.getGrammar()),
             new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
                     .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
                     .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
@@ -122,7 +124,7 @@ public class ExampleMain {
             new BestPrinter<BitsGenotype, String, NumericFitness>(problem.getPhenotypePrinter(), "%30.30s")
     ));
     Evolver<BitsGenotype, String, NumericFitness> evolver = new StandardEvolver<>(
-            1, configuration, random, false);
+            configuration, 1, random, false);
     List<Node<String>> bests = evolver.solve(listeners);
     System.out.printf("Found %d solutions.%n", bests.size());
   }
@@ -142,7 +144,7 @@ public class ExampleMain {
             new RandomInitializer<>(random, new BitsGenotypeFactory(256)),
             new Any<BitsGenotype>(),
             //new StandardGEMapper<>(8, 5, problem.getGrammar()),
-            new WeightedHierarchicalMapper<>(3, problem.getGrammar()),
+            new WeightedHierarchicalMapper<>(3, false, true, problem.getGrammar()),
             new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
                     .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
                     .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
@@ -162,7 +164,7 @@ public class ExampleMain {
             new BestPrinter<BitsGenotype, String, NumericFitness>(problem.getPhenotypePrinter(), "%30.30s")
     ));
     Evolver<BitsGenotype, String, NumericFitness> evolver = new PartitionEvolver<>(
-            1, configuration, random, false);
+            configuration, 1, random, false);
     List<Node<String>> bests = evolver.solve(listeners);
     System.out.printf("Found %d solutions.%n", bests.size());
   }
@@ -175,7 +177,7 @@ public class ExampleMain {
             50,
             new RandomInitializer<>(random, new BitsGenotypeFactory(256)),
             new Any<BitsGenotype>(),
-            new WeightedHierarchicalMapper<>(3, problem.getGrammar()),
+            new WeightedHierarchicalMapper<>(3, false, true, problem.getGrammar()),
             new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
                     .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
                     .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
@@ -194,7 +196,7 @@ public class ExampleMain {
             new BestPrinter<BitsGenotype, String, MultiObjectiveFitness>(problem.getPhenotypePrinter(), "%30.30s")
     ));
     Evolver<BitsGenotype, String, MultiObjectiveFitness> evolver = new StandardEvolver<>(
-            1, configuration, random, false);
+            configuration, 1, random, false);
     List<Node<String>> bests = evolver.solve(listeners);
     System.out.printf("Found %d solutions.%n", bests.size());
   }
@@ -213,7 +215,7 @@ public class ExampleMain {
             50,
             new RandomInitializer<>(random, new BitsGenotypeFactory(256)),
             new Any<BitsGenotype>(),
-            new WeightedHierarchicalMapper<>(3, problem.getGrammar()),
+            new WeightedHierarchicalMapper<>(3, false, true, problem.getGrammar()),
             new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
                     .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
                     .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
@@ -232,7 +234,7 @@ public class ExampleMain {
             new BestPrinter<BitsGenotype, String, MultiObjectiveFitness>(problem.getPhenotypePrinter(), "%30.30s")
     ));
     Evolver<BitsGenotype, String, MultiObjectiveFitness> evolver = new PartitionEvolver<>(
-            1, configuration, random, false);
+            configuration, 1, random, false);
     List<Node<String>> bests = evolver.solve(listeners);
     System.out.printf("Found %d solutions.%n", bests.size());
   }
@@ -267,7 +269,7 @@ public class ExampleMain {
             25,
             new RandomInitializer<>(random, new BitsGenotypeFactory(256)),
             new Any<BitsGenotype>(),
-            new WeightedHierarchicalMapper<>(3, problem.getGrammar()),
+            new WeightedHierarchicalMapper<>(3, false, true, problem.getGrammar()),
             new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
                     .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
                     .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
@@ -294,7 +296,7 @@ public class ExampleMain {
             new BestPrinter<BitsGenotype, String, MultiObjectiveFitness>(problem.getPhenotypePrinter(), "%30.30s")
     ));
     Evolver<BitsGenotype, String, MultiObjectiveFitness> evolver = new SACEvolver<>(
-            1, configuration, random, false);
+            configuration, 1, random, false);
     List<Node<String>> bests = evolver.solve(listeners);
     System.out.printf("Found %d solutions.%n", bests.size());
   }
@@ -308,7 +310,7 @@ public class ExampleMain {
             new RandomInitializer<>(random, new BitsGenotypeFactory(256)),
             new Any<BitsGenotype>(),
             //new StandardGEMapper<>(8, 5, problem.getGrammar()),
-            new WeightedHierarchicalMapper<>(3, problem.getGrammar()),
+            new WeightedHierarchicalMapper<>(3, false, true, problem.getGrammar()),
             new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
                     .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
                     .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
@@ -327,7 +329,44 @@ public class ExampleMain {
             new BestPrinter<BitsGenotype, String, NumericFitness>(problem.getPhenotypePrinter(), "%30.30s")
     ));
     Evolver<BitsGenotype, String, NumericFitness> evolver = new StandardEvolver<>(
-            1, configuration, random, false);
+            configuration, 1, random, false);
+    List<Node<String>> bests = evolver.solve(listeners);
+    System.out.printf("Found %d solutions.%n", bests.size());
+  }
+
+  private static void solveTextDC() throws IOException, InterruptedException, ExecutionException {
+    Random random = new Random(1l);
+    Problem<String, NumericFitness> problem = new Text();
+    final Distance<Sequence<Boolean>> gDistance = new Hamming<Boolean>();
+    DeterministicCrowdingConfiguration<BitsGenotype, String, NumericFitness> configuration = new DeterministicCrowdingConfiguration<>(
+            new Distance<Individual<BitsGenotype, String, NumericFitness>>() {
+              @Override
+              public double d(Individual<BitsGenotype, String, NumericFitness> i1, Individual<BitsGenotype, String, NumericFitness> i2) {
+                return gDistance.d(i1.getGenotype(), i2.getGenotype());
+              }
+            },
+            500,
+            50,
+            new RandomInitializer<>(random, new BitsGenotypeFactory(256)),
+            new Any<BitsGenotype>(),
+            //new StandardGEMapper<>(8, 5, problem.getGrammar()),
+            new WeightedHierarchicalMapper<>(3, false, true, problem.getGrammar()),
+            new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
+                    .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
+                    .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
+            new ComparableRanker<>(new IndividualComparator<BitsGenotype, String, NumericFitness>(IndividualComparator.Attribute.FITNESS)),
+            new Tournament<Individual<BitsGenotype, String, NumericFitness>>(3, random),
+            problem);
+    List<EvolverListener<BitsGenotype, String, NumericFitness>> listeners = new ArrayList<>();
+    listeners.add(new CollectorGenerationLogger<>(
+            Collections.EMPTY_MAP, System.out, true, 10, " ", " | ",
+            new Population<BitsGenotype, String, NumericFitness>(),
+            new NumericFirstBest<BitsGenotype, String>(false, problem.getTestingFitnessComputer(), "%6.2f"),
+            new Diversity<BitsGenotype, String, NumericFitness>(),
+            new BestPrinter<BitsGenotype, String, NumericFitness>(problem.getPhenotypePrinter(), "%30.30s")
+    ));
+    Evolver<BitsGenotype, String, NumericFitness> evolver = new DeterministicCrowdingEvolver<>(
+            configuration, 1, random, false);
     List<Node<String>> bests = evolver.solve(listeners);
     System.out.printf("Found %d solutions.%n", bests.size());
   }
@@ -365,7 +404,7 @@ public class ExampleMain {
             new BestPrinter<BitsGenotype, String, NumericFitness>(problem.getPhenotypePrinter(), "%30.30s")
     ));
     Evolver<Node<String>, String, NumericFitness> evolver = new StandardEvolver<>(
-            1, configuration, random, false);
+            configuration, 1, random, false);
     List<Node<String>> bests = evolver.solve(listeners);
     System.out.printf("Found %d solutions.%n", bests.size());
   }
@@ -403,7 +442,7 @@ public class ExampleMain {
             new BestPrinter<BitsGenotype, String, NumericFitness>(problem.getPhenotypePrinter(), "%30.30s")
     ));
     Evolver<Node<String>, String, NumericFitness> evolver = new StandardEvolver<>(
-            1, configuration, random, false);
+            configuration, 1, random, false);
     List<Node<String>> bests = evolver.solve(listeners);
     System.out.printf("Found %d solutions.%n", bests.size());
   }
@@ -441,7 +480,7 @@ public class ExampleMain {
             new BestPrinter<BitsGenotype, String, NumericFitness>(problem.getPhenotypePrinter(), "%30.30s")
     ));
     Evolver<Node<String>, String, NumericFitness> evolver = new StandardEvolver<>(
-            1, configuration, random, false);
+            configuration, 1, random, false);
     List<Node<String>> bests = evolver.solve(listeners);
     System.out.printf("Found %d solutions.%n", bests.size());
   }
@@ -455,7 +494,7 @@ public class ExampleMain {
             new RandomInitializer<>(random, new BitsGenotypeFactory(256)),
             new Any<BitsGenotype>(),
             //new StandardGEMapper<>(8, 1, problem.getGrammar()),
-            new WeightedHierarchicalMapper<>(3, problem.getGrammar()),
+            new WeightedHierarchicalMapper<>(3, false, true, problem.getGrammar()),
             //new HierarchicalMapper<>(problem.getGrammar()),
             //new PiGEMapper<>(16,1,problem.getGrammar()),
             new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
@@ -480,7 +519,7 @@ public class ExampleMain {
             "/home/eric/experiments/ge/images/tcyb",
             EvolutionImageSaverListener.ImageType.DU));
     Evolver<BitsGenotype, String, NumericFitness> evolver = new StandardEvolver<>(
-            1, configuration, random, false);
+            configuration, 1, random, false);
     List<Node<String>> bests = evolver.solve(listeners);
     System.out.printf("Found %d solutions.%n", bests.size());
   }
@@ -516,7 +555,7 @@ public class ExampleMain {
             "/home/eric/experiments/ge/images/tcyb",
             EvolutionImageSaverListener.ImageType.DU));
     Evolver<SGEGenotype<String>, String, NumericFitness> evolver = new StandardEvolver<>(
-            1, configuration, random, false);
+            configuration, 1, random, false);
     List<Node<String>> bests = evolver.solve(listeners);
     System.out.printf("Found %d solutions.%n", bests.size());
   }
