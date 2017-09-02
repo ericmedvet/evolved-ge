@@ -90,7 +90,7 @@ public class DeepExperimenter {
     Random random = new Random(1);
     final int populationSize = 500;
     final int generations = 50;
-    final int runs = 30;
+    final int runs = 10;
     final int tournamentSize = 5;
     //define problems, methods, mappers
     List<String> problems = Lists.newArrayList(
@@ -103,8 +103,8 @@ public class DeepExperimenter {
             "dc-g", "dc-p", "dc-f",
             "p-g-u-20", "p-p-a<-20", "p-p-a>-20", "p-p-u-20", "p-f-a<-20", "p-f-a>-20", "p-f-u-20", "p-f-l<-20", "p-f-l>-20");
     List<String> mappers = Lists.newArrayList(
-            //"ge-8-5-1024",
-            //"whge-3-1024",
+            "ge-8-5-1024",
+            "whge-3-1024",
             "sge-6",
             "cfggp-12");
     PrintStream filePrintStream = null;
@@ -123,7 +123,7 @@ public class DeepExperimenter {
     };
     //iterate
     boolean header = true;
-    for (int run = 0; run < runs; run++) {
+    for (int run = 30; run < 30+runs; run++) {
       for (String pr : problems) {
         for (String me : methods) {
           for (String ma : mappers) {
