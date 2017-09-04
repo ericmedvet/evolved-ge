@@ -5,6 +5,7 @@
  */
 package it.units.malelab.ege.util.booleanfunction;
 
+import it.units.malelab.ege.benchmark.booleanfunction.BooleanUtils;
 import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.core.PhenotypePrinter;
 import java.util.Arrays;

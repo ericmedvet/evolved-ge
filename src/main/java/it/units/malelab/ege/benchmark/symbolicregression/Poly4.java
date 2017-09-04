@@ -8,7 +8,6 @@ package it.units.malelab.ege.benchmark.symbolicregression;
 import it.units.malelab.ege.core.Problem;
 import it.units.malelab.ege.core.fitness.NumericFitness;
 import it.units.malelab.ege.util.Utils;
-import it.units.malelab.ege.util.symbolicregression.MathUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedHashMap;

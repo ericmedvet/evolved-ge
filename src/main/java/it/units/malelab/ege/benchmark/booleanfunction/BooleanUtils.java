@@ -3,10 +3,15 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.util.booleanfunction;
+package it.units.malelab.ege.benchmark.booleanfunction;
 
 import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.core.PhenotypePrinter;
+import it.units.malelab.ege.benchmark.booleanfunction.element.Constant;
+import it.units.malelab.ege.benchmark.booleanfunction.element.Decoration;
+import it.units.malelab.ege.benchmark.booleanfunction.element.Element;
+import it.units.malelab.ege.benchmark.booleanfunction.element.Operator;
+import it.units.malelab.ege.benchmark.booleanfunction.element.Variable;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;

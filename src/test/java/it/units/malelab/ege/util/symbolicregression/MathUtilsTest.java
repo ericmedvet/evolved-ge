@@ -5,6 +5,7 @@
  */
 package it.units.malelab.ege.util.symbolicregression;
 
+import it.units.malelab.ege.benchmark.symbolicregression.MathUtils;
 import it.units.malelab.ege.core.Node;
 import java.util.LinkedHashMap;
 import java.util.Map;

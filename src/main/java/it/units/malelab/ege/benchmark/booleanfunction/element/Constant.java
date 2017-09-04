@@ -3,44 +3,49 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.util.symbolicregression;
-
-import java.util.Objects;
+package it.units.malelab.ege.benchmark.booleanfunction.element;
 
 /**
  *
  * @author eric
  */
-public class Variable implements Element {
+public class Constant implements Element {
   
-  private final String string;
+  private final boolean value;
 
-  public Variable(String string) {
-    this.string = string;
+  public Constant(boolean value) {
+    this.value = value;
   }
 
   @Override
   public String toString() {
-    return string;
+    return Boolean.toString(value);
+  }
+
+  public boolean getValue() {
+    return value;
   }
 
   @Override
   public int hashCode() {
-    int hash = 5;
-    hash = 37 * hash + Objects.hashCode(this.string);
+    int hash = 3;
+    hash = 17 * hash + (this.value ? 1 : 0);
     return hash;
   }
 
   @Override
   public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
     if (obj == null) {
       return false;
     }
     if (getClass() != obj.getClass()) {
       return false;
     }
-    final Variable other = (Variable) obj;
-    if (!Objects.equals(this.string, other.string)) {
+    final Constant other = (Constant) obj;
+    if (this.value != other.value) {
       return false;
     }
     return true;

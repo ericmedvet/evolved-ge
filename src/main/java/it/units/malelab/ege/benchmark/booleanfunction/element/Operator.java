@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.util.booleanfunction;
+package it.units.malelab.ege.benchmark.booleanfunction.element;
 
 /**
  *

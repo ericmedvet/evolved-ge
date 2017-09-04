@@ -3,12 +3,17 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.util.symbolicregression;
+package it.units.malelab.ege.benchmark.symbolicregression;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.core.PhenotypePrinter;
+import it.units.malelab.ege.benchmark.symbolicregression.element.Constant;
+import it.units.malelab.ege.benchmark.symbolicregression.element.Decoration;
+import it.units.malelab.ege.benchmark.symbolicregression.element.Element;
+import it.units.malelab.ege.benchmark.symbolicregression.element.Operator;
+import it.units.malelab.ege.benchmark.symbolicregression.element.Variable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;

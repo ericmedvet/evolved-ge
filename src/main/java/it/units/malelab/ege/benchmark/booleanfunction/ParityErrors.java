@@ -8,7 +8,6 @@ package it.units.malelab.ege.benchmark.booleanfunction;
 import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.core.fitness.FitnessComputer;
 import it.units.malelab.ege.core.fitness.NumericFitness;
-import it.units.malelab.ege.util.booleanfunction.BooleanUtils;
 import java.util.Map;
 
 /**

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.util.symbolicregression;
+package it.units.malelab.ege.benchmark.symbolicregression.element;
 
 import java.util.Objects;
 

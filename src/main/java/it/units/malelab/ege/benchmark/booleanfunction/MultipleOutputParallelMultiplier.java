@@ -11,7 +11,6 @@ import it.units.malelab.ege.core.PhenotypePrinter;
 import it.units.malelab.ege.core.Problem;
 import it.units.malelab.ege.core.fitness.NumericFitness;
 import it.units.malelab.ege.util.Utils;
-import it.units.malelab.ege.util.booleanfunction.BooleanUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;

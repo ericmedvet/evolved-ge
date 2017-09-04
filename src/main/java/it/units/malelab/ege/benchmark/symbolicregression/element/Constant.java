@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.util.booleanfunction;
+package it.units.malelab.ege.benchmark.symbolicregression.element;
 
 /**
  *
@@ -11,33 +11,30 @@ package it.units.malelab.ege.util.booleanfunction;
  */
 public class Constant implements Element {
   
-  private final boolean value;
+  private final double value;
 
-  public Constant(boolean value) {
+  public Constant(double value) {
     this.value = value;
   }
 
   @Override
   public String toString() {
-    return Boolean.toString(value);
+    return Double.toString(value);
   }
 
-  public boolean getValue() {
+  public double getValue() {
     return value;
   }
 
   @Override
   public int hashCode() {
     int hash = 3;
-    hash = 17 * hash + (this.value ? 1 : 0);
+    hash = 73 * hash + (int) (Double.doubleToLongBits(this.value) ^ (Double.doubleToLongBits(this.value) >>> 32));
     return hash;
   }
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
     if (obj == null) {
       return false;
     }
@@ -45,7 +42,7 @@ public class Constant implements Element {
       return false;
     }
     final Constant other = (Constant) obj;
-    if (this.value != other.value) {
+    if (Double.doubleToLongBits(this.value) != Double.doubleToLongBits(other.value)) {
       return false;
     }
     return true;
