@@ -1,10 +1,10 @@
 <mapper> ::= <optionChooser> <genoAssigner>
 <optionChooser> ::= <n>
 <genoAssigner> ::= <lG>
-<n> ::= <const> | ( <n> <op> <n> ) | <fun_gn> ( <g> ) | length ( <lG> ) | length ( <lN> ) | depth | g_count_r | g_count_rw
+<n> ::= <const> | <op> ( <n> , <n> ) | <fun_gn> ( <g> ) | length ( <lG> ) | length ( <lN> ) | depth | g_count_r | g_count_rw
 <const> ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 <op> ::= + | - | * | / | %
 <fun_gn> ::= size | count | count_r | int
-<g> ::= rotate( <g> , <n> ) | substring( <g> , <n>) | g
-<lG> ::= split ( <g> , <n> ) | split_w ( <g> , <lN> ) | list ( <g> ) | concat ( <lG> , <lG> )
-<lN> ::= apply ( <fun_gn> , <lG> ) | lN | list ( <n> ) | concat ( <lN> , <lN> )
+<g> ::= rotate ( <g> , <n> ) | substring ( <g> , <n>) | g
+<lG> ::= split ( <g> , <n> ) | split_w ( <g> , <lN> ) | list ( <g> ) | concat ( <lG> , <lG> ) | repeat ( <g>, <n> )
+<lN> ::= apply ( <fun_gn> , <lG> ) | lN | list ( <n> ) | concat ( <lN> , <lN> ) | repeat ( <n>, <n> )

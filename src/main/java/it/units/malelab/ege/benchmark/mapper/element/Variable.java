@@ -10,5 +10,20 @@ package it.units.malelab.ege.benchmark.mapper.element;
  * @author eric
  */
 public enum Variable implements Element {
-  G, LIST_N, DEPTH, GL_COUNT_R, GL_COUNT_RW
+  GENOTYPE("g"),
+  LIST_N("lN"),
+  DEPTH("depth"),
+  GL_COUNT_R("g_count_r"),
+  GL_COUNT_RW("g_count_rw");
+  
+  private final String grammarName;
+
+  private Variable(String grammarName) {
+    this.grammarName = grammarName;
+  }
+
+  public String getGrammarName() {
+    return grammarName;
+  }
+  
 }

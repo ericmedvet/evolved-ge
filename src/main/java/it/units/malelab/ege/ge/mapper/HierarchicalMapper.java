@@ -28,7 +28,7 @@ public class HierarchicalMapper<T> extends AbstractMapper<BitsGenotype, T> {
   private final static boolean RECURSIVE_DEFAULT = false;
 
   private final boolean recursive;
-  private final Map<T, List<Integer>> shortestOptionIndexesMap;
+  protected final Map<T, List<Integer>> shortestOptionIndexesMap;
 
   public HierarchicalMapper(Grammar<T> grammar) {
     this(grammar, RECURSIVE_DEFAULT);

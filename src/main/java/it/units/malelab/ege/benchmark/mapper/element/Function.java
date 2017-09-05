@@ -5,19 +5,39 @@
  */
 package it.units.malelab.ege.benchmark.mapper.element;
 
-import com.google.common.collect.Range;
-import it.units.malelab.ege.ge.genotype.BitsGenotype;
-import it.units.malelab.ege.util.Utils;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 /**
  *
  * @author eric
  */
 public enum Function implements Element {
-    LENGTH, SIZE, COUNT, COUNT_R, INT, ROTATE, SUBSTRING, SPLIT, SPLIT_W, LIST, CONCAT, APPLY,
-    OP_ADD, OP_SUBTRACT, OP_MULT, OP_DIVIDE, OP_REMAINDER
+
+  LENGTH("length"),
+  SIZE("size"),
+  COUNT("count"),
+  COUNT_R("count_r"),
+  INT("int"),
+  ROTATE("rotate"),
+  SUBSTRING("substring"),
+  SPLIT("split"),
+  SPLIT_W("split_w"),
+  LIST("list"),
+  CONCAT("concat"),
+  REPEAT("repeat"),
+  APPLY("apply"),
+  OP_ADD("+"),
+  OP_SUBTRACT("-"),
+  OP_MULT("*"),
+  OP_DIVIDE("/"),
+  OP_REMAINDER("%");
+
+  private final String grammarName;
+
+  private Function(String grammarName) {
+    this.grammarName = grammarName;
+  }
+
+  public String getGrammarName() {
+    return grammarName;
+  }
+
 }

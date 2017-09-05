@@ -21,4 +21,9 @@ public class NumericConstant implements Element {
     return value;
   }
 
+  @Override
+  public String toString() {
+    return String.format("%f", value);
+  }
+
 }

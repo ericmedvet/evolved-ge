@@ -20,7 +20,7 @@ import java.util.Map;
  */
 public class WeightedHierarchicalMapper<T> extends HierarchicalMapper<T> {
 
-  private final Map<T, Integer> weightsMap;
+  protected final Map<T, Integer> weightsMap;
   private final int maxDepth;
   private final boolean weightOptions;
   private final boolean weightChildren;

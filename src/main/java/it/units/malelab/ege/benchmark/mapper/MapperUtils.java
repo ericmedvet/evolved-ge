@@ -14,6 +14,7 @@ import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.ge.genotype.BitsGenotype;
 import it.units.malelab.ege.util.Utils;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -23,10 +24,51 @@ import java.util.List;
  */
 public class MapperUtils {
 
+  public static Node<Element> transform(Node<String> stringNode) {
+    if (stringNode.getChildren().isEmpty()) {
+      Element element = fromString(stringNode.getContent());
+      if (element == null) {
+        return null;
+      }
+      return new Node<>(element);
+    }
+    if (stringNode.getChildren().size() == 1) {
+      return transform(stringNode.getChildren().get(0));
+    }
+    Node<Element> node = transform(stringNode.getChildren().get(0));
+    for (int i = 1; i < stringNode.getChildren().size(); i++) {
+      Node<Element> child = transform(stringNode.getChildren().get(i));
+      if (child != null) {
+        node.getChildren().add(child);
+      }
+    }
+    return node;
+  }
+
+  private static Element fromString(String string) {
+    try {
+      double value = Double.parseDouble(string);
+      return new NumericConstant(value);
+    } catch (NumberFormatException ex) {
+      //just ignore
+    }
+    for (Variable variable : Variable.values()) {
+      if (variable.getGrammarName().equals(string)) {
+        return variable;
+      }
+    }
+    for (Function function : Function.values()) {
+      if (function.getGrammarName().equals(string)) {
+        return function;
+      }
+    }
+    return null;
+  }
+
   public static Object compute(Node<Element> node, BitsGenotype g, List<Double> values, int depth, GlobalCounter globalCounter) {
     if (node.getContent() instanceof Variable) {
       switch (((Variable) node.getContent())) {
-        case G:
+        case GENOTYPE:
           return g;
         case LIST_N:
           return values;
@@ -47,8 +89,8 @@ public class MapperUtils {
         case COUNT:
           return ((BitsGenotype) compute(node.getChildren().get(0), g, values, depth, globalCounter)).count();
         case COUNT_R:
-          BitsGenotype bitsGenotype = (BitsGenotype)compute(node.getChildren().get(0), g, values, depth, globalCounter);
-          return bitsGenotype.count()/bitsGenotype.size();
+          BitsGenotype bitsGenotype = (BitsGenotype) compute(node.getChildren().get(0), g, values, depth, globalCounter);
+          return bitsGenotype.count() / bitsGenotype.size();
         case INT:
           return ((BitsGenotype) compute(node.getChildren().get(0), g, values, depth, globalCounter)).toInt();
         case ROTATE:
@@ -78,21 +120,26 @@ public class MapperUtils {
                   (List) compute(node.getChildren().get(0), g, values, depth, globalCounter),
                   (List) compute(node.getChildren().get(1), g, values, depth, globalCounter)
           );
+        case REPEAT:
+          return repeat(
+                  compute(node.getChildren().get(0), g, values, depth, globalCounter),
+                  ((Double) compute(node.getChildren().get(0), g, values, depth, globalCounter)).intValue()
+          );
         case APPLY:
           return apply(
                   (Function) node.getChildren().get(0).getContent(),
                   ((List<BitsGenotype>) compute(node.getChildren().get(1), g, values, depth, globalCounter))
           );
         case OP_ADD:
-          return ((Double) compute(node.getChildren().get(0), g, values, depth, globalCounter) 
+          return ((Double) compute(node.getChildren().get(0), g, values, depth, globalCounter)
                   + (Double) compute(node.getChildren().get(1), g, values, depth, globalCounter));
         case OP_SUBTRACT:
-          return ((Double) compute(node.getChildren().get(0), g, values, depth, globalCounter) 
+          return ((Double) compute(node.getChildren().get(0), g, values, depth, globalCounter)
                   - (Double) compute(node.getChildren().get(1), g, values, depth, globalCounter));
         case OP_MULT:
-          return ((Double) compute(node.getChildren().get(0), g, values, depth, globalCounter) 
+          return ((Double) compute(node.getChildren().get(0), g, values, depth, globalCounter)
                   * (Double) compute(node.getChildren().get(1), g, values, depth, globalCounter));
-        case OP_DIVIDE:          
+        case OP_DIVIDE:
           return protectedDivision(
                   (Double) compute(node.getChildren().get(0), g, values, depth, globalCounter),
                   (Double) compute(node.getChildren().get(1), g, values, depth, globalCounter)
@@ -105,20 +152,20 @@ public class MapperUtils {
       }
     }
     if (node.getContent() instanceof NumericConstant) {
-      return ((NumericConstant)node.getContent()).getValue();
+      return ((NumericConstant) node.getContent()).getValue();
     }
     return null;
   }
-  
+
   private static double protectedDivision(double d1, double d2) {
-    if (d2==0) {
+    if (d2 == 0) {
       return 0d;
     }
-    return d1/d2;
+    return d1 / d2;
   }
 
   private static double protectedRemainder(double d1, double d2) {
-    if (d2==0) {
+    if (d2 == 0) {
       return 0d;
     }
     return d1 % d2;
@@ -197,6 +244,14 @@ public class MapperUtils {
       }
     }
     return l;
+  }
+
+  private static <T> List<T> repeat(T element, int n) {
+    List<T> list = new ArrayList<>(n);
+    for (int i = 0; i < n; i++) {
+      list.add(element);
+    }
+    return list;
   }
 
 }
