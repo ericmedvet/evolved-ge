@@ -111,6 +111,10 @@ public class DeepExperimenter {
     if (args.length > 0) {
       filePrintStream = new PrintStream(args[0]);
     }
+    int startingRunIndex = 0;
+    if (args.length > 1) {
+      startingRunIndex = Integer.parseInt(args[1]);
+    }
     //prepare distances
     final Distance<Node<String>> phenotypeDistance = new CachedDistance<>(new LeavesEdit<String>());
     Distance<Sequence<Boolean>> bitsGenotypeDistance = new CachedDistance<>(new Hamming<Boolean>());
@@ -118,12 +122,12 @@ public class DeepExperimenter {
     final Distance fitnessDistance = new Distance<NumericFitness>() {
       @Override
       public double d(NumericFitness f1, NumericFitness f2) {
-        return Math.abs(f1.getValue()-f2.getValue());
+        return Math.abs(f1.getValue() - f2.getValue());
       }
     };
     //iterate
     boolean header = true;
-    for (int run = 30; run < 30+runs; run++) {
+    for (int run = startingRunIndex; run < startingRunIndex + runs; run++) {
       for (String pr : problems) {
         for (String me : methods) {
           for (String ma : mappers) {
@@ -209,7 +213,7 @@ public class DeepExperimenter {
             } else if (p(me, 0).equals("dc")) {
               final Distance localGenotypeDistance = genotypeDistance;
               Distance distance = null;
-              if (p(me, 1).equals("g")) {                
+              if (p(me, 1).equals("g")) {
                 distance = new Distance<Individual>() {
                   @Override
                   public double d(Individual i1, Individual i2) {
@@ -245,7 +249,7 @@ public class DeepExperimenter {
               evolver = new DeterministicCrowdingEvolver(configuration, N_THREADS, random, false);
             } else if (p(me, 0).equals("p")) {
               Ranker<Individual> parentInPartitionRanker = null;
-              Comparator<Individual> partitionerComparator = null;            
+              Comparator<Individual> partitionerComparator = null;
               if (p(me, 1).equals("g")) {
                 partitionerComparator = new IndividualComparator(IndividualComparator.Attribute.GENO);
               } else if (p(me, 1).equals("p")) {
@@ -266,7 +270,7 @@ public class DeepExperimenter {
               }
               PartitionConfiguration configuration = new PartitionConfiguration(
                       partitionerComparator,
-                      i(p(me,3)),
+                      i(p(me, 3)),
                       parentInPartitionRanker,
                       new FirstBest(),
                       parentInPartitionRanker,
