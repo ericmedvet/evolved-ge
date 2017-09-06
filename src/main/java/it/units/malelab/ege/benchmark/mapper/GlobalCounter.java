@@ -19,7 +19,7 @@ public class GlobalCounter {
   
   public int rw() {
     c = c+1;
-    return c;
+    return c-1;
   }
 
   @Override

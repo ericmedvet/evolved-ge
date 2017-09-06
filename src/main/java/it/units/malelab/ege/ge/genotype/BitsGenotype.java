@@ -24,9 +24,9 @@ public class BitsGenotype implements ConstrainedSequence<Boolean> {
 
   private final int length;
   private final BitSet bitSet;
-  
+
   private final static Set<Boolean> DOMAIN;
-  
+
   static {
     Set<Boolean> domain = new LinkedHashSet<>();
     domain.add(Boolean.TRUE);
@@ -37,7 +37,7 @@ public class BitsGenotype implements ConstrainedSequence<Boolean> {
   public BitsGenotype(String bits) {
     this(bits.length());
     for (int i = 0; i < length; i++) {
-      bitSet.set(i, bits.charAt(i)!='0');
+      bitSet.set(i, bits.charAt(i) != '0');
     }
   }
 
@@ -88,6 +88,9 @@ public class BitsGenotype implements ConstrainedSequence<Boolean> {
     StringBuilder sb = new StringBuilder();
     sb.append(length + ":");
     for (int i = 0; i < length; i++) {
+      if (i > 0 && i % 8 == 0) {
+        sb.append('-');
+      }
       sb.append(bitSet.get(i) ? '1' : '0');
     }
     return sb.toString();

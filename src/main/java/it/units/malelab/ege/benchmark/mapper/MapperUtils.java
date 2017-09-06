@@ -14,7 +14,6 @@ import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.ge.genotype.BitsGenotype;
 import it.units.malelab.ege.util.Utils;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -66,98 +65,123 @@ public class MapperUtils {
   }
 
   public static Object compute(Node<Element> node, BitsGenotype g, List<Double> values, int depth, GlobalCounter globalCounter) {
-
-    System.out.printf("%12.12s\t%s\t%s\t%d\t%d%n", node.getContent(), g, values, depth, globalCounter.r());
-
+    Object result = null;
     if (node.getContent() instanceof Variable) {
       switch (((Variable) node.getContent())) {
         case GENOTYPE:
-          return g;
+          result = g;
+          break;
         case LIST_N:
-          return values;
+          result = values;
+          break;
         case DEPTH:
-          return (double) depth;
+          result = (double) depth;
+          break;
         case GL_COUNT_R:
-          return (double) globalCounter.r();
+          result = (double) globalCounter.r();
+          break;
         case GL_COUNT_RW:
-          return (double) globalCounter.rw();
+          result = (double) globalCounter.rw();
+          break;
       }
-    }
-    if (node.getContent() instanceof Function) {
+    } else if (node.getContent() instanceof Function) {
       switch (((Function) node.getContent())) {
         case LENGTH:
-          return ((List) compute(node.getChildren().get(0), g, values, depth, globalCounter)).size();
+          result = (double) ((List) compute(node.getChildren().get(0), g, values, depth, globalCounter)).size();
+          break;
         case SIZE:
-          return ((BitsGenotype) compute(node.getChildren().get(0), g, values, depth, globalCounter)).size();
+          result = (double) ((BitsGenotype) compute(node.getChildren().get(0), g, values, depth, globalCounter)).size();
+          break;
         case COUNT:
-          return ((BitsGenotype) compute(node.getChildren().get(0), g, values, depth, globalCounter)).count();
+          result = (double) ((BitsGenotype) compute(node.getChildren().get(0), g, values, depth, globalCounter)).count();
+          break;
         case COUNT_R:
           BitsGenotype bitsGenotype = (BitsGenotype) compute(node.getChildren().get(0), g, values, depth, globalCounter);
-          return bitsGenotype.count() / bitsGenotype.size();
+          result = (double) bitsGenotype.count() / (double) bitsGenotype.size();
+          break;
         case INT:
-          return (double)((BitsGenotype) compute(node.getChildren().get(0), g, values, depth, globalCounter)).toInt();
-        case ROTATE:
-          return rotate(
+          result = (double) ((BitsGenotype) compute(node.getChildren().get(0), g, values, depth, globalCounter)).toInt();
+          break;
+        case ROTATE_DX:
+          result = rotateDx(
                   (BitsGenotype) compute(node.getChildren().get(0), g, values, depth, globalCounter),
                   ((Double) compute(node.getChildren().get(1), g, values, depth, globalCounter)).intValue()
           );
+          break;
+        case ROTATE_SX:
+          result = rotateSx(
+                  (BitsGenotype) compute(node.getChildren().get(0), g, values, depth, globalCounter),
+                  ((Double) compute(node.getChildren().get(1), g, values, depth, globalCounter)).intValue()
+          );
+          break;
         case SUBSTRING:
-          return substring(
+          result = substring(
                   (BitsGenotype) compute(node.getChildren().get(0), g, values, depth, globalCounter),
                   ((Double) compute(node.getChildren().get(1), g, values, depth, globalCounter)).intValue()
           );
+          break;
         case SPLIT:
-          return split(
+          result = split(
                   (BitsGenotype) compute(node.getChildren().get(0), g, values, depth, globalCounter),
                   ((Double) compute(node.getChildren().get(1), g, values, depth, globalCounter)).intValue()
           );
+          break;
         case SPLIT_W:
-          return splitWeighted(
+          result = splitWeighted(
                   (BitsGenotype) compute(node.getChildren().get(0), g, values, depth, globalCounter),
                   (List<Double>) compute(node.getChildren().get(1), g, values, depth, globalCounter)
           );
+          break;
         case LIST:
-          return list(compute(node.getChildren().get(0), g, values, depth, globalCounter));
+          result = list(compute(node.getChildren().get(0), g, values, depth, globalCounter));
+          break;
         case CONCAT:
-          return concat(
+          result = concat(
                   (List) compute(node.getChildren().get(0), g, values, depth, globalCounter),
                   (List) compute(node.getChildren().get(1), g, values, depth, globalCounter)
           );
+          break;
         case REPEAT:
-          return repeat(
+          result = repeat(
                   compute(node.getChildren().get(0), g, values, depth, globalCounter),
-                  ((Double) compute(node.getChildren().get(0), g, values, depth, globalCounter)).intValue()
+                  ((Double) compute(node.getChildren().get(1), g, values, depth, globalCounter)).intValue()
           );
+          break;
         case APPLY:
-          return apply(
+          result = apply(
                   (Function) node.getChildren().get(0).getContent(),
                   ((List<BitsGenotype>) compute(node.getChildren().get(1), g, values, depth, globalCounter))
           );
+          break;
         case OP_ADD:
-          return ((Double) compute(node.getChildren().get(0), g, values, depth, globalCounter)
+          result = ((Double) compute(node.getChildren().get(0), g, values, depth, globalCounter)
                   + (Double) compute(node.getChildren().get(1), g, values, depth, globalCounter));
+          break;
         case OP_SUBTRACT:
-          return ((Double) compute(node.getChildren().get(0), g, values, depth, globalCounter)
+          result = ((Double) compute(node.getChildren().get(0), g, values, depth, globalCounter)
                   - (Double) compute(node.getChildren().get(1), g, values, depth, globalCounter));
+          break;
         case OP_MULT:
-          return ((Double) compute(node.getChildren().get(0), g, values, depth, globalCounter)
+          result = ((Double) compute(node.getChildren().get(0), g, values, depth, globalCounter)
                   * (Double) compute(node.getChildren().get(1), g, values, depth, globalCounter));
+          break;
         case OP_DIVIDE:
-          return protectedDivision(
+          result = protectedDivision(
                   (Double) compute(node.getChildren().get(0), g, values, depth, globalCounter),
                   (Double) compute(node.getChildren().get(1), g, values, depth, globalCounter)
           );
+          break;
         case OP_REMAINDER:
-          return protectedRemainder(
+          result = protectedRemainder(
                   (Double) compute(node.getChildren().get(0), g, values, depth, globalCounter),
                   (Double) compute(node.getChildren().get(1), g, values, depth, globalCounter)
           );
+          break;
       }
+    } else if (node.getContent() instanceof NumericConstant) {
+      result = ((NumericConstant) node.getContent()).getValue();
     }
-    if (node.getContent() instanceof NumericConstant) {
-      return ((NumericConstant) node.getContent()).getValue();
-    }
-    return null;
+    return result;
   }
 
   private static double protectedDivision(double d1, double d2) {
@@ -174,11 +198,25 @@ public class MapperUtils {
     return d1 % d2;
   }
 
-  private static BitsGenotype rotate(BitsGenotype g, int n) {
+  private static BitsGenotype rotateDx(BitsGenotype g, int n) {
+    if (n<=0) {
+      return g;
+    }
+    BitsGenotype copy = new BitsGenotype(g.size());
+    n = n % g.size();
+    copy.set(0, g.slice(g.size()-n, g.size()));
+    copy.set(n, g.slice(0, g.size()-n));
+    return copy;
+  }
+
+  private static BitsGenotype rotateSx(BitsGenotype g, int n) {
+    if (n<=0) {
+      return g;
+    }
     BitsGenotype copy = new BitsGenotype(g.size());
     n = n % g.size();
     copy.set(0, g.slice(n, g.size()));
-    copy.set(g.size() - n, g.slice(0, n));
+    copy.set(g.size()-n, g.slice(0, n));
     return copy;
   }
 
