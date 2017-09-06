@@ -66,6 +66,9 @@ public class MapperUtils {
   }
 
   public static Object compute(Node<Element> node, BitsGenotype g, List<Double> values, int depth, GlobalCounter globalCounter) {
+
+    System.out.printf("%12.12s\t%s\t%s\t%d\t%d%n", node.getContent(), g, values, depth, globalCounter.r());
+
     if (node.getContent() instanceof Variable) {
       switch (((Variable) node.getContent())) {
         case GENOTYPE:
@@ -73,11 +76,11 @@ public class MapperUtils {
         case LIST_N:
           return values;
         case DEPTH:
-          return depth;
+          return (double) depth;
         case GL_COUNT_R:
-          return globalCounter.r();
+          return (double) globalCounter.r();
         case GL_COUNT_RW:
-          return globalCounter.rw();
+          return (double) globalCounter.rw();
       }
     }
     if (node.getContent() instanceof Function) {
@@ -92,7 +95,7 @@ public class MapperUtils {
           BitsGenotype bitsGenotype = (BitsGenotype) compute(node.getChildren().get(0), g, values, depth, globalCounter);
           return bitsGenotype.count() / bitsGenotype.size();
         case INT:
-          return ((BitsGenotype) compute(node.getChildren().get(0), g, values, depth, globalCounter)).toInt();
+          return (double)((BitsGenotype) compute(node.getChildren().get(0), g, values, depth, globalCounter)).toInt();
         case ROTATE:
           return rotate(
                   (BitsGenotype) compute(node.getChildren().get(0), g, values, depth, globalCounter),
@@ -101,8 +104,8 @@ public class MapperUtils {
         case SUBSTRING:
           return substring(
                   (BitsGenotype) compute(node.getChildren().get(0), g, values, depth, globalCounter),
-                  ((Double) compute(node.getChildren().get(1), g, values, depth, globalCounter)).intValue(),
-                  ((Double) compute(node.getChildren().get(2), g, values, depth, globalCounter)).intValue());
+                  ((Double) compute(node.getChildren().get(1), g, values, depth, globalCounter)).intValue()
+          );
         case SPLIT:
           return split(
                   (BitsGenotype) compute(node.getChildren().get(0), g, values, depth, globalCounter),
@@ -179,8 +182,8 @@ public class MapperUtils {
     return copy;
   }
 
-  private static BitsGenotype substring(BitsGenotype g, int from, int to) {
-    return g.slice(Math.max(0, from), Math.min(to, g.size()));
+  private static BitsGenotype substring(BitsGenotype g, int to) {
+    return g.slice(0, Math.min(to, g.size()));
   }
 
   private static List<BitsGenotype> split(BitsGenotype g, int n) {

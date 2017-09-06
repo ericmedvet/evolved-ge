@@ -15,6 +15,7 @@ import it.units.malelab.ege.util.Utils;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -24,7 +25,7 @@ import java.util.Map;
  */
 public class RecursiveMapper<T> extends WeightedHierarchicalMapper<T> {
 
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) throws IOException, MappingException {
     Node<String> rawTree = n("<mapper>",
             n("<optionChooser>",
                     n("<n>",
@@ -71,8 +72,10 @@ public class RecursiveMapper<T> extends WeightedHierarchicalMapper<T> {
                                     n(")")),
                             n(")"))));
     RecursiveMapper<String> mapper = new RecursiveMapper<>(rawTree, 10, 3, Utils.parseFromFile(new File("grammars/symbolic-regression-classic4.bnf")));
-    Utils.prettyPrintTree(mapper.optionChooser, System.out);
-    Utils.prettyPrintTree(mapper.genoAssigner, System.out);
+    //Utils.prettyPrintTree(mapper.optionChooser, System.out);
+    //Utils.prettyPrintTree(mapper.genoAssigner, System.out);
+    BitsGenotype g = bg8(0,2,1,3,2,0,2,1);
+    System.out.println(mapper.map(g, new LinkedHashMap<String, Object>()));
   }
 
   private static Node<String> n(String s, Node<String>... children) {
@@ -81,6 +84,19 @@ public class RecursiveMapper<T> extends WeightedHierarchicalMapper<T> {
       n.getChildren().add(child);
     }
     return n;
+  }
+  
+  private static BitsGenotype bg8(int... values) {
+    StringBuilder sb = new StringBuilder();
+    for (int value : values) {
+      String stringValue = Integer.toBinaryString(value);
+      while (stringValue.length()<8) {
+        stringValue = "0"+stringValue;
+      }
+      sb.append(stringValue);
+    }
+    BitsGenotype g = new BitsGenotype(sb.toString());
+    return g;
   }
 
   private final Node<Element> optionChooser;
