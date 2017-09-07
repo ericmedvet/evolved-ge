@@ -10,6 +10,7 @@ import it.units.malelab.ege.benchmark.KLandscapes;
 import it.units.malelab.ege.benchmark.symbolicregression.HarmonicCurve;
 import it.units.malelab.ege.benchmark.Text;
 import it.units.malelab.ege.benchmark.booleanfunction.Parity;
+import it.units.malelab.ege.benchmark.mapper.MapperGeneration;
 import it.units.malelab.ege.benchmark.symbolicregression.Nguyen7;
 import it.units.malelab.ege.cfggp.initializer.FullTreeFactory;
 import it.units.malelab.ege.cfggp.initializer.GrowTreeFactory;
@@ -93,7 +94,8 @@ public class ExampleMain {
     //solveKLandscapesCfgGp();
     //doImagesBits();
     //doImages();
-    solveTextDC();
+    //solveTextDC();
+    solveMapper();
   }
 
   private static void solveHarmonicCurve() throws IOException, InterruptedException, ExecutionException {
@@ -555,6 +557,54 @@ public class ExampleMain {
             "/home/eric/experiments/ge/images/tcyb",
             EvolutionImageSaverListener.ImageType.DU));
     Evolver<SGEGenotype<String>, String, NumericFitness> evolver = new StandardEvolver<>(
+            configuration, 1, random, false);
+    List<Node<String>> bests = evolver.solve(listeners);
+    System.out.printf("Found %d solutions.%n", bests.size());
+  }
+
+  private static void solveMapper() throws IOException, InterruptedException, ExecutionException {
+    int maxDepth = 12;
+    Random random = new Random(1l);
+    Problem<String, MultiObjectiveFitness> problem = new MapperGeneration(256, 100, random,
+            new Nguyen7(0),
+            new Parity(8),
+            new Text()
+    );
+    PartitionConfiguration<Node<String>, String, MultiObjectiveFitness> configuration = new PartitionConfiguration<>(
+            new IndividualComparator<Node<String>, String, MultiObjectiveFitness>(IndividualComparator.Attribute.PHENO),
+            10,
+            new ComparableRanker<>(new IndividualComparator<Node<String>, String, MultiObjectiveFitness>(IndividualComparator.Attribute.AGE)),
+            new FirstBest<Individual<Node<String>, String, MultiObjectiveFitness>>(),
+            new ComparableRanker<>(new IndividualComparator<Node<String>, String, MultiObjectiveFitness>(IndividualComparator.Attribute.AGE)),
+            new LastWorst<Individual<Node<String>, String, MultiObjectiveFitness>>(),
+            500,
+            50,
+            new MultiInitializer<>(new Utils.MapBuilder<PopulationInitializer<Node<String>>, Double>()
+                    .put(new RandomInitializer<>(random, new GrowTreeFactory<>(maxDepth, problem.getGrammar())), 0.5)
+                    .put(new RandomInitializer<>(random, new FullTreeFactory<>(maxDepth, problem.getGrammar())), 0.5)
+                    .build()
+            ),
+            new Any<Node<String>>(),
+            new CfgGpMapper<String>(),
+            new Utils.MapBuilder<GeneticOperator<Node<String>>, Double>()
+                    .put(new StandardTreeCrossover<String>(maxDepth, random), 0.8d)
+                    .put(new StandardTreeMutation<>(maxDepth, problem.getGrammar(), random), 0.2d)
+                    .build(),
+            new ParetoRanker<Node<String>, String, MultiObjectiveFitness>(),
+            new Tournament<Individual<Node<String>, String, MultiObjectiveFitness>>(3, random),
+            new LastWorst<Individual<Node<String>, String, MultiObjectiveFitness>>(),
+            500,
+            true,
+            problem);
+    List<EvolverListener<Node<String>, String, MultiObjectiveFitness>> listeners = new ArrayList<>();
+    listeners.add(new CollectorGenerationLogger<>(
+            Collections.EMPTY_MAP, System.out, true, 10, " ", " | ",
+            new Population<Node<String>, String, MultiObjectiveFitness>(),
+            new MultiObjectiveFitnessFirstBest<Node<String>, String>(false, problem.getTestingFitnessComputer(), "%4.2f", "%4.2f", "%+4.2f"),
+            new Diversity<Node<String>, String, MultiObjectiveFitness>(),
+            new BestPrinter<Node<String>, String, MultiObjectiveFitness>(problem.getPhenotypePrinter(), "%30.30s")
+    ));
+    Evolver<Node<String>, String, MultiObjectiveFitness> evolver = new PartitionEvolver<>(
             configuration, 1, random, false);
     List<Node<String>> bests = evolver.solve(listeners);
     System.out.printf("Found %d solutions.%n", bests.size());

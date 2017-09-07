@@ -61,8 +61,8 @@ public class MappingPropertiesFitness implements FitnessComputer<String, MultiOb
     Distance<Sequence<Boolean>> genotypeDistance = new Hamming<Boolean>();
     genotypeDistances = new double[(n * (n - 1)) / 2];
     int c = 0;
-    for (int i = 0; i < genotypes.size(); i++) {
-      for (int j = i + 1; i < genotypes.size(); j++) {
+    for (int i = 0; i < genotypes.size()-1; i++) {
+      for (int j = i + 1; j < genotypes.size(); j++) {
         genotypeDistances[c] = genotypeDistance.d(genotypes.get(i), genotypes.get(j));
         c = c + 1;
       }
