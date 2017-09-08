@@ -403,4 +403,12 @@ public class Utils {
     };
   }
   
+public static <T> Node<T> node(T t, Node<T>... children) {
+    Node<T> n = new Node<>(t);
+    for (Node<T> child : children) {
+      n.getChildren().add(child);
+    }
+    return n;
+  }
+
 }

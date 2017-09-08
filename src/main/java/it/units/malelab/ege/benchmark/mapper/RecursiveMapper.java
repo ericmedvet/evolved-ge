@@ -11,6 +11,7 @@ import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.core.mapper.MappingException;
 import it.units.malelab.ege.ge.genotype.BitsGenotype;
 import it.units.malelab.ege.ge.mapper.WeightedHierarchicalMapper;
+import it.units.malelab.ege.util.Utils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,8 +29,8 @@ public class RecursiveMapper<T> extends WeightedHierarchicalMapper<T> {
   public RecursiveMapper(Node<String> rawMappingTree, int maxMappingDepth, int maxDepth, Grammar<T> grammar) {
     super(maxDepth, grammar);
     this.maxMappingDepth = maxMappingDepth;
-    optionChooser = MapperUtils.transform(rawMappingTree.getChildren().get(0).getChildren().get(0));
-    genoAssigner = MapperUtils.transform(rawMappingTree.getChildren().get(1).getChildren().get(0));
+    optionChooser = MapperUtils.transform(rawMappingTree.getChildren().get(0));
+    genoAssigner = MapperUtils.transform(rawMappingTree.getChildren().get(1));
     optionChooser.propagateParentship();
     genoAssigner.propagateParentship();
   }
@@ -38,9 +39,6 @@ public class RecursiveMapper<T> extends WeightedHierarchicalMapper<T> {
   public Node<T> map(BitsGenotype genotype, Map<String, Object> report) throws MappingException {
     GlobalCounter mappingGlobalCounter = new GlobalCounter();
     GlobalCounter finalizationGlobalCounter = new GlobalCounter();
-    
-    //System.out.printf("Mapper%n\t%s%n\t%s%n", optionChooser, genoAssigner);
-    
     Node<T> tree = mapRecursively(grammar.getStartingSymbol(), genotype, mappingGlobalCounter, finalizationGlobalCounter, 0);
     tree.propagateParentship();
     return tree;

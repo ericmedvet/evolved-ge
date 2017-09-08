@@ -11,7 +11,7 @@ package it.units.malelab.ege.benchmark.mapper.element;
  */
 public enum Variable implements Element {
   GENOTYPE("g"),
-  LIST_N("lN"),
+  LIST_N("ln"),
   DEPTH("depth"),
   GL_COUNT_R("g_count_r"),
   GL_COUNT_RW("g_count_rw");

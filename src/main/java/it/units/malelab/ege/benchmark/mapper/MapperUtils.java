@@ -37,7 +37,7 @@ public class MapperUtils {
     Node<Element> node = transform(stringNode.getChildren().get(0));
     for (int i = 1; i < stringNode.getChildren().size(); i++) {
       Node<Element> child = transform(stringNode.getChildren().get(i));
-      if (child != null) {
+      if (child != null) { //discard decorations
         node.getChildren().add(child);
       }
     }
@@ -86,30 +86,79 @@ public class MapperUtils {
       }
     } else if (node.getContent() instanceof Function) {
       switch (((Function) node.getContent())) {
-        case LENGTH:
-          result = (double) ((List) compute(node.getChildren().get(0), g, values, depth, globalCounter)).size();
-          break;
         case SIZE:
           result = (double) ((BitsGenotype) compute(node.getChildren().get(0), g, values, depth, globalCounter)).size();
           break;
-        case COUNT:
+        case WEIGHT:
           result = (double) ((BitsGenotype) compute(node.getChildren().get(0), g, values, depth, globalCounter)).count();
           break;
-        case COUNT_R:
+        case WEIGHT_R:
           BitsGenotype bitsGenotype = (BitsGenotype) compute(node.getChildren().get(0), g, values, depth, globalCounter);
           result = (double) bitsGenotype.count() / (double) bitsGenotype.size();
           break;
         case INT:
           result = (double) ((BitsGenotype) compute(node.getChildren().get(0), g, values, depth, globalCounter)).toInt();
           break;
-        case ROTATE_DX:
-          result = rotateDx(
-                  (BitsGenotype) compute(node.getChildren().get(0), g, values, depth, globalCounter),
+        case ADD:
+          result = ((Double) compute(node.getChildren().get(0), g, values, depth, globalCounter)
+                  + (Double) compute(node.getChildren().get(1), g, values, depth, globalCounter));
+          break;
+        case SUBTRACT:
+          result = ((Double) compute(node.getChildren().get(0), g, values, depth, globalCounter)
+                  - (Double) compute(node.getChildren().get(1), g, values, depth, globalCounter));
+          break;
+        case MULT:
+          result = ((Double) compute(node.getChildren().get(0), g, values, depth, globalCounter)
+                  * (Double) compute(node.getChildren().get(1), g, values, depth, globalCounter));
+          break;
+        case DIVIDE:
+          result = protectedDivision(
+                  (Double) compute(node.getChildren().get(0), g, values, depth, globalCounter),
+                  (Double) compute(node.getChildren().get(1), g, values, depth, globalCounter)
+          );
+          break;
+        case REMAINDER:
+          result = protectedRemainder(
+                  (Double) compute(node.getChildren().get(0), g, values, depth, globalCounter),
+                  (Double) compute(node.getChildren().get(1), g, values, depth, globalCounter)
+          );
+          break;
+        case LENGTH:
+          result = (double) ((List) compute(node.getChildren().get(0), g, values, depth, globalCounter)).size();
+          break;
+        case MAX_INDEX:
+          result = (double) maxIndex((List<Double>) compute(node.getChildren().get(0), g, values, depth, globalCounter), 1d);
+          break;
+        case MIN_INDEX:
+          result = (double) maxIndex((List<Double>) compute(node.getChildren().get(0), g, values, depth, globalCounter), -1d);
+          break;
+        case GET:
+          result = getFromList(
+                  (List) compute(node.getChildren().get(0), g, values, depth, globalCounter),
                   ((Double) compute(node.getChildren().get(1), g, values, depth, globalCounter)).intValue()
+          );
+          break;
+        case SEQ:
+          result = seq(
+                  ((Double) compute(node.getChildren().get(0), g, values, depth, globalCounter)).intValue(),
+                  values.size()
+          );
+          break;
+        case REPEAT:
+          result = repeat(
+                  compute(node.getChildren().get(0), g, values, depth, globalCounter),
+                  ((Double) compute(node.getChildren().get(1), g, values, depth, globalCounter)).intValue(),
+                  values.size()
           );
           break;
         case ROTATE_SX:
           result = rotateSx(
+                  (BitsGenotype) compute(node.getChildren().get(0), g, values, depth, globalCounter),
+                  ((Double) compute(node.getChildren().get(1), g, values, depth, globalCounter)).intValue()
+          );
+          break;
+        case ROTATE_DX:
+          result = rotateDx(
                   (BitsGenotype) compute(node.getChildren().get(0), g, values, depth, globalCounter),
                   ((Double) compute(node.getChildren().get(1), g, values, depth, globalCounter)).intValue()
           );
@@ -123,59 +172,22 @@ public class MapperUtils {
         case SPLIT:
           result = split(
                   (BitsGenotype) compute(node.getChildren().get(0), g, values, depth, globalCounter),
-                  ((Double) compute(node.getChildren().get(1), g, values, depth, globalCounter)).intValue()
+                  ((Double) compute(node.getChildren().get(1), g, values, depth, globalCounter)).intValue(),
+                  values.size()
           );
           break;
         case SPLIT_W:
           result = splitWeighted(
                   (BitsGenotype) compute(node.getChildren().get(0), g, values, depth, globalCounter),
-                  (List<Double>) compute(node.getChildren().get(1), g, values, depth, globalCounter)
-          );
-          break;
-        case LIST:
-          result = list(compute(node.getChildren().get(0), g, values, depth, globalCounter));
-          break;
-        case CONCAT:
-          result = concat(
-                  (List) compute(node.getChildren().get(0), g, values, depth, globalCounter),
-                  (List) compute(node.getChildren().get(1), g, values, depth, globalCounter)
-          );
-          break;
-        case REPEAT:
-          result = repeat(
-                  compute(node.getChildren().get(0), g, values, depth, globalCounter),
-                  ((Double) compute(node.getChildren().get(1), g, values, depth, globalCounter)).intValue(),
+                  (List<Double>) compute(node.getChildren().get(1), g, values, depth, globalCounter),
                   values.size()
           );
           break;
         case APPLY:
           result = apply(
                   (Function) node.getChildren().get(0).getContent(),
-                  ((List<BitsGenotype>) compute(node.getChildren().get(1), g, values, depth, globalCounter))
-          );
-          break;
-        case OP_ADD:
-          result = ((Double) compute(node.getChildren().get(0), g, values, depth, globalCounter)
-                  + (Double) compute(node.getChildren().get(1), g, values, depth, globalCounter));
-          break;
-        case OP_SUBTRACT:
-          result = ((Double) compute(node.getChildren().get(0), g, values, depth, globalCounter)
-                  - (Double) compute(node.getChildren().get(1), g, values, depth, globalCounter));
-          break;
-        case OP_MULT:
-          result = ((Double) compute(node.getChildren().get(0), g, values, depth, globalCounter)
-                  * (Double) compute(node.getChildren().get(1), g, values, depth, globalCounter));
-          break;
-        case OP_DIVIDE:
-          result = protectedDivision(
-                  (Double) compute(node.getChildren().get(0), g, values, depth, globalCounter),
-                  (Double) compute(node.getChildren().get(1), g, values, depth, globalCounter)
-          );
-          break;
-        case OP_REMAINDER:
-          result = protectedRemainder(
-                  (Double) compute(node.getChildren().get(0), g, values, depth, globalCounter),
-                  (Double) compute(node.getChildren().get(1), g, values, depth, globalCounter)
+                  ((List) compute(node.getChildren().get(1), g, values, depth, globalCounter)),
+                  (node.getChildren().size() >= 3) ? compute(node.getChildren().get(2), g, values, depth, globalCounter) : null
           );
           break;
       }
@@ -200,48 +212,51 @@ public class MapperUtils {
   }
 
   private static BitsGenotype rotateDx(BitsGenotype g, int n) {
-    if (n<=0) {
+    if (g.size() == 0) {
       return g;
     }
-    if (g.size()==0) {
+    n = n % g.size();
+    if (n <= 0) {
       return g;
     }
     BitsGenotype copy = new BitsGenotype(g.size());
-    n = n % g.size();
-    copy.set(0, g.slice(g.size()-n, g.size()));
-    copy.set(n, g.slice(0, g.size()-n));
+    copy.set(0, g.slice(g.size() - n, g.size()));
+    copy.set(n, g.slice(0, g.size() - n));
     return copy;
   }
 
   private static BitsGenotype rotateSx(BitsGenotype g, int n) {
-    if (g.size()==0) {
+    if (g.size() == 0) {
       return g;
     }
     n = n % g.size();
-    if (n<=0) {
+    if (n <= 0) {
       return g;
-    }    
+    }
     BitsGenotype copy = new BitsGenotype(g.size());
     copy.set(0, g.slice(n, g.size()));
-    copy.set(g.size()-n, g.slice(0, n));
+    copy.set(g.size() - n, g.slice(0, n));
     return copy;
   }
 
   private static BitsGenotype substring(BitsGenotype g, int to) {
-    if (to<=0) {
+    if (to <= 0) {
       return new BitsGenotype(0);
     }
-    if (g.size()==0) {
+    if (g.size() == 0) {
       return g;
     }
     return g.slice(0, Math.min(to, g.size()));
   }
 
-  private static List<BitsGenotype> split(BitsGenotype g, int n) {
-    if (n<=0) {
+  private static List<BitsGenotype> split(BitsGenotype g, int n, int maxN) {
+    if (n <= 0) {
       return Collections.singletonList(g);
     }
-    if (g.size()==0) {
+    if (n > maxN) {
+      n = maxN;
+    }
+    if (g.size() == 0) {
       return Collections.nCopies(n, new BitsGenotype(0));
     }
     n = Math.max(1, n);
@@ -250,11 +265,11 @@ public class MapperUtils {
     return g.slices(ranges);
   }
 
-  private static List<BitsGenotype> splitWeighted(BitsGenotype g, List<Double> weights) {
+  private static List<BitsGenotype> splitWeighted(BitsGenotype g, List<Double> weights, int maxN) {
     if (weights.isEmpty()) {
-      return Collections.EMPTY_LIST;
+      return Collections.singletonList(g);
     }
-    if (g.size()==0) {
+    if (g.size() == 0) {
       return Collections.nCopies(weights.size(), new BitsGenotype(0));
     }
     double minWeight = Double.POSITIVE_INFINITY;
@@ -265,7 +280,7 @@ public class MapperUtils {
     }
     if (Double.isInfinite(minWeight)) {
       //all zero
-      return split(g, weights.size());
+      return split(g, weights.size(), maxN);
     }
     List<Integer> intWeights = new ArrayList<>(weights.size());
     for (double w : weights) {
@@ -287,39 +302,79 @@ public class MapperUtils {
     return l;
   }
 
-  private static List<Double> apply(Function function, List<BitsGenotype> l1) {
-    List<Double> l = new ArrayList<>(l1.size());
-    for (BitsGenotype g : l1) {
+  private static List apply(Function function, List inputList, Object arg) {
+    List outputList = new ArrayList(inputList.size());
+    for (Object repeatedArg : inputList) {
       switch (function) {
         case SIZE:
-          l.add((double) g.size());
+          outputList.add((double) ((BitsGenotype) repeatedArg).size());
           break;
-        case COUNT:
-          l.add((double) g.count());
+        case WEIGHT:
+          outputList.add((double) ((BitsGenotype) repeatedArg).count());
           break;
-        case COUNT_R:
-          l.add((double) g.count() / (double) g.size());
+        case WEIGHT_R:
+          outputList.add((double) ((BitsGenotype) repeatedArg).count() / (double) ((BitsGenotype) repeatedArg).size());
           break;
         case INT:
-          l.add((double) g.toInt());
+          outputList.add((double) ((BitsGenotype) repeatedArg).toInt());
           break;
-        default:
-          l.add(0d);
+        case ROTATE_SX:
+          outputList.add(rotateSx((BitsGenotype) arg, ((Double) repeatedArg).intValue()));
+          break;
+        case ROTATE_DX:
+          outputList.add(rotateDx((BitsGenotype) arg, ((Double) repeatedArg).intValue()));
+          break;
+        case SUBSTRING:
+          outputList.add(substring((BitsGenotype) arg, ((Double) repeatedArg).intValue()));
+          break;
       }
     }
-    return l;
+    return outputList;
   }
 
   private static <T> List<T> repeat(T element, int n, int maxN) {
-    if (n<=0) {
-      return Collections.EMPTY_LIST;
+    if (n <= 0) {
+      return Collections.singletonList(element);
     }
-    if (n>maxN) {
+    if (n > maxN) {
       n = maxN;
     }
     List<T> list = new ArrayList<>(n);
     for (int i = 0; i < n; i++) {
       list.add(element);
+    }
+    return list;
+  }
+
+  private static <T> T getFromList(List<T> list, int n) {
+    n = Math.min(n, list.size() - 1);
+    n = Math.max(0, n);
+    return list.get(n);
+  }
+
+  private static int maxIndex(List<Double> list, double mult) {
+    if (list.isEmpty()) {
+      return 0;
+    }
+    int index = 0;
+    for (int i = 1; i < list.size(); i++) {
+      if (mult * list.get(i) > mult * list.get(index)) {
+        index = i;
+      }
+    }
+    return index;
+  }
+
+  private static List<Double> seq(int n, int maxN) {
+    if (n > maxN) {
+      n = maxN;
+    }
+    if (n < 1) {
+      n = 1;
+    }
+    List<Double> list = new ArrayList<>(n);
+    for (int i = 0; i < n; i++) {
+      list.add((double) i);
     }
     return list;
   }

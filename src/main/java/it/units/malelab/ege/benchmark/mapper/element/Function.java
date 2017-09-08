@@ -11,25 +11,16 @@ package it.units.malelab.ege.benchmark.mapper.element;
  */
 public enum Function implements Element {
 
-  LENGTH("length"),
-  SIZE("size"),
-  COUNT("count"),
-  COUNT_R("count_r"),
-  INT("int"),
-  ROTATE_SX("rotate_sx"),
-  ROTATE_DX("rotate_dx"),
-  SUBSTRING("substring"),
+  SIZE("size"), WEIGHT("weight"), WEIGHT_R("weight_r"), INT("int"),
+  ADD("+"), SUBTRACT("-"), MULT("*"), DIVIDE("/"), REMAINDER("%"),
+  LENGTH("length"), MAX_INDEX("max_index"), MIN_INDEX("min_index"),
+  GET("get"),
+  SEQ("seq"),
+  REPEAT("repeat"),
+  ROTATE_DX("rotate_dx"), ROTATE_SX("rotate_sx"), SUBSTRING("substring"),
   SPLIT("split"),
   SPLIT_W("split_w"),
-  LIST("list"),
-  CONCAT("concat"),
-  REPEAT("repeat"),
-  APPLY("apply"),
-  OP_ADD("+"),
-  OP_SUBTRACT("-"),
-  OP_MULT("*"),
-  OP_DIVIDE("/"),
-  OP_REMAINDER("%");
+  APPLY("apply");
 
   private final String grammarName;
 
