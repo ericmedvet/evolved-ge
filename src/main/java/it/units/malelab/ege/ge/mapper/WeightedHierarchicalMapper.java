@@ -21,17 +21,17 @@ import java.util.Map;
 public class WeightedHierarchicalMapper<T> extends HierarchicalMapper<T> {
 
   protected final Map<T, Integer> weightsMap;
-  private final int maxDepth;
+  private final int expressivenessDepth;
   private final boolean weightOptions;
   private final boolean weightChildren;
   
-  public WeightedHierarchicalMapper(int maxDepth, Grammar<T> grammar) {
-    this(maxDepth, false, true, grammar);
+  public WeightedHierarchicalMapper(int expressivenessDepth, Grammar<T> grammar) {
+    this(expressivenessDepth, false, true, grammar);
   }
 
-  public WeightedHierarchicalMapper(int maxDepth, boolean weightOptions, boolean weightChildren, Grammar<T> grammar) {
+  public WeightedHierarchicalMapper(int expressivenessDepth, boolean weightOptions, boolean weightChildren, Grammar<T> grammar) {
     super(grammar);
-    this.maxDepth = maxDepth;
+    this.expressivenessDepth = expressivenessDepth;
     this.weightOptions = weightOptions;
     this.weightChildren = weightChildren;
     weightsMap = new HashMap<>();
@@ -39,7 +39,7 @@ public class WeightedHierarchicalMapper<T> extends HierarchicalMapper<T> {
       for (List<T> option : options) {
         for (T symbol : option) {
           if (!weightsMap.keySet().contains(symbol)) {
-            weightsMap.put(symbol, countOptions(symbol, 0, maxDepth));
+            weightsMap.put(symbol, countOptions(symbol, 0, expressivenessDepth));
           }
         }
       }
@@ -119,7 +119,7 @@ public class WeightedHierarchicalMapper<T> extends HierarchicalMapper<T> {
 
   @Override
   public String toString() {
-    return "WeightedHierarchicalMapper{" + "maxDepth=" + maxDepth + ", weightOptions=" + weightOptions + ", weightChildren=" + weightChildren + '}';
+    return "WeightedHierarchicalMapper{" + "maxDepth=" + expressivenessDepth + ", weightOptions=" + weightOptions + ", weightChildren=" + weightChildren + '}';
   }
 
 }

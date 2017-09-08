@@ -10,7 +10,7 @@
                 <goal>org.codehaus.mojo:exec-maven-plugin:1.2.1:exec</goal>
             </goals>
             <properties>
-                <exec.args>-classpath %classpath it.units.malelab.ege.Experimenter</exec.args>
+                <exec.args>-classpath %classpath it.units.malelab.ege.MapperGenerationExperimenter /home/eric/experiments/ge/mapper-generation/main-1.txt /home/eric/experiments/ge/mapper-generation/inner-1.txt</exec.args>
                 <exec.executable>java</exec.executable>
             </properties>
         </action>
@@ -24,7 +24,7 @@
                 <goal>org.codehaus.mojo:exec-maven-plugin:1.2.1:exec</goal>
             </goals>
             <properties>
-                <exec.args>-Xdebug -Xrunjdwp:transport=dt_socket,server=n,address=${jpda.address} -classpath %classpath it.units.malelab.ege.Experimenter</exec.args>
+                <exec.args>-Xdebug -Xrunjdwp:transport=dt_socket,server=n,address=${jpda.address} -classpath %classpath it.units.malelab.ege.MapperGenerationExperimenter /home/eric/experiments/ge/mapper-generation/main-1.txt /home/eric/experiments/ge/mapper-generation/inner-1.txt</exec.args>
                 <exec.executable>java</exec.executable>
                 <jpda.listen>true</jpda.listen>
             </properties>
@@ -39,7 +39,7 @@
                 <goal>org.codehaus.mojo:exec-maven-plugin:1.2.1:exec</goal>
             </goals>
             <properties>
-                <exec.args>-classpath %classpath it.units.malelab.ege.Experimenter</exec.args>
+                <exec.args>-classpath %classpath it.units.malelab.ege.MapperGenerationExperimenter /home/eric/experiments/ge/mapper-generation/main-1.txt /home/eric/experiments/ge/mapper-generation/inner-1.txt</exec.args>
                 <exec.executable>java</exec.executable>
             </properties>
         </action>

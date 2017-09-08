@@ -14,8 +14,10 @@ import it.units.malelab.ege.core.fitness.FitnessComputer;
 import it.units.malelab.ege.core.fitness.MultiObjectiveFitness;
 import it.units.malelab.ege.core.fitness.NumericFitness;
 import it.units.malelab.ege.core.mapper.MappingException;
+import it.units.malelab.ege.core.operator.GeneticOperator;
 import it.units.malelab.ege.ge.genotype.BitsGenotype;
 import it.units.malelab.ege.ge.genotype.BitsGenotypeFactory;
+import it.units.malelab.ege.ge.operator.ProbabilisticMutation;
 import it.units.malelab.ege.util.distance.CachedDistance;
 import it.units.malelab.ege.util.distance.Distance;
 import it.units.malelab.ege.util.distance.Hamming;
@@ -29,8 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.commons.math3.stat.StatUtils;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 
@@ -40,19 +40,25 @@ import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
  */
 public class MappingPropertiesFitness implements FitnessComputer<String, MultiObjectiveFitness> {
 
-  private final static int MAX_MAPPING_DEPTH = 10;
   private final static int EXPRESSIVENESS_DEPTH = 2;
 
+  private final int maxMappingDepth;
   private final List<Problem<String, NumericFitness>> problems;
   private final List<BitsGenotype> genotypes;
   private final Distance<Node<String>> phenotypeDistance = new CachedDistance<>(new LeavesEdit<String>());
+  
   private final double[] genotypeDistances;
 
-  public MappingPropertiesFitness(int genotypeSize, int n, Random random, Problem<String, NumericFitness>... problems) {
-    this.problems = Arrays.asList(problems);
+  public MappingPropertiesFitness(int genotypeSize, int n, int maxMappingDepth, Random random, List<Problem<String, NumericFitness>> problems) {
+    this.maxMappingDepth = maxMappingDepth;
+    this.problems = new ArrayList<>(problems);
     //build genotypes
+    GeneticOperator<BitsGenotype> mutation = new ProbabilisticMutation(random, 0.01d);
     BitsGenotypeFactory factory = new BitsGenotypeFactory(genotypeSize);
     Set<BitsGenotype> set = new LinkedHashSet<>();
+    for (int i = 0; i<Math.floor(Math.sqrt(n)); i++) {
+      set.addAll(consecutiveMutations(factory.build(random), (int)Math.floor(Math.sqrt(n)), mutation));
+    }
     while (set.size() < n) {
       set.add(factory.build(random));
     }
@@ -60,6 +66,15 @@ public class MappingPropertiesFitness implements FitnessComputer<String, MultiOb
     //pre compute geno dists
     Distance<Sequence<Boolean>> genotypeDistance = new Hamming<Boolean>();
     genotypeDistances = computeDistances(genotypes, (Distance) genotypeDistance);
+  }
+  
+  private List<BitsGenotype> consecutiveMutations(BitsGenotype g, int n, GeneticOperator<BitsGenotype> mutation) {
+    Set<BitsGenotype> set = new LinkedHashSet<>();
+    while (set.size()<n) {
+      set.add(g);
+      g = mutation.apply(Collections.singletonList(g)).get(0);
+    }
+    return new ArrayList<>(set);
   }
 
   @Override
@@ -72,7 +87,7 @@ public class MappingPropertiesFitness implements FitnessComputer<String, MultiOb
       List<Node<String>> phenotypes = new ArrayList<>();
       Multiset<Node<String>> groups = LinkedHashMultiset.create();
       //build mapper
-      RecursiveMapper<String> mapper = new RecursiveMapper<>(mapperRawPhenotype, MAX_MAPPING_DEPTH, EXPRESSIVENESS_DEPTH, problems.get(i).getGrammar());
+      RecursiveMapper<String> mapper = new RecursiveMapper<>(mapperRawPhenotype, maxMappingDepth, EXPRESSIVENESS_DEPTH, problems.get(i).getGrammar());
       //map
       for (BitsGenotype genotype : genotypes) {
         Node<String> phenotype = Node.EMPTY_TREE;
@@ -80,7 +95,6 @@ public class MappingPropertiesFitness implements FitnessComputer<String, MultiOb
           phenotype = mapper.map(genotype, Collections.EMPTY_MAP);
         } catch (MappingException ex) {
           //ignore
-          System.out.println("SHOULDN'T HAPPEN!");
         }
         phenotypes.add(phenotype);
         groups.add(phenotype);
@@ -95,27 +109,20 @@ public class MappingPropertiesFitness implements FitnessComputer<String, MultiOb
       }
       propertyValues.get("nonUniformity")[i] = Math.sqrt(StatUtils.variance(groupSizes)) / StatUtils.mean(groupSizes);
       double[] phenotypeDistances = computeDistances(phenotypes, phenotypeDistance);
-      double locality = -(new PearsonsCorrelation().correlation(genotypeDistances, phenotypeDistances));
-      propertyValues.get("nonLocality")[i] = Double.isNaN(locality)?Double.POSITIVE_INFINITY:locality;
-      
-      //System.out.printf("\t\t%d: %4.2f %4.2f %4.2f%n", i,
-      //        propertyValues.get("redundancy")[i], propertyValues.get("nonUniformity")[i], propertyValues.get("nonLocality")[i]);
-      
+      double locality = 1d-(1d+(new PearsonsCorrelation().correlation(genotypeDistances, phenotypeDistances)))/2d;
+      propertyValues.get("nonLocality")[i] = Double.isNaN(locality)?2d:locality;
     }
     Double[] avgPropertyValues = new Double[3];
     avgPropertyValues[0] = StatUtils.mean(propertyValues.get("redundancy"));
     avgPropertyValues[1] = StatUtils.mean(propertyValues.get("nonUniformity"));
     avgPropertyValues[2] = StatUtils.mean(propertyValues.get("nonLocality"));
     MultiObjectiveFitness mof = new MultiObjectiveFitness(avgPropertyValues);
-
-    //System.out.printf("\t%4.2f %4.2f %4.2f%n", mof.getValue()[0], mof.getValue()[1], mof.getValue()[2]);
-
     return mof;
   }
 
   @Override
   public MultiObjectiveFitness worstValue() {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    return new MultiObjectiveFitness(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
   }
 
   private <E> double[] computeDistances(List<E> elements, Distance<E> distance) {
