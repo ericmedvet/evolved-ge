@@ -9,6 +9,7 @@ import it.units.malelab.ege.core.Factory;
 import it.units.malelab.ege.core.Grammar;
 import it.units.malelab.ege.core.Node;
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.Random;
 
@@ -43,9 +44,10 @@ public class FullTreeFactory<T> extends GrowTreeFactory<T> {
           }
           if (!allTerminals) {
             availableOptions.add(option);
-          } else {
-            availableOptions = options;
           }
+        }
+        if (availableOptions.isEmpty()) {
+          availableOptions.addAll(options);
         }
       } else {
         availableOptions = new ArrayList<>();

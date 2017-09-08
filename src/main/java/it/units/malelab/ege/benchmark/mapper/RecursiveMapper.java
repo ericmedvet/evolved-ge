@@ -38,6 +38,9 @@ public class RecursiveMapper<T> extends WeightedHierarchicalMapper<T> {
   public Node<T> map(BitsGenotype genotype, Map<String, Object> report) throws MappingException {
     GlobalCounter mappingGlobalCounter = new GlobalCounter();
     GlobalCounter finalizationGlobalCounter = new GlobalCounter();
+    
+    //System.out.printf("Mapper%n\t%s%n\t%s%n", optionChooser, genoAssigner);
+    
     Node<T> tree = mapRecursively(grammar.getStartingSymbol(), genotype, mappingGlobalCounter, finalizationGlobalCounter, 0);
     tree.propagateParentship();
     return tree;
@@ -54,11 +57,11 @@ public class RecursiveMapper<T> extends WeightedHierarchicalMapper<T> {
     if (!grammar.getRules().containsKey(symbol)) {
       return node;
     }
-    if (depth > maxMappingDepth) {
+    if (depth >= maxMappingDepth) {
       List<Integer> shortestOptionIndexTies = shortestOptionIndexesMap.get(symbol);
       List<T> shortestOption = grammar.getRules().get(symbol).get(shortestOptionIndexTies.get(finalizationGlobalCounter.rw() % shortestOptionIndexTies.size()));
       for (T optionSymbol : shortestOption) {
-        node.getChildren().add(mapRecursively(symbol, genotype, mappingGlobalCounter, finalizationGlobalCounter, depth + 1));
+        node.getChildren().add(mapRecursively(optionSymbol, genotype, mappingGlobalCounter, finalizationGlobalCounter, depth + 1));
       }
       return node;
     }
@@ -74,9 +77,6 @@ public class RecursiveMapper<T> extends WeightedHierarchicalMapper<T> {
     }
     int optionIndex = ((Double) MapperUtils.compute(
             optionChooser, genotype, expressivenesses, depth, mappingGlobalCounter)).intValue();
-    
-    System.out.printf("Chosen option: %d%n", optionIndex);
-    
     optionIndex = Math.min(optionIndex, options.size()-1);
     optionIndex = Math.max(0, optionIndex);
     //split genotype
@@ -85,9 +85,6 @@ public class RecursiveMapper<T> extends WeightedHierarchicalMapper<T> {
       expressivenesses.add((double) weightsMap.getOrDefault(optionSymbol, 1));
     }
     List<BitsGenotype> pieces = ((List<BitsGenotype>) MapperUtils.compute(genoAssigner, genotype, expressivenesses, depth, mappingGlobalCounter));
-    
-    System.out.printf("Pieces: %s%n", pieces);
-    
     for (int i = 0; i < options.get(optionIndex).size(); i++) {
       BitsGenotype piece;
       if (pieces.size() > i) {

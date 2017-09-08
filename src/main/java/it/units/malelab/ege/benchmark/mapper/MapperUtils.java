@@ -144,7 +144,8 @@ public class MapperUtils {
         case REPEAT:
           result = repeat(
                   compute(node.getChildren().get(0), g, values, depth, globalCounter),
-                  ((Double) compute(node.getChildren().get(1), g, values, depth, globalCounter)).intValue()
+                  ((Double) compute(node.getChildren().get(1), g, values, depth, globalCounter)).intValue(),
+                  values.size()
           );
           break;
         case APPLY:
@@ -202,6 +203,9 @@ public class MapperUtils {
     if (n<=0) {
       return g;
     }
+    if (g.size()==0) {
+      return g;
+    }
     BitsGenotype copy = new BitsGenotype(g.size());
     n = n % g.size();
     copy.set(0, g.slice(g.size()-n, g.size()));
@@ -210,21 +214,36 @@ public class MapperUtils {
   }
 
   private static BitsGenotype rotateSx(BitsGenotype g, int n) {
-    if (n<=0) {
+    if (g.size()==0) {
       return g;
     }
-    BitsGenotype copy = new BitsGenotype(g.size());
     n = n % g.size();
+    if (n<=0) {
+      return g;
+    }    
+    BitsGenotype copy = new BitsGenotype(g.size());
     copy.set(0, g.slice(n, g.size()));
     copy.set(g.size()-n, g.slice(0, n));
     return copy;
   }
 
   private static BitsGenotype substring(BitsGenotype g, int to) {
+    if (to<=0) {
+      return new BitsGenotype(0);
+    }
+    if (g.size()==0) {
+      return g;
+    }
     return g.slice(0, Math.min(to, g.size()));
   }
 
   private static List<BitsGenotype> split(BitsGenotype g, int n) {
+    if (n<=0) {
+      return Collections.singletonList(g);
+    }
+    if (g.size()==0) {
+      return Collections.nCopies(n, new BitsGenotype(0));
+    }
     n = Math.max(1, n);
     n = Math.min(n, g.size());
     List<Range<Integer>> ranges = Utils.slices(Range.closedOpen(0, g.size()), n);
@@ -232,6 +251,12 @@ public class MapperUtils {
   }
 
   private static List<BitsGenotype> splitWeighted(BitsGenotype g, List<Double> weights) {
+    if (weights.isEmpty()) {
+      return Collections.EMPTY_LIST;
+    }
+    if (g.size()==0) {
+      return Collections.nCopies(weights.size(), new BitsGenotype(0));
+    }
     double minWeight = Double.POSITIVE_INFINITY;
     for (double w : weights) {
       if ((w < minWeight) && (w > 0)) {
@@ -239,14 +264,12 @@ public class MapperUtils {
       }
     }
     if (Double.isInfinite(minWeight)) {
-      if (weights.isEmpty()) {
-        return Collections.singletonList(g);
-      }
+      //all zero
       return split(g, weights.size());
     }
     List<Integer> intWeights = new ArrayList<>(weights.size());
     for (double w : weights) {
-      intWeights.add((int) Math.round(w / minWeight));
+      intWeights.add((int) Math.max(Math.round(w / minWeight), 0d));
     }
     List<Range<Integer>> ranges = Utils.slices(Range.closedOpen(0, g.size()), intWeights);
     return g.slices(ranges);
@@ -287,7 +310,13 @@ public class MapperUtils {
     return l;
   }
 
-  private static <T> List<T> repeat(T element, int n) {
+  private static <T> List<T> repeat(T element, int n, int maxN) {
+    if (n<=0) {
+      return Collections.EMPTY_LIST;
+    }
+    if (n>maxN) {
+      n = maxN;
+    }
     List<T> list = new ArrayList<>(n);
     for (int i = 0; i < n; i++) {
       list.add(element);

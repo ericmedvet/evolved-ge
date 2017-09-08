@@ -59,14 +59,7 @@ public class MappingPropertiesFitness implements FitnessComputer<String, MultiOb
     genotypes = new ArrayList<>(set);
     //pre compute geno dists
     Distance<Sequence<Boolean>> genotypeDistance = new Hamming<Boolean>();
-    genotypeDistances = new double[(n * (n - 1)) / 2];
-    int c = 0;
-    for (int i = 0; i < genotypes.size()-1; i++) {
-      for (int j = i + 1; j < genotypes.size(); j++) {
-        genotypeDistances[c] = genotypeDistance.d(genotypes.get(i), genotypes.get(j));
-        c = c + 1;
-      }
-    }
+    genotypeDistances = computeDistances(genotypes, (Distance) genotypeDistance);
   }
 
   @Override
@@ -93,7 +86,7 @@ public class MappingPropertiesFitness implements FitnessComputer<String, MultiOb
         groups.add(phenotype);
       }
       //compute properties
-      propertyValues.get("redundancy")[i] = 1d - phenotypes.size() / genotypes.size();
+      propertyValues.get("redundancy")[i] = 1d - (double)groups.elementSet().size() / (double)genotypes.size();
       double[] groupSizes = new double[groups.elementSet().size()];
       int c = 0;
       for (Node<String> phenotype : groups.elementSet()) {
@@ -101,27 +94,40 @@ public class MappingPropertiesFitness implements FitnessComputer<String, MultiOb
         c = c + 1;
       }
       propertyValues.get("nonUniformity")[i] = Math.sqrt(StatUtils.variance(groupSizes)) / StatUtils.mean(groupSizes);
-      double[] phenotypeDistances = new double[(phenotypes.size() * (phenotypes.size() - 1)) / 2];
-      c = 0;
-      for (int k = 0; k < phenotypes.size(); k++) {
-        for (int j = k + 1; k < genotypes.size(); j++) {
-          phenotypeDistances[c] = phenotypeDistance.d(phenotypes.get(k), phenotypes.get(j));
-          c = c + 1;
-        }
-      }
-      propertyValues.get("nonLocality")[i] =new PearsonsCorrelation().correlation(genotypeDistances, phenotypeDistances);
+      double[] phenotypeDistances = computeDistances(phenotypes, phenotypeDistance);
+      double locality = -(new PearsonsCorrelation().correlation(genotypeDistances, phenotypeDistances));
+      propertyValues.get("nonLocality")[i] = Double.isNaN(locality)?Double.POSITIVE_INFINITY:locality;
+      
+      //System.out.printf("\t\t%d: %4.2f %4.2f %4.2f%n", i,
+      //        propertyValues.get("redundancy")[i], propertyValues.get("nonUniformity")[i], propertyValues.get("nonLocality")[i]);
+      
     }
     Double[] avgPropertyValues = new Double[3];
     avgPropertyValues[0] = StatUtils.mean(propertyValues.get("redundancy"));
     avgPropertyValues[1] = StatUtils.mean(propertyValues.get("nonUniformity"));
     avgPropertyValues[2] = StatUtils.mean(propertyValues.get("nonLocality"));
     MultiObjectiveFitness mof = new MultiObjectiveFitness(avgPropertyValues);
+
+    //System.out.printf("\t%4.2f %4.2f %4.2f%n", mof.getValue()[0], mof.getValue()[1], mof.getValue()[2]);
+
     return mof;
   }
 
   @Override
   public MultiObjectiveFitness worstValue() {
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+
+  private <E> double[] computeDistances(List<E> elements, Distance<E> distance) {
+    double[] dists = new double[elements.size() * (elements.size() - 1) / 2];
+    int c = 0;
+    for (int i = 0; i < elements.size() - 1; i++) {
+      for (int j = i + 1; j < elements.size(); j++) {
+        dists[c] = distance.d(elements.get(i), elements.get(j));
+        c = c + 1;
+      }
+    }
+    return dists;
   }
 
 }

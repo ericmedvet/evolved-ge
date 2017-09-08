@@ -95,6 +95,7 @@ public class ExampleMain {
     //doImagesBits();
     //doImages();
     //solveTextDC();
+    //solveKLandscapesCfgGp();
     solveMapper();
   }
 
@@ -565,7 +566,7 @@ public class ExampleMain {
   private static void solveMapper() throws IOException, InterruptedException, ExecutionException {
     int maxDepth = 12;
     Random random = new Random(1l);
-    Problem<String, MultiObjectiveFitness> problem = new MapperGeneration(256, 100, random,
+    Problem<String, MultiObjectiveFitness> problem = new MapperGeneration(256, 50, random,
             new Nguyen7(0),
             new Parity(8),
             new Text()
@@ -605,7 +606,8 @@ public class ExampleMain {
             new BestPrinter<Node<String>, String, MultiObjectiveFitness>(problem.getPhenotypePrinter(), "%30.30s")
     ));
     Evolver<Node<String>, String, MultiObjectiveFitness> evolver = new PartitionEvolver<>(
-            configuration, 1, random, false);
+            //configuration, 1, random, false);
+            configuration, Runtime.getRuntime().availableProcessors()-1, random, false);
     List<Node<String>> bests = evolver.solve(listeners);
     System.out.printf("Found %d solutions.%n", bests.size());
   }
