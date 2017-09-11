@@ -46,12 +46,16 @@ public class MappingPropertiesFitness implements FitnessComputer<String, MultiOb
   private final List<Problem<String, NumericFitness>> problems;
   private final List<BitsGenotype> genotypes;
   private final Distance<Node<String>> phenotypeDistance = new CachedDistance<>(new LeavesEdit<String>());
+  private final Property[] properties;
   
   private final double[] genotypeDistances;
+  
+  public static enum Property {REDUNDANCY, NON_UNIFORMITY, NON_LOCALITY};
 
-  public MappingPropertiesFitness(int genotypeSize, int n, int maxMappingDepth, Random random, List<Problem<String, NumericFitness>> problems) {
+  public MappingPropertiesFitness(int genotypeSize, int n, int maxMappingDepth, Random random, List<Problem<String, NumericFitness>> problems, Property... properties) {
     this.maxMappingDepth = maxMappingDepth;
     this.problems = new ArrayList<>(problems);
+    this.properties = properties;
     //build genotypes
     GeneticOperator<BitsGenotype> mutation = new ProbabilisticMutation(random, 0.01d);
     BitsGenotypeFactory factory = new BitsGenotypeFactory(genotypeSize);
@@ -79,10 +83,10 @@ public class MappingPropertiesFitness implements FitnessComputer<String, MultiOb
 
   @Override
   public MultiObjectiveFitness compute(Node<String> mapperRawPhenotype) {
-    Map<String, double[]> propertyValues = new LinkedHashMap<>();
-    propertyValues.put("redundancy", new double[problems.size()]);
-    propertyValues.put("nonUniformity", new double[problems.size()]);
-    propertyValues.put("nonLocality", new double[problems.size()]);
+    Map<Property, double[]> propertyValues = new LinkedHashMap<>();
+    for (Property property : properties) {
+      propertyValues.put(property, new double[problems.size()]);
+    }
     for (int i = 0; i < problems.size(); i++) {
       List<Node<String>> phenotypes = new ArrayList<>();
       Multiset<Node<String>> groups = LinkedHashMultiset.create();
@@ -100,29 +104,40 @@ public class MappingPropertiesFitness implements FitnessComputer<String, MultiOb
         groups.add(phenotype);
       }
       //compute properties
-      propertyValues.get("redundancy")[i] = 1d - (double)groups.elementSet().size() / (double)genotypes.size();
-      double[] groupSizes = new double[groups.elementSet().size()];
-      int c = 0;
-      for (Node<String> phenotype : groups.elementSet()) {
-        groupSizes[c] = (double) groups.count(phenotype);
-        c = c + 1;
+      if (propertyValues.keySet().contains(Property.REDUNDANCY)) {
+        propertyValues.get(Property.REDUNDANCY)[i] = 1d - (double)groups.elementSet().size() / (double)genotypes.size();
       }
-      propertyValues.get("nonUniformity")[i] = Math.sqrt(StatUtils.variance(groupSizes)) / StatUtils.mean(groupSizes);
-      double[] phenotypeDistances = computeDistances(phenotypes, phenotypeDistance);
-      double locality = 1d-(1d+(new PearsonsCorrelation().correlation(genotypeDistances, phenotypeDistances)))/2d;
-      propertyValues.get("nonLocality")[i] = Double.isNaN(locality)?2d:locality;
+      if (propertyValues.keySet().contains(Property.NON_UNIFORMITY)) {
+        double[] groupSizes = new double[groups.elementSet().size()];
+        int c = 0;
+        for (Node<String> phenotype : groups.elementSet()) {
+          groupSizes[c] = (double) groups.count(phenotype);
+          c = c + 1;
+        }
+        propertyValues.get(Property.NON_UNIFORMITY)[i] = Math.sqrt(StatUtils.variance(groupSizes)) / StatUtils.mean(groupSizes);
+      }
+      if (propertyValues.keySet().contains(Property.NON_LOCALITY)) {
+        double[] phenotypeDistances = computeDistances(phenotypes, phenotypeDistance);
+        double locality = 1d-(1d+(new PearsonsCorrelation().correlation(genotypeDistances, phenotypeDistances)))/2d;
+        propertyValues.get(Property.NON_LOCALITY)[i] = Double.isNaN(locality)?1d:locality;
+      }
     }
-    Double[] avgPropertyValues = new Double[3];
-    avgPropertyValues[0] = StatUtils.mean(propertyValues.get("redundancy"));
-    avgPropertyValues[1] = StatUtils.mean(propertyValues.get("nonUniformity"));
-    avgPropertyValues[2] = StatUtils.mean(propertyValues.get("nonLocality"));
-    MultiObjectiveFitness mof = new MultiObjectiveFitness(avgPropertyValues);
+    Double[] meanValues = new Double[properties.length];
+    for (int i = 0; i<properties.length; i++) {
+      meanValues[i] = StatUtils.mean(propertyValues.get(properties[i]));
+    }
+    MultiObjectiveFitness mof = new MultiObjectiveFitness(meanValues);
     return mof;
   }
 
   @Override
   public MultiObjectiveFitness worstValue() {
-    return new MultiObjectiveFitness(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
+    Double[] worstValues = new Double[properties.length];
+    for (int i = 0; i<properties.length; i++) {
+      worstValues[i] = Double.POSITIVE_INFINITY;
+    }
+    MultiObjectiveFitness mof = new MultiObjectiveFitness(worstValues);
+    return mof;
   }
 
   private <E> double[] computeDistances(List<E> elements, Distance<E> distance) {

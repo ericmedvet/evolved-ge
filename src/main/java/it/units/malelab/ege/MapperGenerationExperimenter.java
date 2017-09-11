@@ -7,11 +7,9 @@ package it.units.malelab.ege;
 
 import it.units.malelab.ege.benchmark.KLandscapes;
 import it.units.malelab.ege.benchmark.Text;
-import it.units.malelab.ege.benchmark.booleanfunction.Parity;
 import it.units.malelab.ege.benchmark.mapper.MapperGeneration;
+import it.units.malelab.ege.benchmark.mapper.MappingPropertiesFitness;
 import it.units.malelab.ege.benchmark.mapper.RecursiveMapper;
-import it.units.malelab.ege.benchmark.symbolicregression.HarmonicCurve;
-import it.units.malelab.ege.benchmark.symbolicregression.Nguyen7;
 import it.units.malelab.ege.benchmark.symbolicregression.Pagie1;
 import it.units.malelab.ege.cfggp.initializer.FullTreeFactory;
 import it.units.malelab.ege.cfggp.initializer.GrowTreeFactory;
@@ -34,7 +32,6 @@ import it.units.malelab.ege.core.initializer.RandomInitializer;
 import it.units.malelab.ege.core.listener.CollectorGenerationLogger;
 import it.units.malelab.ege.core.listener.EvolverListener;
 import it.units.malelab.ege.core.listener.collector.BestPrinter;
-import it.units.malelab.ege.core.listener.collector.CacheStatistics;
 import it.units.malelab.ege.core.listener.collector.Diversity;
 import it.units.malelab.ege.core.listener.collector.MultiObjectiveFitnessFirstBest;
 import it.units.malelab.ege.core.listener.collector.NumericFirstBest;
@@ -49,7 +46,6 @@ import it.units.malelab.ege.core.selector.Tournament;
 import it.units.malelab.ege.ge.genotype.BitsGenotype;
 import it.units.malelab.ege.ge.genotype.BitsGenotypeFactory;
 import it.units.malelab.ege.ge.genotype.validator.Any;
-import it.units.malelab.ege.ge.mapper.WeightedHierarchicalMapper;
 import it.units.malelab.ege.ge.operator.LengthPreservingTwoPointsCrossover;
 import it.units.malelab.ege.ge.operator.ProbabilisticMutation;
 import it.units.malelab.ege.util.Utils;
@@ -60,9 +56,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -74,22 +72,56 @@ public class MapperGenerationExperimenter {
   public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
     int maxDepth = 16;
     int popSize = 500;
-    int genotypeSize = 256;
     int nGenotypes = 100;
     int expressivenessDepth = 2;
     int runs = 10;
-    int innerMaxMappingDepth = 8;
+    int innerGenotypeSize = 256;
+    int innerMaxMappingDepth = 9;
     int innerGenerations = 30;
     int innerPopSize = 250;
-    int innerRuns = 3;
-    PrintStream mainFilePrintStream = new PrintStream(args[0]);
-    PrintStream innerFilePrintStream = new PrintStream(args[1]);
+    int innerRuns = 10;
+    PrintStream mainFilePrintStream = null;
+    PrintStream innerFilePrintStream = null;
+    Set<MappingPropertiesFitness.Property> propertySet = new LinkedHashSet<>();
+    //read args
+    if (args.length > 0) {
+      mainFilePrintStream = new PrintStream(args[0]);
+      if (args.length > 1) {
+        innerFilePrintStream = new PrintStream(args[1]);
+      }
+      if (args.length > 2) {
+        String[] pieces = args[2].split("\\|");
+        for (String piece : pieces) {
+          for (MappingPropertiesFitness.Property property : MappingPropertiesFitness.Property.values()) {
+            if (property.name().equalsIgnoreCase(piece)) {
+              propertySet.add(property);
+              break;
+            }
+          }
+        }
+      }
+    }
+    if (propertySet.isEmpty()) {
+      propertySet.addAll(Arrays.asList(MappingPropertiesFitness.Property.values()));
+    }
+    //prepare things
+    MappingPropertiesFitness.Property[] properties = propertySet.toArray(new MappingPropertiesFitness.Property[0]);
     Random random = new Random(1l);
     Map<String, Problem<String, NumericFitness>> innerProblems = new LinkedHashMap<>();
     innerProblems.put("Pagie1", new Pagie1());
-    innerProblems.put("KLandscapes-5", new KLandscapes(5));
+    innerProblems.put("KLand-5", new KLandscapes(5));
     innerProblems.put("Text", new Text());
-    Problem<String, MultiObjectiveFitness> problem = new MapperGeneration(genotypeSize, nGenotypes, innerMaxMappingDepth, random, new ArrayList<>(innerProblems.values()));
+    Problem<String, MultiObjectiveFitness> problem = new MapperGeneration(
+            innerGenotypeSize,
+            nGenotypes,
+            innerMaxMappingDepth,
+            random,
+            new ArrayList<>(innerProblems.values()),
+            properties
+    );
+    //print summary
+    System.out.println("Problems: " + innerProblems.keySet());
+    System.out.println("Properties: " + Arrays.toString(properties));
     //print baselines
     Map<String, Node<String>> baselines = new LinkedHashMap<>();
     baselines.put("GE", getGERawTree());
@@ -100,15 +132,15 @@ public class MapperGenerationExperimenter {
     boolean mainHeader = true;
     for (String baselineName : baselines.keySet()) {
       MultiObjectiveFitness moF = problem.getLearningFitnessComputer().compute(baselines.get(baselineName));
-      System.out.printf("%5.5s fitness:\t%4.2f %4.2f %4.2f%n",
-              baselineName, moF.getValue()[0], moF.getValue()[1], moF.getValue()[2]
+      System.out.printf("%5.5s fitness:\t" + join(rep("%4.2f", properties.length), " ") + "%n",
+              join(a(baselineName), moF.getValue())
       );
       for (String innerProblemName : innerProblems.keySet()) {
         for (int r = 0; r < innerRuns; r++) {
           NumericFitness numF = applyMapperOnProblem(
                   baselines.get(baselineName),
                   innerProblems.get(innerProblemName),
-                  innerPopSize, genotypeSize, innerGenerations, innerMaxMappingDepth, expressivenessDepth,
+                  innerPopSize, innerGenotypeSize, innerGenerations, innerMaxMappingDepth, expressivenessDepth,
                   baselineName, r, innerProblemName,
                   innerHeader, innerFilePrintStream
           );
@@ -137,9 +169,9 @@ public class MapperGenerationExperimenter {
               new Any<Node<String>>(),
               new CfgGpMapper<String>(),
               new Utils.MapBuilder<GeneticOperator<Node<String>>, Double>()
-              .put(new StandardTreeCrossover<String>(maxDepth, innerRandom), 0.8d)
-              .put(new StandardTreeMutation<>(maxDepth, problem.getGrammar(), innerRandom), 0.2d)
-              .build(),
+                      .put(new StandardTreeCrossover<String>(maxDepth, innerRandom), 0.8d)
+                      .put(new StandardTreeMutation<>(maxDepth, problem.getGrammar(), innerRandom), 0.2d)
+                      .build(),
               new ParetoRanker<Node<String>, String, MultiObjectiveFitness>(),
               new Tournament<Individual<Node<String>, String, MultiObjectiveFitness>>(3, innerRandom),
               new LastWorst<Individual<Node<String>, String, MultiObjectiveFitness>>(),
@@ -150,30 +182,32 @@ public class MapperGenerationExperimenter {
       listeners.add(new CollectorGenerationLogger<>(
               (Map) Collections.singletonMap("run", s), System.out, true, 10, " ", " | ",
               new Population<Node<String>, String, MultiObjectiveFitness>(),
-              new MultiObjectiveFitnessFirstBest<Node<String>, String>(false, problem.getTestingFitnessComputer(), "%4.2f", "%4.2f", "%4.2f"),
+              new MultiObjectiveFitnessFirstBest<Node<String>, String>(false, problem.getTestingFitnessComputer(), rep("%4.2f", properties.length)),
               new Diversity<Node<String>, String, MultiObjectiveFitness>(),
               new BestPrinter<Node<String>, String, MultiObjectiveFitness>(problem.getPhenotypePrinter(), "%30.30s")
       ));
-      listeners.add(new CollectorGenerationLogger<>(
-              (Map) Collections.singletonMap("run", s), mainFilePrintStream, false, mainHeader ? 0 : -1, ";", ";",
-              new Population<Node<String>, String, MultiObjectiveFitness>(),
-              new MultiObjectiveFitnessFirstBest<Node<String>, String>(false, problem.getTestingFitnessComputer(), "%4.2f", "%4.2f", "%4.2f"),
-              new Diversity<Node<String>, String, MultiObjectiveFitness>(),
-              new BestPrinter<Node<String>, String, MultiObjectiveFitness>(problem.getPhenotypePrinter(), "%30.30s")
-      ));
+      if (mainFilePrintStream != null) {
+        listeners.add(new CollectorGenerationLogger<>(
+                (Map) Collections.singletonMap("run", s), mainFilePrintStream, false, mainHeader ? 0 : -1, ";", ";",
+                new Population<Node<String>, String, MultiObjectiveFitness>(),
+                new MultiObjectiveFitnessFirstBest<Node<String>, String>(false, problem.getTestingFitnessComputer(), rep("%4.2f", properties.length)),
+                new Diversity<Node<String>, String, MultiObjectiveFitness>(),
+                new BestPrinter<Node<String>, String, MultiObjectiveFitness>(problem.getPhenotypePrinter(), "%30.30s")
+        ));
+      }
       mainHeader = false;
       Evolver<Node<String>, String, MultiObjectiveFitness> evolver = new PartitionEvolver<>(
               //configuration, 1, random, false);
               configuration, Runtime.getRuntime().availableProcessors() - 1, innerRandom, false);
       List<Node<String>> bests = evolver.solve(listeners);
       System.out.printf("Found %d solutions.%n", bests.size());
-      String mapperName = "best-" + s;
+      String mapperName = "best";
       for (String innerProblemName : innerProblems.keySet()) {
         for (int r = 0; r < innerRuns; r++) {
           NumericFitness numF = applyMapperOnProblem(
                   bests.get(0),
                   innerProblems.get(innerProblemName),
-                  innerPopSize, genotypeSize, innerGenerations, innerMaxMappingDepth, expressivenessDepth,
+                  innerPopSize, innerGenotypeSize, innerGenerations, innerMaxMappingDepth, expressivenessDepth,
                   mapperName, r, innerProblemName,
                   innerHeader, innerFilePrintStream
           );
@@ -410,8 +444,8 @@ public class MapperGenerationExperimenter {
             new Any<BitsGenotype>(),
             new RecursiveMapper<>(rawMapper, maxMappingDepth, expressivenessDepth, problem.getGrammar()),
             new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
-            .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
-            .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
+                    .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
+                    .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
             new ComparableRanker<>(new IndividualComparator<BitsGenotype, String, NumericFitness>(IndividualComparator.Attribute.FITNESS)),
             new Tournament<Individual<BitsGenotype, String, NumericFitness>>(3, random),
             new LastWorst<Individual<BitsGenotype, String, NumericFitness>>(),
@@ -419,19 +453,58 @@ public class MapperGenerationExperimenter {
             true,
             problem);
     List<EvolverListener<BitsGenotype, String, NumericFitness>> listeners = new ArrayList<>();
-    listeners.add(new CollectorGenerationLogger<>(
-            new Utils.MapBuilder<String, Object>()
-            .put("mapper", mapperName)
-            .put("problem", innerProblemName)
-            .put("run", run).build(),
-            ps, false, header ? 0 : -1, ";", ";",
-            new Population<BitsGenotype, String, NumericFitness>(),
-            new NumericFirstBest<BitsGenotype, String>(false, problem.getTestingFitnessComputer(), "%6.2f"),
-            new Diversity<BitsGenotype, String, NumericFitness>())
-    );
+    if (ps != null) {
+      listeners.add(new CollectorGenerationLogger<>(
+              new Utils.MapBuilder<String, Object>()
+                      .put("mapper", mapperName)
+                      .put("problem", innerProblemName)
+                      .put("run", run).build(),
+              ps, false, header ? 0 : -1, ";", ";",
+              new Population<BitsGenotype, String, NumericFitness>(),
+              new NumericFirstBest<BitsGenotype, String>(false, problem.getTestingFitnessComputer(), "%6.2f"),
+              new Diversity<BitsGenotype, String, NumericFitness>())
+      );
+    }
     Evolver<BitsGenotype, String, NumericFitness> evolver = new StandardEvolver<>(configuration, Runtime.getRuntime().availableProcessors() - 1, random, false);
     List<Node<String>> bests = evolver.solve(listeners);
     return problem.getLearningFitnessComputer().compute(bests.get(0));
+  }
+
+  private static String[] rep(String s, int n) {
+    String[] ss = new String[n];
+    for (int i = 0; i < n; i++) {
+      ss[i] = s;
+    }
+    return ss;
+  }
+
+  private static String join(String[] ss, String joiner) {
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < ss.length; i++) {
+      sb.append(ss[i]);
+      if (i < ss.length - 1) {
+        sb.append(joiner);
+      }
+    }
+    return sb.toString();
+  }
+
+  private static Object[] join(Object[]... as) {
+    int s = 0;
+    for (Object[] a : as) {
+      s = s + a.length;
+    }
+    Object[] result = new Object[s];
+    int c = 0;
+    for (Object[] a : as) {
+      System.arraycopy(a, 0, result, c, a.length);
+      c = c + a.length;
+    }
+    return result;
+  }
+
+  private static Object[] a(Object o) {
+    return new Object[]{o};
   }
 
 }

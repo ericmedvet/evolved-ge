@@ -23,16 +23,22 @@ import java.util.Random;
  */
 public class MapperGeneration extends Problem<String, MultiObjectiveFitness> {
 
-  public MapperGeneration(int genotypeSize, int n, int maxMappingDepth, Random random, List<Problem<String, NumericFitness>> problems) throws IOException {
+  public MapperGeneration(
+          int genotypeSize,
+          int n,
+          int maxMappingDepth,
+          Random random,
+          List<Problem<String, NumericFitness>> problems,
+          MappingPropertiesFitness.Property... properties
+  ) throws IOException {
     super(Utils.parseFromFile(new File("grammars/mapper.bnf")),
-            new MappingPropertiesFitness(genotypeSize, n, maxMappingDepth, random, problems),
+            new MappingPropertiesFitness(genotypeSize, n, maxMappingDepth, random, problems, properties),
             null,
-            //new LeavesJoiner<String>()
             new PhenotypePrinter<String>() {
               private PhenotypePrinter<String> innerPhenotypePrinter = new LeavesJoiner<>();
               @Override
               public String toString(Node<String> node) {
-                return innerPhenotypePrinter.toString(node.getChildren().get(0))+";"+innerPhenotypePrinter.toString(node.getChildren().get(1));
+                return innerPhenotypePrinter.toString(node.getChildren().get(0))+"&"+innerPhenotypePrinter.toString(node.getChildren().get(1));
               }
             }
     );
