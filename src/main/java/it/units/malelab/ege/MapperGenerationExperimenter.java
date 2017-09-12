@@ -8,6 +8,7 @@ package it.units.malelab.ege;
 import it.units.malelab.ege.benchmark.KLandscapes;
 import it.units.malelab.ege.benchmark.Text;
 import it.units.malelab.ege.benchmark.mapper.MapperGeneration;
+import it.units.malelab.ege.benchmark.mapper.MapperUtils;
 import it.units.malelab.ege.benchmark.mapper.MappingPropertiesFitness;
 import it.units.malelab.ege.benchmark.mapper.RecursiveMapper;
 import it.units.malelab.ege.benchmark.symbolicregression.Pagie1;
@@ -48,6 +49,7 @@ import it.units.malelab.ege.ge.genotype.BitsGenotypeFactory;
 import it.units.malelab.ege.ge.genotype.validator.Any;
 import it.units.malelab.ege.ge.operator.LengthPreservingTwoPointsCrossover;
 import it.units.malelab.ege.ge.operator.ProbabilisticMutation;
+import it.units.malelab.ege.util.Pair;
 import it.units.malelab.ege.util.Utils;
 import static it.units.malelab.ege.util.Utils.*;
 import java.io.IOException;
@@ -70,24 +72,33 @@ import java.util.concurrent.ExecutionException;
 public class MapperGenerationExperimenter {
 
   public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
+    //params
     int maxDepth = 16;
     int popSize = 500;
     int nGenotypes = 100;
     int expressivenessDepth = 2;
     int runs = 10;
-    int innerGenotypeSize = 256;
-    int innerMaxMappingDepth = 9;
-    int innerGenerations = 30;
-    int innerPopSize = 250;
-    int innerRuns = 10;
+    int learningGenotypeSize = 256;
+    int learningMaxMappingDepth = 9;
+    int validationGenotypeSize = 1024;
+    int validationMaxMappingDepth = 9;
+    int validationGenerations = 30;
+    int validationPopSize = 500;
+    int validationRuns = 10;
+    Map<String, Problem<String, NumericFitness>> validationProblems = new LinkedHashMap<>();
+    validationProblems.put("Pagie1", new Pagie1());
+    validationProblems.put("KLand-5", new KLandscapes(5));
+    validationProblems.put("Text", new Text());
+    List<Problem<String, NumericFitness>> learningProblems = new ArrayList<>();
+    learningProblems.add(new Pagie1());
     PrintStream mainFilePrintStream = null;
-    PrintStream innerFilePrintStream = null;
+    PrintStream validationFilePrintStream = null;
     Set<MappingPropertiesFitness.Property> propertySet = new LinkedHashSet<>();
     //read args
     if (args.length > 0) {
       mainFilePrintStream = new PrintStream(args[0]);
       if (args.length > 1) {
-        innerFilePrintStream = new PrintStream(args[1]);
+        validationFilePrintStream = new PrintStream(args[1]);
       }
       if (args.length > 2) {
         String[] pieces = args[2].split("\\|");
@@ -107,20 +118,16 @@ public class MapperGenerationExperimenter {
     //prepare things
     MappingPropertiesFitness.Property[] properties = propertySet.toArray(new MappingPropertiesFitness.Property[0]);
     Random random = new Random(1l);
-    Map<String, Problem<String, NumericFitness>> innerProblems = new LinkedHashMap<>();
-    innerProblems.put("Pagie1", new Pagie1());
-    innerProblems.put("KLand-5", new KLandscapes(5));
-    innerProblems.put("Text", new Text());
     Problem<String, MultiObjectiveFitness> problem = new MapperGeneration(
-            innerGenotypeSize,
+            learningGenotypeSize,
             nGenotypes,
-            innerMaxMappingDepth,
+            learningMaxMappingDepth,
             random,
-            new ArrayList<>(innerProblems.values()),
+            learningProblems,
             properties
     );
     //print summary
-    System.out.println("Problems: " + innerProblems.keySet());
+    System.out.println("Problems: " + validationProblems.keySet());
     System.out.println("Properties: " + Arrays.toString(properties));
     //print baselines
     Map<String, Node<String>> baselines = new LinkedHashMap<>();
@@ -128,24 +135,28 @@ public class MapperGenerationExperimenter {
     baselines.put("HGE", getHGERawTree());
     baselines.put("WGE", getWHGERawTree());
     //baselines.clear(); //TODO remove to show baselines performance
-    boolean innerHeader = true;
+    boolean validationHeader = true;
     boolean mainHeader = true;
     for (String baselineName : baselines.keySet()) {
       MultiObjectiveFitness moF = problem.getLearningFitnessComputer().compute(baselines.get(baselineName));
       System.out.printf("%5.5s fitness:\t" + join(rep("%4.2f", properties.length), " ") + "%n",
               join(a(baselineName), moF.getValue())
       );
-      for (String innerProblemName : innerProblems.keySet()) {
-        for (int r = 0; r < innerRuns; r++) {
-          NumericFitness numF = applyMapperOnProblem(
+      for (String validationProblemName : validationProblems.keySet()) {
+        for (int r = 0; r < validationRuns; r++) {
+          Pair<Node<String>, NumericFitness> best = applyMapperOnProblem(
                   baselines.get(baselineName),
-                  innerProblems.get(innerProblemName),
-                  innerPopSize, innerGenotypeSize, innerGenerations, innerMaxMappingDepth, expressivenessDepth,
-                  baselineName, r, innerProblemName,
-                  innerHeader, innerFilePrintStream
+                  validationProblems.get(validationProblemName),
+                  validationPopSize, validationGenotypeSize, validationGenerations, validationMaxMappingDepth, expressivenessDepth,
+                  baselineName, r, validationProblemName,
+                  validationHeader, validationFilePrintStream
           );
-          System.out.printf("\t%10.10s %2d bf=%6.3f%n", innerProblemName, r, numF.getValue());
-          innerHeader = false;
+          System.out.printf("\t%10.10s %2d bf=%6.3f depth=%3d size=%4d %30.30s%n",
+                  validationProblemName, r, best.getSecond().getValue(),
+                  best.getFirst().depth(), best.getFirst().nodeSize(),
+                  validationProblems.get(validationProblemName).getPhenotypePrinter().toString(best.getFirst())
+          );
+          validationHeader = false;
         }
       }
     }
@@ -202,17 +213,21 @@ public class MapperGenerationExperimenter {
       List<Node<String>> bests = evolver.solve(listeners);
       System.out.printf("Found %d solutions.%n", bests.size());
       String mapperName = "best";
-      for (String innerProblemName : innerProblems.keySet()) {
-        for (int r = 0; r < innerRuns; r++) {
-          NumericFitness numF = applyMapperOnProblem(
+      for (String validationProblemName : validationProblems.keySet()) {
+        for (int r = 0; r < validationRuns; r++) {
+          Pair<Node<String>, NumericFitness> best = applyMapperOnProblem(
                   bests.get(0),
-                  innerProblems.get(innerProblemName),
-                  innerPopSize, innerGenotypeSize, innerGenerations, innerMaxMappingDepth, expressivenessDepth,
-                  mapperName, r, innerProblemName,
-                  innerHeader, innerFilePrintStream
+                  validationProblems.get(validationProblemName),
+                  validationPopSize, validationGenotypeSize, validationGenerations, validationMaxMappingDepth, expressivenessDepth,
+                  mapperName, r, validationProblemName,
+                  validationHeader, validationFilePrintStream
           );
-          System.out.printf("\t%10.10s %2d bf=%6.3f%n", innerProblemName, r, numF.getValue());
-          innerHeader = false;
+          System.out.printf("\t%10.10s %2d bf=%6.3f depth=%3d size=%4d %30.30s%n",
+                  validationProblemName, r, best.getSecond().getValue(),
+                  best.getFirst().depth(), best.getFirst().nodeSize(),
+                  validationProblems.get(validationProblemName).getPhenotypePrinter().toString(best.getFirst())
+          );
+          validationHeader = false;
         }
       }
     }
@@ -430,11 +445,11 @@ public class MapperGenerationExperimenter {
     );
   }
 
-  private static NumericFitness applyMapperOnProblem(
+  private static Pair<Node<String>, NumericFitness> applyMapperOnProblem(
           Node<String> rawMapper,
           Problem<String, NumericFitness> problem,
           int popSize, int genotypeSize, int generations, int maxMappingDepth, int expressivenessDepth,
-          String mapperName, int run, String innerProblemName,
+          String mapperName, int run, String problemName,
           boolean header, PrintStream ps) throws InterruptedException, ExecutionException {
     Random random = new Random(run);
     StandardConfiguration<BitsGenotype, String, NumericFitness> configuration = new StandardConfiguration<>(
@@ -457,7 +472,7 @@ public class MapperGenerationExperimenter {
       listeners.add(new CollectorGenerationLogger<>(
               new Utils.MapBuilder<String, Object>()
                       .put("mapper", mapperName)
-                      .put("problem", innerProblemName)
+                      .put("problem", problemName)
                       .put("run", run).build(),
               ps, false, header ? 0 : -1, ";", ";",
               new Population<BitsGenotype, String, NumericFitness>(),
@@ -467,7 +482,7 @@ public class MapperGenerationExperimenter {
     }
     Evolver<BitsGenotype, String, NumericFitness> evolver = new StandardEvolver<>(configuration, Runtime.getRuntime().availableProcessors() - 1, random, false);
     List<Node<String>> bests = evolver.solve(listeners);
-    return problem.getLearningFitnessComputer().compute(bests.get(0));
+    return new Pair<>(bests.get(0), problem.getLearningFitnessComputer().compute(bests.get(0)));
   }
 
   private static String[] rep(String s, int n) {
