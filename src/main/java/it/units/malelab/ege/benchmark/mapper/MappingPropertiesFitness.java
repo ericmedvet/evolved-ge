@@ -43,9 +43,8 @@ public class MappingPropertiesFitness implements FitnessComputer<String, MultiOb
   private final static int EXPRESSIVENESS_DEPTH = 2;
 
   private final int maxMappingDepth;
-  private final List<Problem<String, NumericFitness>> problems;
+  private final Map<Problem<String, NumericFitness>, Distance<Node<String>>> problems;
   private final List<BitsGenotype> genotypes;
-  private final Distance<Node<String>> phenotypeDistance = new CachedDistance<>(new LeavesEdit<String>());
   private final Property[] properties;
   
   private final double[] genotypeDistances;
@@ -54,7 +53,10 @@ public class MappingPropertiesFitness implements FitnessComputer<String, MultiOb
 
   public MappingPropertiesFitness(int genotypeSize, int n, int maxMappingDepth, Random random, List<Problem<String, NumericFitness>> problems, Property... properties) {
     this.maxMappingDepth = maxMappingDepth;
-    this.problems = new ArrayList<>(problems);
+    this.problems = new LinkedHashMap<>();
+    for (Problem<String, NumericFitness> problem: problems) {
+      this.problems.put(problem, new CachedDistance<>(new LeavesEdit<String>()));
+    }
     this.properties = properties;
     //build genotypes
     GeneticOperator<BitsGenotype> mutation = new ProbabilisticMutation(random, 0.01d);
@@ -87,11 +89,12 @@ public class MappingPropertiesFitness implements FitnessComputer<String, MultiOb
     for (Property property : properties) {
       propertyValues.put(property, new double[problems.size()]);
     }
-    for (int i = 0; i < problems.size(); i++) {
+    int i = 0;
+    for (Problem<String, NumericFitness> problem : problems.keySet()) {
       List<Node<String>> phenotypes = new ArrayList<>();
       Multiset<Node<String>> groups = LinkedHashMultiset.create();
       //build mapper
-      RecursiveMapper<String> mapper = new RecursiveMapper<>(mapperRawPhenotype, maxMappingDepth, EXPRESSIVENESS_DEPTH, problems.get(i).getGrammar());
+      RecursiveMapper<String> mapper = new RecursiveMapper<>(mapperRawPhenotype, maxMappingDepth, EXPRESSIVENESS_DEPTH, problem.getGrammar());
       //map
       for (BitsGenotype genotype : genotypes) {
         Node<String> phenotype = Node.EMPTY_TREE;
@@ -117,14 +120,15 @@ public class MappingPropertiesFitness implements FitnessComputer<String, MultiOb
         propertyValues.get(Property.NON_UNIFORMITY)[i] = Math.sqrt(StatUtils.variance(groupSizes)) / StatUtils.mean(groupSizes);
       }
       if (propertyValues.keySet().contains(Property.NON_LOCALITY)) {
-        double[] phenotypeDistances = computeDistances(phenotypes, phenotypeDistance);
+        double[] phenotypeDistances = computeDistances(phenotypes, problems.get(problem));
         double locality = 1d-(1d+(new PearsonsCorrelation().correlation(genotypeDistances, phenotypeDistances)))/2d;
         propertyValues.get(Property.NON_LOCALITY)[i] = Double.isNaN(locality)?1d:locality;
       }
+      i = i+1;
     }
     Double[] meanValues = new Double[properties.length];
-    for (int i = 0; i<properties.length; i++) {
-      meanValues[i] = StatUtils.mean(propertyValues.get(properties[i]));
+    for (int j = 0; j<properties.length; j++) {
+      meanValues[j] = StatUtils.mean(propertyValues.get(properties[j]));
     }
     MultiObjectiveFitness mof = new MultiObjectiveFitness(meanValues);
     return mof;
