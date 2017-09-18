@@ -11,12 +11,8 @@ import java.util.Random;
  *
  * @author eric
  */
-public abstract class AbstractMutation<G> extends AbstractOperator<G> {
+public abstract class AbstractMutation<G> implements GeneticOperator<G> {
 
-  public AbstractMutation(Random random) {
-    super(random);
-  }
-  
   @Override
   public int getParentsArity() {
     return 1;

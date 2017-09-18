@@ -46,14 +46,10 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
   public final static String FITNESS_CACHE_NAME = "fitness";
 
   private final StandardConfiguration<G, T, F> configuration;
-  protected final ExecutorService executor;
-  protected final Random random;
   protected final boolean saveAncestry;
 
-  public StandardEvolver(StandardConfiguration<G, T, F> configuration, int numberOfThreads, Random random, boolean saveAncestry) {
+  public StandardEvolver(StandardConfiguration<G, T, F> configuration, boolean saveAncestry) {
     this.configuration = configuration;
-    executor = Executors.newFixedThreadPool(numberOfThreads);
-    this.random = random;
     this.saveAncestry = saveAncestry;
   }
 
@@ -63,13 +59,13 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
   }
 
   @Override
-  public List<Node<T>> solve(List<EvolverListener<G, T, F>> listeners) throws InterruptedException, ExecutionException {
+  public List<Node<T>> solve(ExecutorService executor, Random random, List<EvolverListener<G, T, F>> listeners) throws InterruptedException, ExecutionException {
     LoadingCache<G, Pair<Node<T>, Map<String, Object>>> mappingCache = CacheBuilder.newBuilder().maximumSize(CACHE_SIZE).recordStats().build(getMappingCacheLoader());
     LoadingCache<Node<T>, F> fitnessCache = CacheBuilder.newBuilder().maximumSize(CACHE_SIZE).recordStats().build(getFitnessCacheLoader());
     //initialize population
     int births = 0;
     List<Callable<List<Individual<G, T, F>>>> tasks = new ArrayList<>();
-    for (G genotype : configuration.getPopulationInitializer().build(configuration.getPopulationSize(), configuration.getInitGenotypeValidator())) {
+    for (G genotype : configuration.getPopulationInitializer().build(configuration.getPopulationSize(), configuration.getInitGenotypeValidator(), random)) {
       tasks.add(individualFromGenotypeCallable(genotype, 0, mappingCache, fitnessCache, listeners, null, null));
       births = births + 1;
     }
@@ -89,9 +85,9 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
         GeneticOperator<G> operator = Utils.selectRandom(configuration.getOperators(), random);
         List<Individual<G, T, F>> parents = new ArrayList<>(operator.getParentsArity());
         for (int j = 0; j < operator.getParentsArity(); j++) {
-          parents.add(configuration.getParentSelector().select(rankedPopulation));
+          parents.add(configuration.getParentSelector().select(rankedPopulation, random));
         }
-        tasks.add(operatorApplicationCallable(operator, parents, currentGeneration, mappingCache, fitnessCache, listeners));
+        tasks.add(operatorApplicationCallable(operator, parents, random, currentGeneration, mappingCache, fitnessCache, listeners));
         i = i + operator.getChildrenArity();
       }
       List<Individual<G, T, F>> newPopulation = new ArrayList<>(Utils.getAll(executor.invokeAll(tasks)));
@@ -106,7 +102,7 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
           //keep missing individuals from old population
           int targetSize = population.size() - newPopulation.size();
           while (population.size() > targetSize) {
-            Individual<G, T, F> individual = configuration.getUnsurvivalSelector().select(rankedPopulation);
+            Individual<G, T, F> individual = configuration.getUnsurvivalSelector().select(rankedPopulation, random);
             population.remove(individual);
           }
           population.addAll(newPopulation);
@@ -116,7 +112,7 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
       while (population.size() > configuration.getPopulationSize()) {
         //re-rank
         rankedPopulation = configuration.getRanker().rank(population);
-        Individual<G, T, F> individual = configuration.getUnsurvivalSelector().select(rankedPopulation);
+        Individual<G, T, F> individual = configuration.getUnsurvivalSelector().select(rankedPopulation, random);
         population.remove(individual);
       }
       if ((int) Math.floor(births / configuration.getPopulationSize()) > lastBroadcastGeneration) {
@@ -200,6 +196,7 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
   protected Callable<List<Individual<G, T, F>>> operatorApplicationCallable(
           final GeneticOperator<G> operator,
           final List<Individual<G, T, F>> parents,
+          final Random random,
           final int generation,
           final LoadingCache<G, Pair<Node<T>, Map<String, Object>>> mappingCache,
           final LoadingCache<Node<T>, F> fitnessCache,
@@ -215,7 +212,7 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
           parentGenotypes.add(parent.getGenotype());
         }
         Stopwatch stopwatch = Stopwatch.createStarted();
-        List<G> childGenotypes = operator.apply(parentGenotypes).subList(0, operator.getChildrenArity());
+        List<G> childGenotypes = operator.apply(parentGenotypes, random).subList(0, operator.getChildrenArity());
         long elapsed = stopwatch.elapsed(TimeUnit.NANOSECONDS);
         if (childGenotypes!=null) {
           for (G childGenotype : childGenotypes) {

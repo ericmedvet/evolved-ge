@@ -5,13 +5,14 @@
  */
 package it.units.malelab.ege.core.ranker;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
  *
  * @author eric
  */
-public interface Ranker<T> {
+public interface Ranker<T> extends Serializable {
   
   public List<List<T>> rank(List<T> ts);
   

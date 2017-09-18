@@ -18,12 +18,8 @@ import java.util.Random;
  */
 public class TwoPointsCrossover extends AbstractCrossover<BitsGenotype> {
 
-  public TwoPointsCrossover(Random random) {
-    super(random);
-  }
-
   @Override
-  public List<BitsGenotype> apply(List<BitsGenotype> parents) {
+  public List<BitsGenotype> apply(List<BitsGenotype> parents, Random random) {
     BitsGenotype parent1 = parents.get(0);
     BitsGenotype parent2 = parents.get(1);
     int pivot1, pivot2;

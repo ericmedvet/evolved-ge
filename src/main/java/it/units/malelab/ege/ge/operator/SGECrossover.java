@@ -18,12 +18,8 @@ import java.util.Random;
  */
 public class SGECrossover<T> extends AbstractCrossover<SGEGenotype<T>> {
 
-  public SGECrossover(Random random) {
-    super(random);
-  }
-
   @Override
-  public List<SGEGenotype<T>> apply(List<SGEGenotype<T>> parents) {
+  public List<SGEGenotype<T>> apply(List<SGEGenotype<T>> parents, Random random) {
     SGEGenotype<T> parent0 = parents.get(0);
     SGEGenotype<T> parent1 = parents.get(1);
     SGEGenotype<T> child0 = new SGEGenotype<>(parent0);

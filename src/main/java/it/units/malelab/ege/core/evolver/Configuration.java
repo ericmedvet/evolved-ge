@@ -10,12 +10,13 @@ import it.units.malelab.ege.core.mapper.Mapper;
 import it.units.malelab.ege.core.Problem;
 import it.units.malelab.ege.core.fitness.Fitness;
 import it.units.malelab.ege.core.ranker.Ranker;
+import java.io.Serializable;
 
 /**
  *
  * @author eric
  */
-public interface Configuration<G, T, F extends Fitness> {
+public interface Configuration<G, T, F extends Fitness> extends Serializable {
   
   public Problem<T, F> getProblem();
   public Mapper<G, T> getMapper();

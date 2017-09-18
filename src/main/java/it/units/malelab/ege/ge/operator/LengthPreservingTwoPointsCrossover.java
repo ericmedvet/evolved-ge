@@ -17,12 +17,8 @@ import java.util.Random;
  */
 public class LengthPreservingTwoPointsCrossover extends TwoPointsCrossover {
 
-  public LengthPreservingTwoPointsCrossover(Random random) {
-    super(random);
-  }
-          
   @Override
-  public List<BitsGenotype> apply(List<BitsGenotype> parents) {
+  public List<BitsGenotype> apply(List<BitsGenotype> parents, Random random) {
     BitsGenotype parent1 = parents.get(0);
     BitsGenotype parent2 = parents.get(1);
     int startIndex1 = Math.min(Math.max(1, random.nextInt(parent1.size())), parent1.size()-2);

@@ -17,12 +17,8 @@ import java.util.Random;
  */
 public class CompactFlipMutation extends AbstractMutation<BitsGenotype> {
   
-  public CompactFlipMutation(Random random) {
-    super(random);
-  }
-
   @Override
-  public List<BitsGenotype> apply(List<BitsGenotype> parents) {
+  public List<BitsGenotype> apply(List<BitsGenotype> parents, Random random) {
     BitsGenotype parent = parents.get(0);
     BitsGenotype child = new BitsGenotype(parent.size());
     child.set(0, parent);

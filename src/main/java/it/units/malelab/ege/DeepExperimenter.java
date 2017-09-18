@@ -51,7 +51,7 @@ import it.units.malelab.ege.core.selector.LastWorst;
 import it.units.malelab.ege.core.selector.Tournament;
 import it.units.malelab.ege.ge.genotype.BitsGenotypeFactory;
 import it.units.malelab.ege.ge.genotype.SGEGenotypeFactory;
-import it.units.malelab.ege.ge.genotype.validator.Any;
+import it.units.malelab.ege.core.validator.Any;
 import it.units.malelab.ege.ge.mapper.BitsSGEMapper;
 import it.units.malelab.ege.ge.mapper.HierarchicalMapper;
 import it.units.malelab.ege.ge.mapper.PiGEMapper;
@@ -77,6 +77,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  *
@@ -87,6 +89,7 @@ public class DeepExperimenter {
   private final static int N_THREADS = Runtime.getRuntime().availableProcessors() - 1;
 
   public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
+    ExecutorService executor = Executors.newFixedThreadPool(N_THREADS);
     Random random = new Random(1);
     final int populationSize = 500;
     final int generations = 50;
@@ -157,40 +160,40 @@ public class DeepExperimenter {
             //build mapper, operators, initializer, genotype distance
             Mapper mapper = null;
             Map operators = new Utils.MapBuilder<>()
-                    .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
-                    .put(new ProbabilisticMutation(random, 0.01), 0.2d).build();
+                    .put(new LengthPreservingTwoPointsCrossover(), 0.8d)
+                    .put(new ProbabilisticMutation(0.01), 0.2d).build();
             PopulationInitializer populationInitializer = null;
             Distance genotypeDistance = bitsGenotypeDistance;
             if (p(ma, 0).equals("ge")) {
               mapper = new StandardGEMapper(i(p(ma, 1)), i(p(ma, 2)), problem.getGrammar());
-              populationInitializer = new RandomInitializer<>(random, new BitsGenotypeFactory(i(p(ma, 3))));
+              populationInitializer = new RandomInitializer<>(new BitsGenotypeFactory(i(p(ma, 3))));
             } else if (p(ma, 0).equals("pige")) {
               mapper = new PiGEMapper(i(p(ma, 1)), i(p(ma, 2)), problem.getGrammar());
-              populationInitializer = new RandomInitializer<>(random, new BitsGenotypeFactory(i(p(ma, 3))));
+              populationInitializer = new RandomInitializer<>(new BitsGenotypeFactory(i(p(ma, 3))));
             } else if (p(ma, 0).equals("hge")) {
               mapper = new HierarchicalMapper(problem.getGrammar());
-              populationInitializer = new RandomInitializer<>(random, new BitsGenotypeFactory(i(p(ma, 1))));
+              populationInitializer = new RandomInitializer<>(new BitsGenotypeFactory(i(p(ma, 1))));
             } else if (p(ma, 0).equals("whge")) {
               mapper = new WeightedHierarchicalMapper(i(p(ma, 1)), problem.getGrammar());
-              populationInitializer = new RandomInitializer<>(random, new BitsGenotypeFactory(i(p(ma, 2))));
+              populationInitializer = new RandomInitializer<>(new BitsGenotypeFactory(i(p(ma, 2))));
             } else if (p(ma, 0).equals("bitsge")) {
               mapper = new BitsSGEMapper(i(p(ma, 1)), problem.getGrammar());
-              populationInitializer = new RandomInitializer<>(random, new BitsGenotypeFactory(i(p(ma, 2))));
+              populationInitializer = new RandomInitializer<>(new BitsGenotypeFactory(i(p(ma, 2))));
             } else if (p(ma, 0).equals("sge")) {
               mapper = new SGEMapper(i(p(ma, 1)), problem.getGrammar());
               operators = new Utils.MapBuilder<>()
-                      .put(new SGECrossover<>(random), 0.8d)
-                      .put(new SGEMutation<>(0.01, (SGEMapper<String>) mapper, random), 0.2d).build();
-              populationInitializer = new RandomInitializer<>(random, new SGEGenotypeFactory<>((SGEMapper<String>) mapper));
+                      .put(new SGECrossover<>(), 0.8d)
+                      .put(new SGEMutation<>(0.01, (SGEMapper<String>) mapper), 0.2d).build();
+              populationInitializer = new RandomInitializer<>(new SGEGenotypeFactory<>((SGEMapper<String>) mapper));
               genotypeDistance = sgeGenotypeDistance;
             } else if (p(ma, 0).equals("cfggp")) {
               mapper = new CfgGpMapper();
               operators = new Utils.MapBuilder<>()
-                      .put(new StandardTreeCrossover<>(i(p(ma, 1)), random), 0.8d)
-                      .put(new StandardTreeMutation<>(i(p(ma, 1)), problem.getGrammar(), random), 0.2d).build();
+                      .put(new StandardTreeCrossover<>(i(p(ma, 1))), 0.8d)
+                      .put(new StandardTreeMutation<>(i(p(ma, 1)), problem.getGrammar()), 0.2d).build();
               populationInitializer = new MultiInitializer<>(new Utils.MapBuilder<PopulationInitializer<Node<String>>, Double>()
-                      .put(new RandomInitializer<>(random, new GrowTreeFactory<>(i(p(ma, 1)), problem.getGrammar())), 0.5)
-                      .put(new RandomInitializer<>(random, new FullTreeFactory<>(i(p(ma, 1)), problem.getGrammar())), 0.5)
+                      .put(new RandomInitializer<>(new GrowTreeFactory<>(i(p(ma, 1)), problem.getGrammar())), 0.5)
+                      .put(new RandomInitializer<>(new FullTreeFactory<>(i(p(ma, 1)), problem.getGrammar())), 0.5)
                       .build());
               genotypeDistance = phenotypeDistance;
             }
@@ -204,12 +207,12 @@ public class DeepExperimenter {
                       mapper,
                       operators,
                       new ComparableRanker(new IndividualComparator(IndividualComparator.Attribute.FITNESS)),
-                      new Tournament(tournamentSize, random),
+                      new Tournament(tournamentSize),
                       new LastWorst(),
                       1,
                       true,
                       problem);
-              evolver = new StandardEvolver(configuration, N_THREADS, random, false);
+              evolver = new StandardEvolver(configuration, false);
             } else if (p(me, 0).equals("dc")) {
               final Distance localGenotypeDistance = genotypeDistance;
               Distance distance = null;
@@ -244,9 +247,9 @@ public class DeepExperimenter {
                       mapper,
                       operators,
                       new ComparableRanker(new IndividualComparator(IndividualComparator.Attribute.FITNESS)),
-                      new Tournament(tournamentSize, random),
+                      new Tournament(tournamentSize),
                       problem);
-              evolver = new DeterministicCrowdingEvolver(configuration, N_THREADS, random, false);
+              evolver = new DeterministicCrowdingEvolver(configuration, false);
             } else if (p(me, 0).equals("p")) {
               Ranker<Individual> parentInPartitionRanker = null;
               Comparator<Individual> partitionerComparator = null;
@@ -282,12 +285,12 @@ public class DeepExperimenter {
                       mapper,
                       operators,
                       new ComparableRanker(new IndividualComparator(IndividualComparator.Attribute.FITNESS)),
-                      new Tournament(tournamentSize, random),
+                      new Tournament(tournamentSize),
                       new LastWorst(),
                       1,
                       true,
                       problem);
-              evolver = new PartitionEvolver(configuration, N_THREADS, random, false);
+              evolver = new PartitionEvolver(configuration, false);
             }
             //prepare listeners and go
             List<EvolverListener> listeners = new ArrayList<>();
@@ -307,7 +310,7 @@ public class DeepExperimenter {
                       new CacheStatistics()
               ));
             }
-            evolver.solve(listeners);
+            evolver.solve(executor, random, listeners);
             header = false;
           }
         }

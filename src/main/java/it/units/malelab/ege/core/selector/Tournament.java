@@ -18,15 +18,13 @@ import java.util.TreeMap;
 public class Tournament<T> implements Selector<T> {
   
   private final int size;
-  private final Random random;
 
-  public Tournament(int size, Random random) {
+  public Tournament(int size) {
     this.size = size;
-    this.random = random;
   }
 
   @Override
-  public T select(List<List<T>> ts) {
+  public T select(List<List<T>> ts, Random random) {
     SortedMap<Integer, List<T>> selected = new TreeMap<>();
     for (int i = 0; i<size; i++) {
       int rankIndex = random.nextInt(ts.size());
@@ -43,7 +41,7 @@ public class Tournament<T> implements Selector<T> {
 
   @Override
   public String toString() {
-    return "Tournament{" + "size=" + size + ", random=" + random + '}';
+    return "Tournament{" + "size=" + size + '}';
   }
 
 }

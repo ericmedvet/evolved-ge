@@ -23,14 +23,13 @@ public class SGEMutation<T> extends AbstractMutation<SGEGenotype<T>> {
   private final double p;
   private final SGEMapper<T> mapper;
 
-  public SGEMutation(double p, SGEMapper<T> mapper, Random random) {
-    super(random);
+  public SGEMutation(double p, SGEMapper<T> mapper) {
     this.p = p;
     this.mapper = mapper;
   }
 
   @Override
-  public List<SGEGenotype<T>> apply(List<SGEGenotype<T>> parents) {
+  public List<SGEGenotype<T>> apply(List<SGEGenotype<T>> parents, Random random) {
     SGEGenotype<T> parent = parents.get(0);
     SGEGenotype<T> child = new SGEGenotype<>(parent);
     for (Map.Entry<Pair<T, Integer>, List<Integer>> entry : child.getGenes().entrySet()) {

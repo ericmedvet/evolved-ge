@@ -22,13 +22,12 @@ public class StandardTreeCrossover<T> extends AbstractCrossover<Node<T>> {
 
   private final int maxDepth;
 
-  public StandardTreeCrossover(int maxDepth, Random random) {
-    super(random);
+  public StandardTreeCrossover(int maxDepth) {
     this.maxDepth = maxDepth;
   }
 
   @Override
-  public List<Node<T>> apply(List<Node<T>> parents) {
+  public List<Node<T>> apply(List<Node<T>> parents, Random random) {
     //build maps of leaf-subtrees
     Node<T> child1 = new Node<>(parents.get(0));
     Node<T> child2 = new Node<>(parents.get(1));

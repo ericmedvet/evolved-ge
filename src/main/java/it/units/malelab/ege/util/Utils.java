@@ -389,21 +389,22 @@ public class Utils {
     }
     return new PearsonsCorrelation().correlation(x, y);
   }
-  
+
   public static <T> Sequence<T> fromList(final List<T> list) {
     return new Sequence<T>() {
       @Override
       public T get(int index) {
         return list.get(index);
       }
+
       @Override
       public int size() {
         return list.size();
       }
     };
   }
-  
-public static <T> Node<T> node(T t, Node<T>... children) {
+
+  public static <T> Node<T> node(T t, Node<T>... children) {
     Node<T> n = new Node<>(t);
     for (Node<T> child : children) {
       n.getChildren().add(child);

@@ -14,14 +14,8 @@ import java.util.Random;
  */
 public class Uniform<T> implements Selector<T> {
   
-  private final Random random;
-
-  public Uniform(Random random) {
-    this.random = random;
-  }
-
   @Override
-  public T select(List<List<T>> ts) {
+  public T select(List<List<T>> ts, Random random) {
     if (ts.isEmpty()) {
       return null;
     }

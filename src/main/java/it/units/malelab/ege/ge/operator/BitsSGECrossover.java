@@ -23,8 +23,7 @@ public class BitsSGECrossover extends AbstractCrossover<BitsGenotype> {
   private final List<Integer> nonTerminalSizes;
   private int overallSize;
 
-  public BitsSGECrossover(BitsSGEMapper sgeMapper, Random random) {
-    super(random);
+  public BitsSGECrossover(BitsSGEMapper sgeMapper) {
     nonTerminalSizes = sgeMapper.getNonTerminalSizes();
     overallSize = 0;
     for (int size : nonTerminalSizes) {
@@ -33,7 +32,7 @@ public class BitsSGECrossover extends AbstractCrossover<BitsGenotype> {
   }
           
   @Override
-  public List<BitsGenotype> apply(List<BitsGenotype> parents) {
+  public List<BitsGenotype> apply(List<BitsGenotype> parents, Random random) {
     BitsGenotype parent1 = parents.get(0);
     BitsGenotype parent2 = parents.get(1);
     if (Math.min(parent1.size(), parent2.size())<overallSize) {

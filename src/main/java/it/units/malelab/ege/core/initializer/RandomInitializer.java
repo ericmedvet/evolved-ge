@@ -5,7 +5,7 @@
  */
 package it.units.malelab.ege.core.initializer;
 
-import it.units.malelab.ege.core.Validator;
+import it.units.malelab.ege.core.validator.Validator;
 import it.units.malelab.ege.core.Factory;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,21 +17,19 @@ import java.util.Random;
  */
 public class RandomInitializer<G> implements PopulationInitializer<G> {
   
-  private final Random random;
   private final Factory<G> factory;
 
-  public RandomInitializer(Random random, Factory<G> factory) {
-    this.random = random;
+  public RandomInitializer(Factory<G> factory) {
     this.factory = factory;
   }
 
   @Override
-  public List<G> build(int n, Validator<G> genotypeValidator) {
+  public List<G> build(int n, Validator<G> genotypeValidator, Random random) {
     List<G> genotypes = new ArrayList<>(n);
     for (int i = 0; i<n; i++) {
       while (true) {
         G genotype = factory.build(random);
-        if (genotypeValidator.validate(genotype)) {
+        if (genotypeValidator.validate(genotype, random)) {
           genotypes.add(genotype);
           break;
         }

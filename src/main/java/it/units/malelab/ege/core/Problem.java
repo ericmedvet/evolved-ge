@@ -7,12 +7,13 @@ package it.units.malelab.ege.core;
 
 import it.units.malelab.ege.core.fitness.Fitness;
 import it.units.malelab.ege.core.fitness.FitnessComputer;
+import java.io.Serializable;
 
 /**
  *
  * @author eric
  */
-public class Problem<T, F extends Fitness> {
+public class Problem<T, F extends Fitness> implements Serializable {
   
   private final Grammar<T> grammar;
   private final FitnessComputer<T, F> learningFitnessComputer;

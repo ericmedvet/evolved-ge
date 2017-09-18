@@ -16,12 +16,8 @@ import java.util.Random;
  */
 public class LocalizedTwoPointsCrossover extends TwoPointsCrossover {
 
-  public LocalizedTwoPointsCrossover(Random random) {
-    super(random);
-  }
-
   @Override
-  public List<BitsGenotype> apply(List<BitsGenotype> parents) {
+  public List<BitsGenotype> apply(List<BitsGenotype> parents, Random random) {
     BitsGenotype parent0 = parents.get(0);
     BitsGenotype parent1 = parents.get(1);
     int pivot1, pivot2;

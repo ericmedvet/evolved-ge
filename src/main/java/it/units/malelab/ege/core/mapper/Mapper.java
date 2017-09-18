@@ -6,13 +6,14 @@
 package it.units.malelab.ege.core.mapper;
 
 import it.units.malelab.ege.core.Node;
+import java.io.Serializable;
 import java.util.Map;
 
 /**
  *
  * @author eric
  */
-public interface Mapper<G, T> {
+public interface Mapper<G, T> extends Serializable {
   
   public Node<T> map(G genotype, Map<String, Object> report) throws MappingException;
   

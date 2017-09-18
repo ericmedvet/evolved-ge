@@ -57,14 +57,14 @@ public class StandardTreeCrossoverTest {
     GrowTreeFactory<String> f = new GrowTreeFactory<>(maxDepth, g);
     Node<String> t1 = f.build(random);
     Node<String> t2 = f.build(random);
-    StandardTreeCrossover<String> op = new StandardTreeCrossover<>(maxDepth, new Random(1l));
+    StandardTreeCrossover<String> op = new StandardTreeCrossover<>(maxDepth);
     List<Node<String>> parents = new ArrayList<>();
     parents.add(t1);
     parents.add(t2);
     for (int i = 0; i<50; i++) {
       Node<String> parent1 = parents.get(0);
       Node<String> parent2 = parents.get(1);
-      List<Node<String>> children = op.apply(parents);
+      List<Node<String>> children = op.apply(parents, random);
       assertTrue("parent1 should remain unchanged", parent1==parents.get(0));
       assertTrue("parent2 should remain unchanged", parent2==parents.get(1));
       if (children!=null) {

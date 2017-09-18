@@ -21,18 +21,15 @@ import java.util.Random;
 public class StandardTreeMutation<T>  extends AbstractMutation<Node<T>> {
   
   private final int maxDepth;
-  private final Grammar<T> grammar;
   private GrowTreeFactory<T> factory;
 
-  public StandardTreeMutation(int maxDepth, Grammar<T> grammar, Random random) {
-    super(random);
+  public StandardTreeMutation(int maxDepth, Grammar<T> grammar) {
     this.maxDepth = maxDepth;
-    this.grammar = grammar;
     factory = new GrowTreeFactory<>(0, grammar);
   }
 
   @Override
-  public List<Node<T>> apply(List<Node<T>> parents) {
+  public List<Node<T>> apply(List<Node<T>> parents, Random random) {
     Node<T> child = new Node<>(parents.get(0));
     child.propagateParentship();
     List<Node<T>> nonTerminalNodes = new ArrayList<>();

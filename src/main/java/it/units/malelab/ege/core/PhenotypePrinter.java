@@ -5,11 +5,13 @@
  */
 package it.units.malelab.ege.core;
 
+import java.io.Serializable;
+
 /**
  *
  * @author eric
  */
-public interface PhenotypePrinter<T> {
+public interface PhenotypePrinter<T> extends Serializable {
   
   public String toString(Node<T> node);
   

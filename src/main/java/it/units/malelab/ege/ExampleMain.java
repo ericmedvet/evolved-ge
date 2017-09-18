@@ -48,7 +48,7 @@ import it.units.malelab.ege.core.initializer.RandomInitializer;
 import it.units.malelab.ege.core.listener.EvolutionImageSaverListener;
 import it.units.malelab.ege.core.listener.collector.BestPrinter;
 import it.units.malelab.ege.core.listener.collector.MultiObjectiveFitnessFirstBest;
-import it.units.malelab.ege.ge.genotype.validator.Any;
+import it.units.malelab.ege.core.validator.Any;
 import it.units.malelab.ege.core.operator.GeneticOperator;
 import it.units.malelab.ege.core.ranker.ComparableRanker;
 import it.units.malelab.ege.core.ranker.ComparatorChain;
@@ -74,6 +74,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  *
@@ -82,392 +84,30 @@ import java.util.concurrent.ExecutionException;
 public class ExampleMain {
 
   public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
-    //solveHarmonicCurve();
-    //solveHarmonicCurveDiversity();
-    //solveBinaryRegex();
-    //solveBinaryRegexDiversity();
-    //solveBinaryRegexSAC();
-    //solveText();
-    //solveTextCfgGp();
-    //solveParityCfgGp();
-    //solveKLandscapesCfgGp();
-    //doImagesBits();
-    //doImages();
-    //solveTextDC();
     solveKLandscapesCfgGp();
-  }
-
-  private static void solveHarmonicCurve() throws IOException, InterruptedException, ExecutionException {
-    Random random = new Random(1l);
-    Problem<String, NumericFitness> problem = new HarmonicCurve();
-    StandardConfiguration<BitsGenotype, String, NumericFitness> configuration = new StandardConfiguration<>(
-            500,
-            50,
-            new RandomInitializer<>(random, new BitsGenotypeFactory(256)),
-            new Any<BitsGenotype>(),
-            //new StandardGEMapper<>(8, 5, problem.getGrammar()),
-            new WeightedHierarchicalMapper<>(3, false, true, problem.getGrammar()),
-            new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
-                    .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
-                    .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
-            new ComparableRanker<>(new IndividualComparator<BitsGenotype, String, NumericFitness>(IndividualComparator.Attribute.FITNESS)),
-            new Tournament<Individual<BitsGenotype, String, NumericFitness>>(3, random),
-            new LastWorst<Individual<BitsGenotype, String, NumericFitness>>(),
-            500,
-            true,
-            problem);
-    List<EvolverListener<BitsGenotype, String, NumericFitness>> listeners = new ArrayList<>();
-    listeners.add(new CollectorGenerationLogger<>(
-            Collections.EMPTY_MAP, System.out, true, 10, " ", " | ",
-            new Population<BitsGenotype, String, NumericFitness>(),
-            new NumericFirstBest<BitsGenotype, String>(false, problem.getTestingFitnessComputer(), "%6.2f"),
-            new Diversity<BitsGenotype, String, NumericFitness>(),
-            new BestPrinter<BitsGenotype, String, NumericFitness>(problem.getPhenotypePrinter(), "%30.30s")
-    ));
-    Evolver<BitsGenotype, String, NumericFitness> evolver = new StandardEvolver<>(
-            configuration, 1, random, false);
-    List<Node<String>> bests = evolver.solve(listeners);
-    System.out.printf("Found %d solutions.%n", bests.size());
-  }
-
-  private static void solveHarmonicCurveDiversity() throws IOException, InterruptedException, ExecutionException {
-    Random random = new Random(1l);
-    Problem<String, NumericFitness> problem = new HarmonicCurve();
-    PartitionConfiguration<BitsGenotype, String, NumericFitness> configuration = new PartitionConfiguration<>(
-            new IndividualComparator<BitsGenotype, String, NumericFitness>(IndividualComparator.Attribute.PHENO),
-            10,
-            new ComparableRanker<>(new IndividualComparator<BitsGenotype, String, NumericFitness>(IndividualComparator.Attribute.AGE)),
-            new FirstBest<Individual<BitsGenotype, String, NumericFitness>>(),
-            new ComparableRanker<>(new IndividualComparator<BitsGenotype, String, NumericFitness>(IndividualComparator.Attribute.AGE)),
-            new LastWorst<Individual<BitsGenotype, String, NumericFitness>>(),
-            500,
-            50,
-            new RandomInitializer<>(random, new BitsGenotypeFactory(256)),
-            new Any<BitsGenotype>(),
-            //new StandardGEMapper<>(8, 5, problem.getGrammar()),
-            new WeightedHierarchicalMapper<>(3, false, true, problem.getGrammar()),
-            new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
-                    .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
-                    .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
-            new ComparableRanker<>(new IndividualComparator<BitsGenotype, String, NumericFitness>(IndividualComparator.Attribute.FITNESS)),
-            new Tournament<Individual<BitsGenotype, String, NumericFitness>>(3, random),
-            new LastWorst<Individual<BitsGenotype, String, NumericFitness>>(),
-            500,
-            true,
-            problem
-    );
-    List<EvolverListener<BitsGenotype, String, NumericFitness>> listeners = new ArrayList<>();
-    listeners.add(new CollectorGenerationLogger<>(
-            Collections.EMPTY_MAP, System.out, true, 10, " ", " | ",
-            new Population<BitsGenotype, String, NumericFitness>(),
-            new NumericFirstBest<BitsGenotype, String>(false, problem.getTestingFitnessComputer(), "%6.2f"),
-            new Diversity<BitsGenotype, String, NumericFitness>(),
-            new BestPrinter<BitsGenotype, String, NumericFitness>(problem.getPhenotypePrinter(), "%30.30s")
-    ));
-    Evolver<BitsGenotype, String, NumericFitness> evolver = new PartitionEvolver<>(
-            configuration, 1, random, false);
-    List<Node<String>> bests = evolver.solve(listeners);
-    System.out.printf("Found %d solutions.%n", bests.size());
-  }
-
-  private static void solveBinaryRegex() throws IOException, InterruptedException, ExecutionException {
-    Random random = new Random(1l);
-    Problem<String, MultiObjectiveFitness> problem = new BinaryRegex();
-    StandardConfiguration<BitsGenotype, String, MultiObjectiveFitness> configuration = new StandardConfiguration<>(
-            500,
-            50,
-            new RandomInitializer<>(random, new BitsGenotypeFactory(256)),
-            new Any<BitsGenotype>(),
-            new WeightedHierarchicalMapper<>(3, false, true, problem.getGrammar()),
-            new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
-                    .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
-                    .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
-            new ParetoRanker<BitsGenotype, String, MultiObjectiveFitness>(),
-            new Tournament<Individual<BitsGenotype, String, MultiObjectiveFitness>>(3, random),
-            new LastWorst<Individual<BitsGenotype, String, MultiObjectiveFitness>>(),
-            500,
-            true,
-            problem);
-    List<EvolverListener<BitsGenotype, String, MultiObjectiveFitness>> listeners = new ArrayList<>();
-    listeners.add(new CollectorGenerationLogger<>(
-            Collections.EMPTY_MAP, System.out, true, 10, " ", " | ",
-            new Population<BitsGenotype, String, MultiObjectiveFitness>(),
-            new MultiObjectiveFitnessFirstBest<BitsGenotype, String>(false, problem.getTestingFitnessComputer(), "%4.2f", "%4.2f"),
-            new Diversity<BitsGenotype, String, MultiObjectiveFitness>(),
-            new BestPrinter<BitsGenotype, String, MultiObjectiveFitness>(problem.getPhenotypePrinter(), "%30.30s")
-    ));
-    Evolver<BitsGenotype, String, MultiObjectiveFitness> evolver = new StandardEvolver<>(
-            configuration, 1, random, false);
-    List<Node<String>> bests = evolver.solve(listeners);
-    System.out.printf("Found %d solutions.%n", bests.size());
-  }
-
-  private static void solveBinaryRegexDiversity() throws IOException, InterruptedException, ExecutionException {
-    Random random = new Random(1l);
-    Problem<String, MultiObjectiveFitness> problem = new BinaryRegex();
-    PartitionConfiguration<BitsGenotype, String, MultiObjectiveFitness> configuration = new PartitionConfiguration<>(
-            new IndividualComparator<BitsGenotype, String, MultiObjectiveFitness>(IndividualComparator.Attribute.PHENO),
-            10,
-            new ComparableRanker<>(new IndividualComparator<BitsGenotype, String, MultiObjectiveFitness>(IndividualComparator.Attribute.AGE)),
-            new FirstBest<Individual<BitsGenotype, String, MultiObjectiveFitness>>(),
-            new ComparableRanker<>(new IndividualComparator<BitsGenotype, String, MultiObjectiveFitness>(IndividualComparator.Attribute.AGE)),
-            new LastWorst<Individual<BitsGenotype, String, MultiObjectiveFitness>>(),
-            500,
-            50,
-            new RandomInitializer<>(random, new BitsGenotypeFactory(256)),
-            new Any<BitsGenotype>(),
-            new WeightedHierarchicalMapper<>(3, false, true, problem.getGrammar()),
-            new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
-                    .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
-                    .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
-            new ParetoRanker<BitsGenotype, String, MultiObjectiveFitness>(),
-            new Tournament<Individual<BitsGenotype, String, MultiObjectiveFitness>>(3, random),
-            new LastWorst<Individual<BitsGenotype, String, MultiObjectiveFitness>>(),
-            500,
-            true,
-            problem);
-    List<EvolverListener<BitsGenotype, String, MultiObjectiveFitness>> listeners = new ArrayList<>();
-    listeners.add(new CollectorGenerationLogger<>(
-            Collections.EMPTY_MAP, System.out, true, 10, " ", " | ",
-            new Population<BitsGenotype, String, MultiObjectiveFitness>(),
-            new MultiObjectiveFitnessFirstBest<BitsGenotype, String>(false, problem.getTestingFitnessComputer(), "%4.2f", "%4.2f"),
-            new Diversity<BitsGenotype, String, MultiObjectiveFitness>(),
-            new BestPrinter<BitsGenotype, String, MultiObjectiveFitness>(problem.getPhenotypePrinter(), "%30.30s")
-    ));
-    Evolver<BitsGenotype, String, MultiObjectiveFitness> evolver = new PartitionEvolver<>(
-            configuration, 1, random, false);
-    List<Node<String>> bests = evolver.solve(listeners);
-    System.out.printf("Found %d solutions.%n", bests.size());
-  }
-
-  private static void solveBinaryRegexSAC() throws IOException, InterruptedException, ExecutionException {
-    Random random = new Random(1l);
-    Problem<String, MultiObjectiveFitness> problem = new BinaryRegex();
-    final LexicoGraphicalMOComparator lgmoc = new LexicoGraphicalMOComparator(0, 1);
-    SACConfiguration<String, BitsGenotype, String, MultiObjectiveFitness> configuration = new SACConfiguration<>(
-            new Joiner<String>() {
-      @Override
-      public Node<String> join(Node<String>... pieces) {
-        Node<String> orNode = new Node<>("<or>");
-        for (int i = 0; i < pieces.length; i++) {
-          if (i > 0) {
-            orNode.getChildren().add(new Node<>("|"));
-          }
-          orNode.getChildren().add(new Node<>("("));
-          orNode.getChildren().add(pieces[i]);
-          orNode.getChildren().add(new Node<>(")"));
-        }
-        return orNode;
-      }
-    },
-            new IndividualComparator<BitsGenotype, String, MultiObjectiveFitness>(IndividualComparator.Attribute.PHENO),
-            1,
-            new ComparableRanker<>(new IndividualComparator<BitsGenotype, String, MultiObjectiveFitness>(IndividualComparator.Attribute.AGE)),
-            new FirstBest<Individual<BitsGenotype, String, MultiObjectiveFitness>>(),
-            new ComparableRanker<>(new IndividualComparator<BitsGenotype, String, MultiObjectiveFitness>(IndividualComparator.Attribute.AGE)),
-            new LastWorst<Individual<BitsGenotype, String, MultiObjectiveFitness>>(),
-            500,
-            25,
-            new RandomInitializer<>(random, new BitsGenotypeFactory(256)),
-            new Any<BitsGenotype>(),
-            new WeightedHierarchicalMapper<>(3, false, true, problem.getGrammar()),
-            new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
-                    .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
-                    .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
-            new ComparableRanker<>(new ComparatorChain<Individual<BitsGenotype, String, MultiObjectiveFitness>>(
-                    new Comparator<Individual<BitsGenotype, String, MultiObjectiveFitness>>() {
-              @Override
-              public int compare(Individual<BitsGenotype, String, MultiObjectiveFitness> i1, Individual<BitsGenotype, String, MultiObjectiveFitness> i2) {
-                return lgmoc.compare(i1.getFitness(), i2.getFitness());
-              }
-            },
-                    new IndividualComparator<BitsGenotype, String, MultiObjectiveFitness>(IndividualComparator.Attribute.PHENO_SIZE)
-            )),
-            new Tournament<Individual<BitsGenotype, String, MultiObjectiveFitness>>(3, random),
-            new LastWorst<Individual<BitsGenotype, String, MultiObjectiveFitness>>(),
-            500,
-            true,
-            problem);
-    List<EvolverListener<BitsGenotype, String, MultiObjectiveFitness>> listeners = new ArrayList<>();
-    listeners.add(new CollectorGenerationLogger<>(
-            Collections.EMPTY_MAP, System.out, true, 10, " ", " | ",
-            new Population<BitsGenotype, String, MultiObjectiveFitness>(),
-            new MultiObjectiveFitnessFirstBest<BitsGenotype, String>(false, problem.getTestingFitnessComputer(), "%4.2f", "%4.2f"),
-            new Diversity<BitsGenotype, String, MultiObjectiveFitness>(),
-            new BestPrinter<BitsGenotype, String, MultiObjectiveFitness>(problem.getPhenotypePrinter(), "%30.30s")
-    ));
-    Evolver<BitsGenotype, String, MultiObjectiveFitness> evolver = new SACEvolver<>(
-            configuration, 1, random, false);
-    List<Node<String>> bests = evolver.solve(listeners);
-    System.out.printf("Found %d solutions.%n", bests.size());
-  }
-
-  private static void solveText() throws IOException, InterruptedException, ExecutionException {
-    Random random = new Random(1l);
-    Problem<String, NumericFitness> problem = new Text();
-    StandardConfiguration<BitsGenotype, String, NumericFitness> configuration = new StandardConfiguration<>(
-            500,
-            50,
-            new RandomInitializer<>(random, new BitsGenotypeFactory(256)),
-            new Any<BitsGenotype>(),
-            //new StandardGEMapper<>(8, 5, problem.getGrammar()),
-            new WeightedHierarchicalMapper<>(3, false, true, problem.getGrammar()),
-            new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
-                    .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
-                    .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
-            new ComparableRanker<>(new IndividualComparator<BitsGenotype, String, NumericFitness>(IndividualComparator.Attribute.FITNESS)),
-            new Tournament<Individual<BitsGenotype, String, NumericFitness>>(3, random),
-            new LastWorst<Individual<BitsGenotype, String, NumericFitness>>(),
-            500,
-            true,
-            problem);
-    List<EvolverListener<BitsGenotype, String, NumericFitness>> listeners = new ArrayList<>();
-    listeners.add(new CollectorGenerationLogger<>(
-            Collections.EMPTY_MAP, System.out, true, 10, " ", " | ",
-            new Population<BitsGenotype, String, NumericFitness>(),
-            new NumericFirstBest<BitsGenotype, String>(false, problem.getTestingFitnessComputer(), "%6.2f"),
-            new Diversity<BitsGenotype, String, NumericFitness>(),
-            new BestPrinter<BitsGenotype, String, NumericFitness>(problem.getPhenotypePrinter(), "%30.30s")
-    ));
-    Evolver<BitsGenotype, String, NumericFitness> evolver = new StandardEvolver<>(
-            configuration, 1, random, false);
-    List<Node<String>> bests = evolver.solve(listeners);
-    System.out.printf("Found %d solutions.%n", bests.size());
-  }
-
-  private static void solveTextDC() throws IOException, InterruptedException, ExecutionException {
-    Random random = new Random(1l);
-    Problem<String, NumericFitness> problem = new Text();
-    final Distance<Sequence<Boolean>> gDistance = new Hamming<Boolean>();
-    DeterministicCrowdingConfiguration<BitsGenotype, String, NumericFitness> configuration = new DeterministicCrowdingConfiguration<>(
-            new Distance<Individual<BitsGenotype, String, NumericFitness>>() {
-              @Override
-              public double d(Individual<BitsGenotype, String, NumericFitness> i1, Individual<BitsGenotype, String, NumericFitness> i2) {
-                return gDistance.d(i1.getGenotype(), i2.getGenotype());
-              }
-            },
-            500,
-            50,
-            new RandomInitializer<>(random, new BitsGenotypeFactory(256)),
-            new Any<BitsGenotype>(),
-            //new StandardGEMapper<>(8, 5, problem.getGrammar()),
-            new WeightedHierarchicalMapper<>(3, false, true, problem.getGrammar()),
-            new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
-                    .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
-                    .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
-            new ComparableRanker<>(new IndividualComparator<BitsGenotype, String, NumericFitness>(IndividualComparator.Attribute.FITNESS)),
-            new Tournament<Individual<BitsGenotype, String, NumericFitness>>(3, random),
-            problem);
-    List<EvolverListener<BitsGenotype, String, NumericFitness>> listeners = new ArrayList<>();
-    listeners.add(new CollectorGenerationLogger<>(
-            Collections.EMPTY_MAP, System.out, true, 10, " ", " | ",
-            new Population<BitsGenotype, String, NumericFitness>(),
-            new NumericFirstBest<BitsGenotype, String>(false, problem.getTestingFitnessComputer(), "%6.2f"),
-            new Diversity<BitsGenotype, String, NumericFitness>(),
-            new BestPrinter<BitsGenotype, String, NumericFitness>(problem.getPhenotypePrinter(), "%30.30s")
-    ));
-    Evolver<BitsGenotype, String, NumericFitness> evolver = new DeterministicCrowdingEvolver<>(
-            configuration, 1, random, false);
-    List<Node<String>> bests = evolver.solve(listeners);
-    System.out.printf("Found %d solutions.%n", bests.size());
-  }
-
-  private static void solveTextCfgGp() throws IOException, InterruptedException, ExecutionException {
-    Random random = new Random(1l);
-    Problem<String, NumericFitness> problem = new Nguyen7(0);
-    int maxDepth = 16;
-    StandardConfiguration<Node<String>, String, NumericFitness> configuration = new StandardConfiguration<>(
-            500,
-            50,
-            new MultiInitializer<>(new Utils.MapBuilder<PopulationInitializer<Node<String>>, Double>()
-                    .put(new RandomInitializer<>(random, new GrowTreeFactory<>(maxDepth, problem.getGrammar())), 0.5)
-                    .put(new RandomInitializer<>(random, new FullTreeFactory<>(maxDepth, problem.getGrammar())), 0.5)
-                    .build()
-            ),
-            new Any<Node<String>>(),
-            new CfgGpMapper<String>(),
-            new Utils.MapBuilder<GeneticOperator<Node<String>>, Double>()
-                    .put(new StandardTreeCrossover<String>(maxDepth, random), 0.8d)
-                    .put(new StandardTreeMutation<>(maxDepth, problem.getGrammar(), random), 0.2d)
-                    .build(),
-            new ComparableRanker<>(new IndividualComparator<Node<String>, String, NumericFitness>(IndividualComparator.Attribute.FITNESS)),
-            new Tournament<Individual<Node<String>, String, NumericFitness>>(3, random),
-            new LastWorst<Individual<Node<String>, String, NumericFitness>>(),
-            500,
-            true,
-            problem);
-    List<EvolverListener<Node<String>, String, NumericFitness>> listeners = new ArrayList<>();
-    listeners.add(new CollectorGenerationLogger<>(
-            Collections.EMPTY_MAP, System.out, true, 10, " ", " | ",
-            new Population<BitsGenotype, String, NumericFitness>(),
-            new NumericFirstBest<BitsGenotype, String>(false, problem.getTestingFitnessComputer(), "%6.2f"),
-            new Diversity<BitsGenotype, String, NumericFitness>(),
-            new BestPrinter<BitsGenotype, String, NumericFitness>(problem.getPhenotypePrinter(), "%30.30s")
-    ));
-    Evolver<Node<String>, String, NumericFitness> evolver = new StandardEvolver<>(
-            configuration, 1, random, false);
-    List<Node<String>> bests = evolver.solve(listeners);
-    System.out.printf("Found %d solutions.%n", bests.size());
-  }
-
-  private static void solveParityCfgGp() throws IOException, InterruptedException, ExecutionException {
-    Random random = new Random(1l);
-    Problem<String, NumericFitness> problem = new Parity(5);
-    int maxDepth = 16;
-    StandardConfiguration<Node<String>, String, NumericFitness> configuration = new StandardConfiguration<>(
-            500,
-            50,
-            new MultiInitializer<>(new Utils.MapBuilder<PopulationInitializer<Node<String>>, Double>()
-                    .put(new RandomInitializer<>(random, new GrowTreeFactory<>(maxDepth, problem.getGrammar())), 0.5)
-                    .put(new RandomInitializer<>(random, new FullTreeFactory<>(maxDepth, problem.getGrammar())), 0.5)
-                    .build()
-            ),
-            new Any<Node<String>>(),
-            new CfgGpMapper<String>(),
-            new Utils.MapBuilder<GeneticOperator<Node<String>>, Double>()
-                    .put(new StandardTreeCrossover<String>(maxDepth, random), 0.8d)
-                    .put(new StandardTreeMutation<>(maxDepth, problem.getGrammar(), random), 0.2d)
-                    .build(),
-            new ComparableRanker<>(new IndividualComparator<Node<String>, String, NumericFitness>(IndividualComparator.Attribute.FITNESS)),
-            new Tournament<Individual<Node<String>, String, NumericFitness>>(3, random),
-            new LastWorst<Individual<Node<String>, String, NumericFitness>>(),
-            500,
-            true,
-            problem);
-    List<EvolverListener<Node<String>, String, NumericFitness>> listeners = new ArrayList<>();
-    listeners.add(new CollectorGenerationLogger<>(
-            Collections.EMPTY_MAP, System.out, true, 10, " ", " | ",
-            new Population<BitsGenotype, String, NumericFitness>(),
-            new NumericFirstBest<BitsGenotype, String>(false, problem.getTestingFitnessComputer(), "%6.2f"),
-            new Diversity<BitsGenotype, String, NumericFitness>(),
-            new BestPrinter<BitsGenotype, String, NumericFitness>(problem.getPhenotypePrinter(), "%30.30s")
-    ));
-    Evolver<Node<String>, String, NumericFitness> evolver = new StandardEvolver<>(
-            configuration, 1, random, false);
-    List<Node<String>> bests = evolver.solve(listeners);
-    System.out.printf("Found %d solutions.%n", bests.size());
   }
 
   private static void solveKLandscapesCfgGp() throws IOException, InterruptedException, ExecutionException {
     Random random = new Random(1l);
+    ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()-1);
     Problem<String, NumericFitness> problem = new KLandscapes(8);
     int maxDepth = 16;
     StandardConfiguration<Node<String>, String, NumericFitness> configuration = new StandardConfiguration<>(
             500,
             50,
             new MultiInitializer<>(new Utils.MapBuilder<PopulationInitializer<Node<String>>, Double>()
-                    .put(new RandomInitializer<>(random, new GrowTreeFactory<>(maxDepth, problem.getGrammar())), 0.5)
-                    .put(new RandomInitializer<>(random, new FullTreeFactory<>(maxDepth, problem.getGrammar())), 0.5)
+                    .put(new RandomInitializer<>(new GrowTreeFactory<>(maxDepth, problem.getGrammar())), 0.5)
+                    .put(new RandomInitializer<>(new FullTreeFactory<>(maxDepth, problem.getGrammar())), 0.5)
                     .build()
             ),
             new Any<Node<String>>(),
             new CfgGpMapper<String>(),
             new Utils.MapBuilder<GeneticOperator<Node<String>>, Double>()
-                    .put(new StandardTreeCrossover<String>(maxDepth, random), 0.8d)
-                    .put(new StandardTreeMutation<>(maxDepth, problem.getGrammar(), random), 0.2d)
+                    .put(new StandardTreeCrossover<String>(maxDepth), 0.8d)
+                    .put(new StandardTreeMutation<>(maxDepth, problem.getGrammar()), 0.2d)
                     .build(),
             new ComparableRanker<>(new IndividualComparator<Node<String>, String, NumericFitness>(IndividualComparator.Attribute.FITNESS)),
-            new Tournament<Individual<Node<String>, String, NumericFitness>>(3, random),
+            new Tournament<Individual<Node<String>, String, NumericFitness>>(3),
             new LastWorst<Individual<Node<String>, String, NumericFitness>>(),
             500,
             true,
@@ -480,84 +120,8 @@ public class ExampleMain {
             new Diversity<BitsGenotype, String, NumericFitness>(),
             new BestPrinter<BitsGenotype, String, NumericFitness>(problem.getPhenotypePrinter(), "%30.30s")
     ));
-    Evolver<Node<String>, String, NumericFitness> evolver = new StandardEvolver<>(
-            configuration, 1, random, false);
-    List<Node<String>> bests = evolver.solve(listeners);
-    System.out.printf("Found %d solutions.%n", bests.size());
-  }
-
-  private static void doImagesBits() throws IOException, InterruptedException, ExecutionException {
-    Random random = new Random(1l);
-    Problem<String, NumericFitness> problem = new KLandscapes(7);
-    StandardConfiguration<BitsGenotype, String, NumericFitness> configuration = new StandardConfiguration<>(
-            500,
-            50,
-            new RandomInitializer<>(random, new BitsGenotypeFactory(256)),
-            new Any<BitsGenotype>(),
-            //new StandardGEMapper<>(8, 1, problem.getGrammar()),
-            new WeightedHierarchicalMapper<>(3, false, true, problem.getGrammar()),
-            //new HierarchicalMapper<>(problem.getGrammar()),
-            //new PiGEMapper<>(16,1,problem.getGrammar()),
-            new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
-                    .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
-                    .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
-            new ComparableRanker<>(new IndividualComparator<BitsGenotype, String, NumericFitness>(IndividualComparator.Attribute.FITNESS)),
-            new Tournament<Individual<BitsGenotype, String, NumericFitness>>(3, random),
-            new LastWorst<Individual<BitsGenotype, String, NumericFitness>>(),
-            500,
-            true,
-            problem);
-    List<EvolverListener<BitsGenotype, String, NumericFitness>> listeners = new ArrayList<>();
-    listeners.add(new CollectorGenerationLogger<>(
-            Collections.EMPTY_MAP, System.out, true, 10, " ", " | ",
-            new Population<BitsGenotype, String, NumericFitness>(),
-            new NumericFirstBest<BitsGenotype, String>(false, problem.getTestingFitnessComputer(), "%6.2f"),
-            new Diversity<BitsGenotype, String, NumericFitness>(),
-            new BestPrinter<BitsGenotype, String, NumericFitness>(problem.getPhenotypePrinter(), "%30.30s")
-    ));
-    listeners.add(new EvolutionImageSaverListener<>(
-            (Map) Collections.singletonMap("name", "whge3-kland7"),
-            "/home/eric/experiments/ge/images/tcyb",
-            EvolutionImageSaverListener.ImageType.DU));
-    Evolver<BitsGenotype, String, NumericFitness> evolver = new StandardEvolver<>(
-            configuration, 1, random, false);
-    List<Node<String>> bests = evolver.solve(listeners);
-    System.out.printf("Found %d solutions.%n", bests.size());
-  }
-
-  private static void doImages() throws IOException, InterruptedException, ExecutionException {
-    Random random = new Random(1l);
-    Problem<String, NumericFitness> problem = new KLandscapes(7);
-    SGEMapper<String> mapper = new SGEMapper<>(8, problem.getGrammar());
-    StandardConfiguration<SGEGenotype<String>, String, NumericFitness> configuration = new StandardConfiguration<>(
-            500, 50,
-            new RandomInitializer<>(random, new SGEGenotypeFactory<>((SGEMapper<String>) mapper)),
-            new Any<SGEGenotype<String>>(),
-            mapper,
-            new Utils.MapBuilder<GeneticOperator<SGEGenotype<String>>, Double>()
-                    .put(new SGECrossover<String>(random), 0.8d)
-                    .put(new SGEMutation<>(0.01, (SGEMapper<String>) mapper, random), 0.2d).build(),
-            new ComparableRanker<>(new IndividualComparator<SGEGenotype<String>, String, NumericFitness>(IndividualComparator.Attribute.FITNESS)),
-            new Tournament<Individual<SGEGenotype<String>, String, NumericFitness>>(3, random),
-            new LastWorst<Individual<SGEGenotype<String>, String, NumericFitness>>(),
-            500,
-            true,
-            problem);
-    List<EvolverListener<SGEGenotype<String>, String, NumericFitness>> listeners = new ArrayList<>();
-    listeners.add(new CollectorGenerationLogger<>(
-            Collections.EMPTY_MAP, System.out, true, 10, " ", " | ",
-            new Population<SGEGenotype<String>, String, NumericFitness>(),
-            new NumericFirstBest<SGEGenotype<String>, String>(false, problem.getTestingFitnessComputer(), "%6.2f"),
-            new Diversity<SGEGenotype<String>, String, NumericFitness>(),
-            new BestPrinter<SGEGenotype<String>, String, NumericFitness>(problem.getPhenotypePrinter(), "%30.30s")
-    ));
-    listeners.add(new EvolutionImageSaverListener<>(
-            (Map) Collections.singletonMap("name", "sge8-kland7"),
-            "/home/eric/experiments/ge/images/tcyb",
-            EvolutionImageSaverListener.ImageType.DU));
-    Evolver<SGEGenotype<String>, String, NumericFitness> evolver = new StandardEvolver<>(
-            configuration, 1, random, false);
-    List<Node<String>> bests = evolver.solve(listeners);
+    Evolver<Node<String>, String, NumericFitness> evolver = new StandardEvolver<>(configuration, false);
+    List<Node<String>> bests = evolver.solve(executor, random, listeners);
     System.out.printf("Found %d solutions.%n", bests.size());
   }
 

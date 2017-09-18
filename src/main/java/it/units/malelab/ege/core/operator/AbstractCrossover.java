@@ -11,11 +11,7 @@ import java.util.Random;
  *
  * @author eric
  */
-public abstract class AbstractCrossover<G> extends AbstractOperator<G> {
-
-  public AbstractCrossover(Random random) {
-    super(random);
-  }
+public abstract class AbstractCrossover<G> implements GeneticOperator<G> {
 
   @Override
   public int getParentsArity() {

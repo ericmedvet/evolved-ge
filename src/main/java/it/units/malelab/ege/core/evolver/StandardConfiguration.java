@@ -9,7 +9,7 @@ import it.units.malelab.ege.core.Individual;
 import it.units.malelab.ege.core.Problem;
 import it.units.malelab.ege.core.fitness.Fitness;
 import it.units.malelab.ege.core.selector.Selector;
-import it.units.malelab.ege.core.Validator;
+import it.units.malelab.ege.core.validator.Validator;
 import it.units.malelab.ege.core.mapper.Mapper;
 import it.units.malelab.ege.core.ranker.Ranker;
 import it.units.malelab.ege.core.operator.GeneticOperator;

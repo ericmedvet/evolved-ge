@@ -5,15 +5,17 @@
  */
 package it.units.malelab.ege.core.initializer;
 
-import it.units.malelab.ege.core.Validator;
+import it.units.malelab.ege.core.validator.Validator;
+import java.io.Serializable;
 import java.util.List;
+import java.util.Random;
 
 /**
  *
  * @author eric
  */
-public interface PopulationInitializer<G> {
+public interface PopulationInitializer<G> extends Serializable {
     
-  public List<G> build(int n, Validator<G> genotypeValidator);
+  public List<G> build(int n, Validator<G> genotypeValidator, Random random);
   
 }

@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 
 /**
  *
@@ -26,16 +27,14 @@ import java.util.concurrent.ExecutionException;
 public class SACEvolver<I, G, T, F extends MultiObjectiveFitness> extends PartitionEvolver<G, T, F> {
 
   private final SACConfiguration<I, G, T, F> configuration;
-  private final int numberOfThreads;
 
-  public SACEvolver(SACConfiguration<I, G, T, F> configuration, int numberOfThreads, Random random, boolean saveAncestry) {
-    super(configuration, numberOfThreads, random, saveAncestry);
+  public SACEvolver(SACConfiguration<I, G, T, F> configuration, boolean saveAncestry) {
+    super(configuration, saveAncestry);
     this.configuration = configuration;
-    this.numberOfThreads = numberOfThreads;
   }
 
   @Override
-  public List<Node<T>> solve(List<EvolverListener<G, T, F>> listeners) throws InterruptedException, ExecutionException {
+  public List<Node<T>> solve(ExecutorService executor, Random random, List<EvolverListener<G, T, F>> listeners) throws InterruptedException, ExecutionException {
     Node<T> joined = null;
     BinaryClassification<I, T> allLearningFitness = (BinaryClassification<I, T>) configuration.getProblem().getLearningFitnessComputer();
     BinaryClassification<I, T> allTestingFitness = (BinaryClassification<I, T>) configuration.getProblem().getTestingFitnessComputer();
@@ -75,8 +74,8 @@ public class SACEvolver<I, G, T, F extends MultiObjectiveFitness> extends Partit
               )
       );
       //obtain bests
-      PartitionEvolver<G, T, F> partitionEvolver = new PartitionEvolver<>(innerConfiguration, numberOfThreads, random, saveAncestry);
-      List<Node<T>> bests = partitionEvolver.solve(listeners);
+      PartitionEvolver<G, T, F> partitionEvolver = new PartitionEvolver<>(innerConfiguration, saveAncestry);
+      List<Node<T>> bests = partitionEvolver.solve(executor, random, listeners);
       Node<T> best = bests.get(0);      
       //remove positives
       int truePositives = 0;

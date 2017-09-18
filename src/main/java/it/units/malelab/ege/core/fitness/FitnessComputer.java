@@ -6,13 +6,13 @@
 package it.units.malelab.ege.core.fitness;
 
 import it.units.malelab.ege.core.Node;
-import it.units.malelab.ege.core.fitness.Fitness;
+import java.io.Serializable;
 
 /**
  *
  * @author eric
  */
-public interface FitnessComputer<T, F extends Fitness> {
+public interface FitnessComputer<T, F extends Fitness> extends Serializable {
   
   public F compute(Node<T> phenotype);
   public F worstValue();

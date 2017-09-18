@@ -5,10 +5,11 @@
  */
 package it.units.malelab.ege.core.initializer;
 
-import it.units.malelab.ege.core.Validator;
+import it.units.malelab.ege.core.validator.Validator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 /**
  *
@@ -23,7 +24,7 @@ public class MultiInitializer<G> implements PopulationInitializer<G> {
   }
 
   @Override
-  public List<G> build(int n, Validator<G> genotypeValidator) {
+  public List<G> build(int n, Validator<G> genotypeValidator, Random random) {
     double sum = 0;
     for (double d : initializers.values()) {
       sum = sum+d;
@@ -32,7 +33,7 @@ public class MultiInitializer<G> implements PopulationInitializer<G> {
     for (Map.Entry<PopulationInitializer<G>, Double> entry : initializers.entrySet()) {
       int localN = (int)Math.round(entry.getValue()/sum*(double)n);
       if (localN>0) {
-        population.addAll(entry.getKey().build((int)Math.round(entry.getValue()/sum*(double)n), genotypeValidator));
+        population.addAll(entry.getKey().build((int)Math.round(entry.getValue()/sum*(double)n), genotypeValidator, random));
       }
     }
     if (population.size()>n) {

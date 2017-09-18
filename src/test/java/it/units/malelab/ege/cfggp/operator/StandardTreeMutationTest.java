@@ -55,13 +55,13 @@ public class StandardTreeMutationTest {
     Grammar<String> g = Utils.parseFromFile(new File("grammars/max-grammar.bnf"));
     int maxDepth = 10;
     GrowTreeFactory<String> f = new GrowTreeFactory<>(maxDepth, g);
-    StandardTreeMutation<String> op = new StandardTreeMutation<>(maxDepth, g, random);
+    StandardTreeMutation<String> op = new StandardTreeMutation<>(maxDepth, g);
     List<Node<String>> parents = new ArrayList<>();
     for (int i = 0; i<50; i++) {
       parents.clear();
       parents.add(f.build(random));
       Node<String> parent1 = parents.get(0);
-      List<Node<String>> children = op.apply(parents);
+      List<Node<String>> children = op.apply(parents, random);
       assertTrue("parent1 should remain unchanged", parent1==parents.get(0));
       if (children!=null) {
         assertEquals("there should be 1 child", 1, children.size());

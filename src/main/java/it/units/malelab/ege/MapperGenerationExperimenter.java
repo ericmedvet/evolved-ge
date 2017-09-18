@@ -46,7 +46,7 @@ import it.units.malelab.ege.core.selector.LastWorst;
 import it.units.malelab.ege.core.selector.Tournament;
 import it.units.malelab.ege.ge.genotype.BitsGenotype;
 import it.units.malelab.ege.ge.genotype.BitsGenotypeFactory;
-import it.units.malelab.ege.ge.genotype.validator.Any;
+import it.units.malelab.ege.core.validator.Any;
 import it.units.malelab.ege.ge.operator.LengthPreservingTwoPointsCrossover;
 import it.units.malelab.ege.ge.operator.ProbabilisticMutation;
 import it.units.malelab.ege.util.Pair;
@@ -64,12 +64,16 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  *
  * @author eric
  */
 public class MapperGenerationExperimenter {
+  
+  private final static int N_THREADS = Runtime.getRuntime().availableProcessors() - 1;
 
   public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
     //params
@@ -118,6 +122,7 @@ public class MapperGenerationExperimenter {
     //prepare things
     MappingPropertiesFitness.Property[] properties = propertySet.toArray(new MappingPropertiesFitness.Property[0]);
     Random random = new Random(1l);
+    ExecutorService executor = Executors.newFixedThreadPool(N_THREADS);
     Problem<String, MultiObjectiveFitness> problem = new MapperGeneration(
             learningGenotypeSize,
             nGenotypes,
@@ -173,18 +178,18 @@ public class MapperGenerationExperimenter {
               popSize,
               50,
               new MultiInitializer<>(new Utils.MapBuilder<PopulationInitializer<Node<String>>, Double>()
-                      .put(new RandomInitializer<>(innerRandom, new GrowTreeFactory<>(maxDepth, problem.getGrammar())), 0.5)
-                      .put(new RandomInitializer<>(innerRandom, new FullTreeFactory<>(maxDepth, problem.getGrammar())), 0.5)
+                      .put(new RandomInitializer<>(new GrowTreeFactory<>(maxDepth, problem.getGrammar())), 0.5)
+                      .put(new RandomInitializer<>(new FullTreeFactory<>(maxDepth, problem.getGrammar())), 0.5)
                       .build()
               ),
               new Any<Node<String>>(),
               new CfgGpMapper<String>(),
               new Utils.MapBuilder<GeneticOperator<Node<String>>, Double>()
-                      .put(new StandardTreeCrossover<String>(maxDepth, innerRandom), 0.8d)
-                      .put(new StandardTreeMutation<>(maxDepth, problem.getGrammar(), innerRandom), 0.2d)
+                      .put(new StandardTreeCrossover<String>(maxDepth), 0.8d)
+                      .put(new StandardTreeMutation<>(maxDepth, problem.getGrammar()), 0.2d)
                       .build(),
               new ParetoRanker<Node<String>, String, MultiObjectiveFitness>(),
-              new Tournament<Individual<Node<String>, String, MultiObjectiveFitness>>(3, innerRandom),
+              new Tournament<Individual<Node<String>, String, MultiObjectiveFitness>>(3),
               new LastWorst<Individual<Node<String>, String, MultiObjectiveFitness>>(),
               popSize,
               true,
@@ -207,10 +212,8 @@ public class MapperGenerationExperimenter {
         ));
       }
       mainHeader = false;
-      Evolver<Node<String>, String, MultiObjectiveFitness> evolver = new PartitionEvolver<>(
-              //configuration, 1, random, false);
-              configuration, Runtime.getRuntime().availableProcessors() - 1, innerRandom, false);
-      List<Node<String>> bests = evolver.solve(listeners);
+      Evolver<Node<String>, String, MultiObjectiveFitness> evolver = new PartitionEvolver<>(configuration, false);
+      List<Node<String>> bests = evolver.solve(executor, random, listeners);
       System.out.printf("Found %d solutions.%n", bests.size());
       String mapperName = "best";
       for (String validationProblemName : validationProblems.keySet()) {
@@ -452,17 +455,18 @@ public class MapperGenerationExperimenter {
           String mapperName, int run, String problemName,
           boolean header, PrintStream ps) throws InterruptedException, ExecutionException {
     Random random = new Random(run);
+    ExecutorService executor = Executors.newFixedThreadPool(N_THREADS);
     StandardConfiguration<BitsGenotype, String, NumericFitness> configuration = new StandardConfiguration<>(
             popSize,
             generations,
-            new RandomInitializer<>(random, new BitsGenotypeFactory(genotypeSize)),
+            new RandomInitializer<>(new BitsGenotypeFactory(genotypeSize)),
             new Any<BitsGenotype>(),
             new RecursiveMapper<>(rawMapper, maxMappingDepth, expressivenessDepth, problem.getGrammar()),
             new Utils.MapBuilder<GeneticOperator<BitsGenotype>, Double>()
-                    .put(new LengthPreservingTwoPointsCrossover(random), 0.8d)
-                    .put(new ProbabilisticMutation(random, 0.01), 0.2d).build(),
+                    .put(new LengthPreservingTwoPointsCrossover(), 0.8d)
+                    .put(new ProbabilisticMutation(0.01), 0.2d).build(),
             new ComparableRanker<>(new IndividualComparator<BitsGenotype, String, NumericFitness>(IndividualComparator.Attribute.FITNESS)),
-            new Tournament<Individual<BitsGenotype, String, NumericFitness>>(3, random),
+            new Tournament<Individual<BitsGenotype, String, NumericFitness>>(3),
             new LastWorst<Individual<BitsGenotype, String, NumericFitness>>(),
             popSize,
             true,
@@ -480,8 +484,8 @@ public class MapperGenerationExperimenter {
               new Diversity<BitsGenotype, String, NumericFitness>())
       );
     }
-    Evolver<BitsGenotype, String, NumericFitness> evolver = new StandardEvolver<>(configuration, Runtime.getRuntime().availableProcessors() - 1, random, false);
-    List<Node<String>> bests = evolver.solve(listeners);
+    Evolver<BitsGenotype, String, NumericFitness> evolver = new StandardEvolver<>(configuration, false);
+    List<Node<String>> bests = evolver.solve(executor, random, listeners);
     return new Pair<>(bests.get(0), problem.getLearningFitnessComputer().compute(bests.get(0)));
   }
 

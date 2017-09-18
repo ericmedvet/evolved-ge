@@ -5,14 +5,16 @@
  */
 package it.units.malelab.ege.core.selector;
 
+import java.io.Serializable;
 import java.util.List;
+import java.util.Random;
 
 /**
  *
  * @author eric
  */
-public interface Selector<T> {
+public interface Selector<T> extends Serializable {
   
-  public T select(List<List<T>> ts);
+  public T select(List<List<T>> ts, Random random);
   
 }

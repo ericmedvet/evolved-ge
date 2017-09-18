@@ -19,13 +19,12 @@ public class LengthChanger extends AbstractMutation<BitsGenotype> {
   
   private final double maxRatio;
 
-  public LengthChanger(Random random, double maxRatio) {
-    super(random);
+  public LengthChanger(double maxRatio) {
     this.maxRatio = maxRatio;
   }
 
   @Override
-  public List<BitsGenotype> apply(List<BitsGenotype> parents) {
+  public List<BitsGenotype> apply(List<BitsGenotype> parents, Random random) {
     BitsGenotype parent = parents.get(0);
     int newBits = (int)Math.round((double)parent.size()*random.nextDouble()*maxRatio);
     if (newBits==0) {

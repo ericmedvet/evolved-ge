@@ -6,6 +6,7 @@
 package it.units.malelab.ege.core.selector;
 
 import java.util.List;
+import java.util.Random;
 
 /**
  *
@@ -14,7 +15,7 @@ import java.util.List;
 public class LastWorst<T> implements Selector<T> {
 
   @Override
-  public T select(List<List<T>> ts) {
+  public T select(List<List<T>> ts, Random random) {
     if (ts.isEmpty()) {
       return null;
     }

@@ -41,6 +41,7 @@ public class Population<G extends Sequence, T, F extends Fitness> implements Col
     indexes.put("population.birthDate.average", (int)Math.round(birthDateSum / count));
     indexes.put("population.size", (int)count);
     indexes.put("population.ranks", rankedPopulation.size());
+    indexes.put("population.rank0.size", rankedPopulation.get(0).size());
     return indexes;
   }
 
@@ -49,6 +50,7 @@ public class Population<G extends Sequence, T, F extends Fitness> implements Col
     LinkedHashMap<String, String> formattedNames = new LinkedHashMap<>();
     formattedNames.put("population.size", "%5d");
     formattedNames.put("population.ranks", "%3d");
+    formattedNames.put("population.rank0.size", "%3d");
     formattedNames.put("population.genotype.size.average", "%5d");
     formattedNames.put("population.phenotype.size.average", "%4d");
     formattedNames.put("population.birthDate.average", "%3d");

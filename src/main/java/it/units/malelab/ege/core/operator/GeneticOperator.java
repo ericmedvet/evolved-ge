@@ -5,15 +5,17 @@
  */
 package it.units.malelab.ege.core.operator;
 
+import java.io.Serializable;
 import java.util.List;
+import java.util.Random;
 
 /**
  *
  * @author eric
  */
-public interface GeneticOperator<G> {
+public interface GeneticOperator<G> extends Serializable {
   
-  public List<G> apply(List<G> parents);
+  public List<G> apply(List<G> parents, Random random);
   public int getParentsArity();
   public int getChildrenArity();
   

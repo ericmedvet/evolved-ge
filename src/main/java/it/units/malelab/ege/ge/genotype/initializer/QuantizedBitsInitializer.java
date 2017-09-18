@@ -8,10 +8,11 @@ package it.units.malelab.ege.ge.genotype.initializer;
 import it.units.malelab.ege.core.initializer.PopulationInitializer;
 import com.google.common.collect.Range;
 import it.units.malelab.ege.ge.genotype.BitsGenotype;
-import it.units.malelab.ege.core.Validator;
+import it.units.malelab.ege.core.validator.Validator;
 import it.units.malelab.ege.util.Utils;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 /**
  *
@@ -26,7 +27,7 @@ public class QuantizedBitsInitializer implements PopulationInitializer<BitsGenot
   }  
 
   @Override
-  public List<BitsGenotype> build(int n, Validator<BitsGenotype> genotypeValidator) {
+  public List<BitsGenotype> build(int n, Validator<BitsGenotype> genotypeValidator, Random random) {
     List<BitsGenotype> genotypes = new ArrayList<>(n);
     int pieces = (int)Math.ceil(Math.log(n)/Math.log(2d));
     for (int i = 0; i<n; i++) {

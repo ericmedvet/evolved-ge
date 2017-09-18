@@ -3,19 +3,17 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.ge.genotype.validator;
+package it.units.malelab.ege.core.validator;
 
-import it.units.malelab.ege.core.Validator;
+import java.io.Serializable;
+import java.util.Random;
 
 /**
  *
  * @author eric
  */
-public class Any<G> implements Validator<G> {
-
-  @Override
-  public boolean validate(G g) {
-    return true;
-  }
+public interface Validator<G> extends Serializable {
   
+    public boolean validate(G g, Random random);
+
 }

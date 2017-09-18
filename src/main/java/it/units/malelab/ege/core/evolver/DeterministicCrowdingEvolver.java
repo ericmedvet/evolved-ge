@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 
 /**
  *
@@ -33,19 +34,19 @@ public class DeterministicCrowdingEvolver<G, T, F extends Fitness> extends Stand
 
   private final DeterministicCrowdingConfiguration<G, T, F> configuration;
 
-  public DeterministicCrowdingEvolver(DeterministicCrowdingConfiguration<G, T, F> configuration, int numberOfThreads, Random random, boolean saveAncestry) {
-    super(configuration, numberOfThreads, random, saveAncestry);
+  public DeterministicCrowdingEvolver(DeterministicCrowdingConfiguration<G, T, F> configuration, boolean saveAncestry) {
+    super(configuration, saveAncestry);
     this.configuration = configuration;
   }    
 
   @Override
-  public List<Node<T>> solve(List<EvolverListener<G, T, F>> listeners) throws InterruptedException, ExecutionException {
+  public List<Node<T>> solve(ExecutorService executor, Random random, List<EvolverListener<G, T, F>> listeners) throws InterruptedException, ExecutionException {
     LoadingCache<G, Pair<Node<T>, Map<String, Object>>> mappingCache = CacheBuilder.newBuilder().maximumSize(CACHE_SIZE).recordStats().build(getMappingCacheLoader());
     LoadingCache<Node<T>, F> fitnessCache = CacheBuilder.newBuilder().maximumSize(CACHE_SIZE).recordStats().build(getFitnessCacheLoader());
     //initialize population
     int births = 0;
     List<Callable<List<Individual<G, T, F>>>> tasks = new ArrayList<>();
-    for (G genotype : configuration.getPopulationInitializer().build(configuration.getPopulationSize(), configuration.getInitGenotypeValidator())) {
+    for (G genotype : configuration.getPopulationInitializer().build(configuration.getPopulationSize(), configuration.getInitGenotypeValidator(), random)) {
       tasks.add(individualFromGenotypeCallable(genotype, 0, mappingCache, fitnessCache, listeners, null, null));
       births = births + 1;
     }
@@ -63,9 +64,9 @@ public class DeterministicCrowdingEvolver<G, T, F extends Fitness> extends Stand
       GeneticOperator<G> operator = Utils.selectRandom(configuration.getOperators(), random);
       List<Individual<G, T, F>> parents = new ArrayList<>(operator.getParentsArity());
       for (int j = 0; j < operator.getParentsArity(); j++) {
-        parents.add(configuration.getParentSelector().select(rankedPopulation));
+        parents.add(configuration.getParentSelector().select(rankedPopulation, random));
       }
-      tasks.add(operatorApplicationCallable(operator, parents, currentGeneration, mappingCache, fitnessCache, listeners));
+      tasks.add(operatorApplicationCallable(operator, parents, random, currentGeneration, mappingCache, fitnessCache, listeners));
       List<Individual<G, T, F>> children = new ArrayList<>(Utils.getAll(executor.invokeAll(tasks)));
       births = births + children.size();
       //replace

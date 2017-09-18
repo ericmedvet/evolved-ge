@@ -6,6 +6,7 @@
 package it.units.malelab.ege.core.operator;
 
 import java.util.List;
+import java.util.Random;
 
 /**
  *
@@ -14,7 +15,7 @@ import java.util.List;
 public class Copy<G> implements GeneticOperator<G> {
 
   @Override
-  public List<G> apply(List<G> parents) {
+  public List<G> apply(List<G> parents, Random random) {
     return parents;
   }
 

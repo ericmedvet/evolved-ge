@@ -59,11 +59,11 @@ public class MappingPropertiesFitness implements FitnessComputer<String, MultiOb
     }
     this.properties = properties;
     //build genotypes
-    GeneticOperator<BitsGenotype> mutation = new ProbabilisticMutation(random, 0.01d);
+    GeneticOperator<BitsGenotype> mutation = new ProbabilisticMutation(0.01d);
     BitsGenotypeFactory factory = new BitsGenotypeFactory(genotypeSize);
     Set<BitsGenotype> set = new LinkedHashSet<>();
     for (int i = 0; i<Math.floor(Math.sqrt(n)); i++) {
-      set.addAll(consecutiveMutations(factory.build(random), (int)Math.floor(Math.sqrt(n)), mutation));
+      set.addAll(consecutiveMutations(factory.build(random), (int)Math.floor(Math.sqrt(n)), mutation, random));
     }
     while (set.size() < n) {
       set.add(factory.build(random));
@@ -74,11 +74,11 @@ public class MappingPropertiesFitness implements FitnessComputer<String, MultiOb
     genotypeDistances = computeDistances(genotypes, (Distance) genotypeDistance);
   }
   
-  private List<BitsGenotype> consecutiveMutations(BitsGenotype g, int n, GeneticOperator<BitsGenotype> mutation) {
+  private List<BitsGenotype> consecutiveMutations(BitsGenotype g, int n, GeneticOperator<BitsGenotype> mutation, Random random) {
     Set<BitsGenotype> set = new LinkedHashSet<>();
     while (set.size()<n) {
       set.add(g);
-      g = mutation.apply(Collections.singletonList(g)).get(0);
+      g = mutation.apply(Collections.singletonList(g), random).get(0);
     }
     return new ArrayList<>(set);
   }
