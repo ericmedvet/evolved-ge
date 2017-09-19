@@ -5,17 +5,22 @@
  */
 package it.units.malelab.ege.distributed;
 
+import com.google.common.collect.Multimap;
+import it.units.malelab.ege.util.PrintStreamFactory;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
+import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -27,25 +32,38 @@ import java.util.logging.Logger;
 public class Master implements Runnable {
 
   private final static int MAX_CLIENTS = 32;
+  public final static String SEED_NAME = "random.seed";
 
   private final String keyPhrase;
   private final int port;
+  private final PrintStreamFactory printStreamFactory;
 
   private final ExecutorService executor;
   private final Random random;
+  private final Map<Map<String, Object>, PrintStream> streams;
+  
+  private final List<Job> toDoJobs;
 
   private final static Logger L = Logger.getLogger(Master.class.getName());
 
-  public Master(String keyPhrase, int port) {
+  public Master(String keyPhrase, int port, PrintStreamFactory printStreamFactory) {
     this.keyPhrase = keyPhrase;
     this.port = port;
+    this.printStreamFactory = printStreamFactory;
     this.executor = Executors.newFixedThreadPool(MAX_CLIENTS);
     random = new Random();
+    streams = Collections.synchronizedMap(new HashMap<Map<String, Object>, PrintStream>());
+    toDoJobs = Collections.synchronizedList(new ArrayList<Job>());
   }
 
   public static void main(String[] args) throws IOException {
     LogManager.getLogManager().readConfiguration(Master.class.getClassLoader().getResourceAsStream("logging.properties"));
-    Master master = new Master("hi", 9000);
+    Master master = new Master("hi", 9000, new PrintStreamFactory() {
+      @Override
+      public PrintStream build(String key) {
+        return System.out;
+      }
+    });
     master.run();
   }
 
@@ -60,21 +78,26 @@ public class Master implements Runnable {
       System.exit(-1);
     }
     while (true) {
-      try (Socket socket = serverSocket.accept();) {
+      try {
+        Socket socket = serverSocket.accept();
         L.fine(String.format("Connection from %s:%d.", socket.getInetAddress(), socket.getPort()));
-        executor.submit(getServerRunnable(socket.getInputStream(), socket.getOutputStream()));
+        executor.submit(getServerRunnable(socket));
       } catch (IOException ex) {
         L.log(Level.WARNING, String.format("Cannot accept socket: %s", ex.getMessage()), ex);
       }
     }
   }
 
-  private Runnable getServerRunnable(final InputStream in, final OutputStream out) {
+  private Runnable getServerRunnable(final Socket socket) {
     return new Runnable() {
       @Override
       public void run() {
-        try (ObjectInputStream ois = new ObjectInputStream(in);
-                ObjectOutputStream oos = new ObjectOutputStream(out);) {
+        ObjectOutputStream oos = null;
+        ObjectInputStream ois = null;
+        try {
+          oos = new ObjectOutputStream(socket.getOutputStream());
+          oos.flush();
+          ois = new ObjectInputStream(socket.getInputStream());
           //handshake
           String randomData = Double.toHexString(random.nextDouble());
           oos.writeObject(DistributedUtils.encrypt(randomData, keyPhrase));
@@ -83,12 +106,49 @@ public class Master implements Runnable {
             throw new SecurityException("Client did not correctly replied to the challenge!");
           }
           L.fine(String.format("Handshake correctly completed with \"%s\".", randomData));
-          //message
-          //TODO
+          //get updates
+          int dataItemsCount = 0;
+          Multimap<Job, Map<String, Object>> jobData = (Multimap<Job, Map<String, Object>>)ois.readObject();
+          for (Job job : jobData.keySet()) {
+            PrintStream ps = streams.get(job.getKeys());
+            if (ps==null) {
+              L.fine(String.format("Building new stream for %s, named %s.", job.getKeys(), Integer.toString(job.getKeys().hashCode())));
+              ps = printStreamFactory.build(Integer.toString(job.getKeys().hashCode()));
+              streams.put(job.getKeys(), ps);
+            }
+            for (Map<String, Object> dataItem : jobData.get(job)) {
+              dataItemsCount = dataItemsCount+1;
+              //TODO write seriously
+              ps.print(dataItem);
+            }
+          }
+          oos.writeObject(Boolean.TRUE);
+          L.fine(String.format("Received %d data items.", dataItemsCount));
+          //possibly assign new jobs
+          Integer freeRemoteThreads = (Integer)ois.readObject();
+          if (freeRemoteThreads>0) {
+            //send one job (might be improved w/ better choice)
+            synchronized (toDoJobs) {
+              int index = random.nextInt(toDoJobs.size());
+              Job job = toDoJobs.get(index);
+              toDoJobs.remove(job);
+              oos.writeObject(Collections.singletonList(job));
+            }
+          } else {
+            oos.writeObject(Collections.EMPTY_LIST);
+          }
         } catch (IOException ex) {
           L.log(Level.WARNING, String.format("Cannot build Object streams: %s", ex.getMessage()), ex);
+          ex.printStackTrace();
         } catch (ClassNotFoundException ex) {
           L.log(Level.WARNING, String.format("Cannot decode response: %s", ex.getMessage()), ex);
+        } finally {
+          if (socket!=null) {
+            try {
+              socket.close();
+            } catch (IOException ex) {
+            }
+          }
         }
       }
     };

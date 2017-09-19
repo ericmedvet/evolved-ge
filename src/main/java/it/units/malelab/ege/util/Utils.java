@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 import org.apache.commons.math3.stat.StatUtils;
@@ -215,10 +216,15 @@ public class Utils {
     }
   }
 
-  public static void broadcast(EvolutionEvent event, List<? extends EvolverListener> listeners) {
-    for (EvolverListener listener : listeners) {
+  public static void broadcast(final EvolutionEvent event, List<? extends EvolverListener> listeners, final ExecutorService executor) {
+    for (final EvolverListener listener : listeners) {
       if (listener.getEventClasses().contains(event.getClass())) {
-        listener.listen(event);
+        executor.submit(new Runnable() {
+          @Override
+          public void run() {
+            listener.listen(event);
+          }
+        });
       }
     }
   }
