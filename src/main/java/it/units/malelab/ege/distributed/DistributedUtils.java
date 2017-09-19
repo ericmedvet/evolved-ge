@@ -5,6 +5,10 @@
  */
 package it.units.malelab.ege.distributed;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 /**
  *
  * @author eric
@@ -24,6 +28,14 @@ public class DistributedUtils {
     sb.append(s);
     sb.reverse();
     return sb.toString();
+  }
+  
+  public static List<String> merge(Collection<String>... collections) {
+    List<String> list = new ArrayList<>();
+    for (Collection<String> collection : collections) {
+      list.addAll(collection);
+    }
+    return list;
   }
   
 }

@@ -3,9 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.util;
+package it.units.malelab.ege.distributed;
 
 import java.io.PrintStream;
+import java.util.List;
 
 /**
  *
@@ -13,6 +14,6 @@ import java.io.PrintStream;
  */
 public interface PrintStreamFactory {
   
-  public PrintStream build(String key);
+  public PrintStream build(List<String> keys);
   
 }

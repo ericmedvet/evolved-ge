@@ -6,7 +6,6 @@
 package it.units.malelab.ege.distributed;
 
 import com.google.common.collect.Multimap;
-import it.units.malelab.ege.util.PrintStreamFactory;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -40,7 +39,7 @@ public class Master implements Runnable {
 
   private final ExecutorService executor;
   private final Random random;
-  private final Map<Map<String, Object>, PrintStream> streams;
+  private final Map<List<String>, PrintStream> streams;
   
   private final List<Job> toDoJobs;
 
@@ -52,7 +51,7 @@ public class Master implements Runnable {
     this.printStreamFactory = printStreamFactory;
     this.executor = Executors.newFixedThreadPool(MAX_CLIENTS);
     random = new Random();
-    streams = Collections.synchronizedMap(new HashMap<Map<String, Object>, PrintStream>());
+    streams = Collections.synchronizedMap(new HashMap<List<String>, PrintStream>());
     toDoJobs = Collections.synchronizedList(new ArrayList<Job>());
   }
 
@@ -60,7 +59,7 @@ public class Master implements Runnable {
     LogManager.getLogManager().readConfiguration(Master.class.getClassLoader().getResourceAsStream("logging.properties"));
     Master master = new Master("hi", 9000, new PrintStreamFactory() {
       @Override
-      public PrintStream build(String key) {
+      public PrintStream build(List<String> keys) {
         return System.out;
       }
     });
@@ -110,13 +109,14 @@ public class Master implements Runnable {
           int dataItemsCount = 0;
           Multimap<Job, Map<String, Object>> jobData = (Multimap<Job, Map<String, Object>>)ois.readObject();
           for (Job job : jobData.keySet()) {
-            PrintStream ps = streams.get(job.getKeys());
-            if (ps==null) {
-              L.fine(String.format("Building new stream for %s, named %s.", job.getKeys(), Integer.toString(job.getKeys().hashCode())));
-              ps = printStreamFactory.build(Integer.toString(job.getKeys().hashCode()));
-              streams.put(job.getKeys(), ps);
-            }
             for (Map<String, Object> dataItem : jobData.get(job)) {
+              List<String> streamKey = DistributedUtils.merge(job.getKeys().keySet(), dataItem.keySet());
+              PrintStream ps = streams.get(streamKey);
+              if (ps==null) {
+                L.fine(String.format("Building new stream for %s.", streamKey));
+                ps = printStreamFactory.build(streamKey);
+                streams.put(streamKey, ps);
+              }
               dataItemsCount = dataItemsCount+1;
               //TODO write seriously
               ps.print(dataItem);
