@@ -80,5 +80,10 @@ public class Job<G, T, F extends Fitness> implements Serializable {
     }
     return true;
   }
+
+  @Override
+  public String toString() {
+    return "Job{" + "keys=" + keys + '}';
+  }  
   
 }

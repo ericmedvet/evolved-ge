@@ -8,6 +8,7 @@ package it.units.malelab.ege.core.selector;
 import it.units.malelab.ege.core.Individual;
 import it.units.malelab.ege.core.Sequence;
 import it.units.malelab.ege.core.fitness.Fitness;
+import java.io.Serializable;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -16,7 +17,7 @@ import java.util.Map;
  *
  * @author eric
  */
-public class IndividualComparator<G, T, F extends Fitness> implements Comparator<Individual<G, T, F>> {
+public class IndividualComparator<G, T, F extends Fitness> implements Comparator<Individual<G, T, F>>, Serializable {
 
   public static enum Attribute {
     FITNESS, AGE, PHENO_SIZE, GENO_SIZE, PHENO, GENO;

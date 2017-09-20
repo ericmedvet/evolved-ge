@@ -5,13 +5,14 @@
  */
 package it.units.malelab.ege.core;
 
+import java.io.Serializable;
 import java.util.Random;
 
 /**
  *
  * @author eric
  */
-public interface Factory<G> {
+public interface Factory<G> extends Serializable {
   
   public G build(Random random);
   

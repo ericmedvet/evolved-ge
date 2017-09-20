@@ -6,6 +6,7 @@
 package it.units.malelab.ege.core;
 
 import it.units.malelab.ege.util.Utils;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -15,7 +16,7 @@ import java.util.Objects;
  *
  * @author eric
  */
-public class Node<T> implements Sequence<T> {
+public class Node<T> implements Sequence<T>, Serializable {
   
   public static Node EMPTY_TREE = new Node(null);
   

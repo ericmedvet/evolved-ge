@@ -5,13 +5,14 @@
  */
 package it.units.malelab.ege.util;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
  *
  * @author eric
  */
-public class Pair<F, S> {
+public class Pair<F, S> implements Serializable {
   
   private final F first;
   private final S second;

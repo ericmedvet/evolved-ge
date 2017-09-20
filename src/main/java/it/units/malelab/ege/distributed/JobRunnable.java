@@ -5,8 +5,6 @@
  */
 package it.units.malelab.ege.distributed;
 
-import com.google.common.collect.Multimap;
-import com.sun.org.apache.xml.internal.security.utils.Constants;
 import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.core.evolver.DeterministicCrowdingConfiguration;
 import it.units.malelab.ege.core.evolver.DeterministicCrowdingEvolver;
@@ -15,45 +13,42 @@ import it.units.malelab.ege.core.evolver.PartitionConfiguration;
 import it.units.malelab.ege.core.evolver.PartitionEvolver;
 import it.units.malelab.ege.core.evolver.StandardConfiguration;
 import it.units.malelab.ege.core.evolver.StandardEvolver;
-import it.units.malelab.ege.core.fitness.Fitness;
-import it.units.malelab.ege.core.fitness.NumericFitness;
+import it.units.malelab.ege.core.listener.AbstractListener;
 import it.units.malelab.ege.core.listener.CollectorGenerationLogger;
 import it.units.malelab.ege.core.listener.EvolverListener;
-import it.units.malelab.ege.core.listener.collector.BestPrinter;
 import it.units.malelab.ege.core.listener.collector.Collector;
-import it.units.malelab.ege.core.listener.collector.Diversity;
-import it.units.malelab.ege.core.listener.collector.NumericFirstBest;
-import it.units.malelab.ege.core.listener.collector.Population;
-import it.units.malelab.ege.ge.genotype.BitsGenotype;
-import java.io.PrintStream;
+import it.units.malelab.ege.core.listener.event.EvolutionEvent;
+import it.units.malelab.ege.core.listener.event.GenerationEvent;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Calendar;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author eric
  */
-public class JobCallable implements Callable<List<List<Node>>> {
+public class JobRunnable extends AbstractListener implements Runnable {
 
   private final Job job;
-  private final JobDataListener jobDataListener;
-  private final ExecutorService executorService;
-  private final Multimap<Boolean, PrintStream> backupStreams;
-
-  public JobCallable(Job job, JobDataListener jobDataListener, ExecutorService executorService, Multimap<Boolean, PrintStream> backupStreams) {
+  private final Worker worker;
+  
+  private final static Logger L = Logger.getLogger(JobRunnable.class.getName());
+  
+  public JobRunnable(Job job, Worker worker) {
+    super((Class) GenerationEvent.class);
     this.job = job;
-    this.jobDataListener = jobDataListener;
-    this.executorService = executorService;
-    this.backupStreams = backupStreams;
+    this.worker = worker;
   }
 
   @Override
-  public List<List<Node>> call() throws Exception {
+  public void run() {
+    L.fine(String.format("Starting job: %s", job.getKeys()));
     //prepare evolver
     Evolver evolver = null;
     if (job.getConfiguration().getClass().equals(StandardConfiguration.class)) {
@@ -73,15 +68,31 @@ public class JobCallable implements Callable<List<List<Node>>> {
     }
     //prepare listeners
     List<EvolverListener> listeners = new ArrayList<>();
-    for (PrintStream ps : backupStreams.get(Boolean.TRUE)) {
-      listeners.add(new CollectorGenerationLogger(job.getKeys(), ps, true, 10, " ", " | ", (Collector[])job.getCollectors().toArray()));
+    listeners.add(new CollectorGenerationLogger(job.getKeys(), System.out, true, 10, " ", " | ", (Collector[])job.getCollectors().toArray()));
+    //listeners.add(new CollectorGenerationLogger(job.getKeys(), worker.build(DistributedUtils.jobKeys(job)), false, 0, ";", ";", (Collector[])job.getCollectors().toArray()));
+    listeners.add(this);
+    try {
+      List<List<Node>> finalBestRank = evolver.solve(worker.getTaskExecutor(), random, listeners);
+      worker.notifyEndedJob(job, finalBestRank);
+      L.fine(String.format("Ended job: %s", job.getKeys()));
+      //TODO send result to worker
+    } catch (InterruptedException ex) {
+      L.log(Level.SEVERE, String.format("Interrupted job: %s", job.getKeys()), ex);
+    } catch (ExecutionException ex) {
+      L.log(Level.SEVERE, String.format("Exception in job: %s", job.getKeys()), ex);
     }
-    for (PrintStream ps : backupStreams.get(Boolean.FALSE)) {
-      listeners.add(new CollectorGenerationLogger(job.getKeys(), ps, false, 0, ";", ";", (Collector[])job.getCollectors().toArray()));
+  }
+
+  @Override
+  public void listen(EvolutionEvent event) {
+    Map<String, Object> data = new LinkedHashMap<>();
+    int generation = ((GenerationEvent) event).getGeneration();
+    data.put(Master.GENERATION_NAME, generation);
+    data.put(Master.LOCAL_TIME_NAME, Calendar.getInstance().getTime());
+    for (Collector collector : (List<Collector>)job.getCollectors()) {
+      data.putAll(collector.collect((GenerationEvent) event));
     }
-    //TODO add here custom listener connected to jobDataListener
-    //TODO change backupstrams in stream factories and add header properly
-    return evolver.solve(executorService, random, null);
+    worker.getCurrentJobsData().put(job, data);
   }
 
 }

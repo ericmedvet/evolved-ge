@@ -5,6 +5,7 @@
  */
 package it.units.malelab.ege.distributed;
 
+import it.units.malelab.ege.core.listener.collector.Collector;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -30,12 +31,13 @@ public class DistributedUtils {
     return sb.toString();
   }
   
-  public static List<String> merge(Collection<String>... collections) {
-    List<String> list = new ArrayList<>();
-    for (Collection<String> collection : collections) {
-      list.addAll(collection);
+  public static List<String> jobKeys(Job job) {
+    List<String> keys = new ArrayList<>();
+    keys.addAll(job.getKeys().keySet());
+    for (Collector collector : (List<Collector>)job.getCollectors()) {
+      keys.addAll(collector.getFormattedNames().keySet());
     }
-    return list;
+    return keys;
   }
   
 }

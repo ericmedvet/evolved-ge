@@ -6,19 +6,21 @@
 package it.units.malelab.ege.distributed;
 
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
+import it.units.malelab.ege.core.Node;
+import it.units.malelab.ege.core.listener.AbstractListener;
+import it.units.malelab.ege.core.listener.event.GenerationEvent;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,9 +36,9 @@ import java.util.logging.Logger;
  *
  * @author eric
  */
-public class Worker implements Runnable {
+public class Worker implements Runnable, PrintStreamFactory {
 
-  public final static int INTERVAL = 5;
+  public final static int INTERVAL = 2;
 
   private final String keyPhrase;
   private final InetAddress masterAddress;
@@ -44,8 +46,11 @@ public class Worker implements Runnable {
   private final int nThreads;
 
   private final ScheduledExecutorService comExecutor;
-  private final ExecutorService executor;
+  private final ExecutorService taskExecutor;
+  private final ExecutorService runExecutor;
   private final Multimap<Job, Map<String, Object>> currentJobsData;
+  private final Set<Job> currentJobs;
+  private final Map<Job, List<List<Node>>> completedJobs;
 
   private final static Logger L = Logger.getLogger(Worker.class.getName());
 
@@ -55,8 +60,11 @@ public class Worker implements Runnable {
     this.masterPort = masterPort;
     this.nThreads = nThreads;
     comExecutor = Executors.newSingleThreadScheduledExecutor();
-    executor = Executors.newFixedThreadPool(nThreads);
+    taskExecutor = Executors.newFixedThreadPool(nThreads);
+    runExecutor = Executors.newCachedThreadPool();
     currentJobsData = (Multimap)Multimaps.synchronizedMultimap(ArrayListMultimap.create());
+    currentJobs = Collections.synchronizedSet(new HashSet<Job>());
+    completedJobs = Collections.synchronizedMap(new HashMap<Job, List<List<Node>>>());
   }
 
   public static void main(String[] args) throws UnknownHostException, IOException, ClassNotFoundException {
@@ -71,6 +79,7 @@ public class Worker implements Runnable {
   }
 
   private Runnable getCommunicationRunnable(final InetAddress masterAddress, final int masterPort) {
+    final Worker thisWorker = this;
     return new Runnable() {
       @Override
       public void run() {
@@ -81,33 +90,56 @@ public class Worker implements Runnable {
           ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
           String challenge = DistributedUtils.decrypt((byte[]) ois.readObject(), keyPhrase);
           oos.writeObject(DistributedUtils.encrypt(DistributedUtils.reverse(challenge), keyPhrase));
-          L.fine(String.format("Handshake response sent with \"%s\".", challenge));
+          L.finer(String.format("Handshake response sent with \"%s\".", challenge));
           //send updates
           synchronized (currentJobsData) { //to avoid losing data
             oos.writeObject(currentJobsData);
-            ois.readObject();
             currentJobsData.clear();
+          }
+          //send job results
+          synchronized (completedJobs) {
+            oos.writeObject(completedJobs);
+            completedJobs.clear();
           }
           //possibly ask for new jobs
           int freeThreads = nThreads;
-          for (Job job : currentJobsData.keySet()) {
+          for (Job job : currentJobs) {
             freeThreads = freeThreads-job.getEstimatedMaxThreads();
           }
           oos.writeObject(new Integer(Math.max(0, freeThreads)));
           List<Job> newJobs = (List<Job>)ois.readObject();
           for (Job job : newJobs) {
-            
+            L.info(String.format("Got new job: %s", job.getKeys()));
+            currentJobs.add(job);
+            runExecutor.submit(new JobRunnable(job, thisWorker));            
           }
           //close
           socket.close();
         } catch (IOException ex) {
           L.log(Level.WARNING, String.format("Cannot connect to master: %s", ex.getMessage()), ex);
-          ex.printStackTrace();
         } catch (ClassNotFoundException ex) {
           L.log(Level.WARNING, String.format("Cannot decode response: %s", ex.getMessage()), ex);
         }
       }
     };
+  }
+
+  @Override
+  public PrintStream build(List<String> keys) {
+    return System.out; //TODO put file here
+  }
+
+  public ExecutorService getTaskExecutor() {
+    return taskExecutor;
+  }
+
+  public Multimap<Job, Map<String, Object>> getCurrentJobsData() {
+    return currentJobsData;
+  }
+  
+  public void notifyEndedJob(Job job, List<List<Node>> solutions) {
+    currentJobs.remove(job);
+    completedJobs.put(job, solutions);
   }
 
 }
