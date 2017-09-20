@@ -5,11 +5,13 @@
  */
 package it.units.malelab.ege.util.distance;
 
+import java.io.Serializable;
+
 /**
  *
  * @author eric
  */
-public interface Distance<T> {
+public interface Distance<T> extends Serializable {
   
   public double d(T t1, T t2);
   

@@ -14,11 +14,11 @@ import it.units.malelab.ege.core.evolver.PartitionEvolver;
 import it.units.malelab.ege.core.evolver.StandardConfiguration;
 import it.units.malelab.ege.core.evolver.StandardEvolver;
 import it.units.malelab.ege.core.listener.AbstractListener;
-import it.units.malelab.ege.core.listener.CollectorGenerationLogger;
 import it.units.malelab.ege.core.listener.EvolverListener;
 import it.units.malelab.ege.core.listener.collector.Collector;
 import it.units.malelab.ege.core.listener.event.EvolutionEvent;
 import it.units.malelab.ege.core.listener.event.GenerationEvent;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.LinkedHashMap;
@@ -33,15 +33,14 @@ import java.util.logging.Logger;
  *
  * @author eric
  */
-public class JobRunnable extends AbstractListener implements Runnable {
+public class JobRunnable implements Runnable {
 
   private final Job job;
   private final Worker worker;
-  
+
   private final static Logger L = Logger.getLogger(JobRunnable.class.getName());
-  
+
   public JobRunnable(Job job, Worker worker) {
-    super((Class) GenerationEvent.class);
     this.job = job;
     this.worker = worker;
   }
@@ -61,38 +60,42 @@ public class JobRunnable extends AbstractListener implements Runnable {
       throw new IllegalArgumentException(String.format("Configuration of type %s is unknown/unmanageable.", job.getConfiguration().getClass()));
     }
     //prepare random
-    Integer randomSeed = (Integer) job.getKeys().get(Master.SEED_NAME);
+    Integer randomSeed = (Integer) job.getKeys().get(Master.RANDOM_SEED_NAME);
     Random random = new Random();
     if (randomSeed != null) {
       random = new Random(randomSeed.longValue());
     }
     //prepare listeners
     List<EvolverListener> listeners = new ArrayList<>();
-    listeners.add(new CollectorGenerationLogger(job.getKeys(), System.out, true, 10, " ", " | ", (Collector[])job.getCollectors().toArray()));
-    //listeners.add(new CollectorGenerationLogger(job.getKeys(), worker.build(DistributedUtils.jobKeys(job)), false, 0, ";", ";", (Collector[])job.getCollectors().toArray()));
-    listeners.add(this);
+    final PrintStream logPrintStream = worker.build(DistributedUtils.jobKeys(job));
+    listeners.add(new AbstractListener(GenerationEvent.class) {
+      @Override
+      public void listen(EvolutionEvent event) {
+        //compute data
+        Map<String, Object> data = new LinkedHashMap<>();
+        int generation = ((GenerationEvent) event).getGeneration();
+        data.put(Master.GENERATION_NAME, generation);
+        data.put(Master.LOCAL_TIME_NAME, Calendar.getInstance().getTime());
+        for (Collector collector : (List<Collector>) job.getCollectors()) {
+          data.putAll(collector.collect((GenerationEvent) event));
+        }
+        worker.getCurrentJobsData().put(job, data);
+        //write to strem
+        if (logPrintStream!=null) {
+          DistributedUtils.writeData(logPrintStream, job, data);
+        }
+        System.out.println(data);
+      }
+    });
     try {
       List<List<Node>> finalBestRank = evolver.solve(worker.getTaskExecutor(), random, listeners);
       worker.notifyEndedJob(job, finalBestRank);
       L.fine(String.format("Ended job: %s", job.getKeys()));
-      //TODO send result to worker
     } catch (InterruptedException ex) {
       L.log(Level.SEVERE, String.format("Interrupted job: %s", job.getKeys()), ex);
     } catch (ExecutionException ex) {
       L.log(Level.SEVERE, String.format("Exception in job: %s", job.getKeys()), ex);
     }
-  }
-
-  @Override
-  public void listen(EvolutionEvent event) {
-    Map<String, Object> data = new LinkedHashMap<>();
-    int generation = ((GenerationEvent) event).getGeneration();
-    data.put(Master.GENERATION_NAME, generation);
-    data.put(Master.LOCAL_TIME_NAME, Calendar.getInstance().getTime());
-    for (Collector collector : (List<Collector>)job.getCollectors()) {
-      data.putAll(collector.collect((GenerationEvent) event));
-    }
-    worker.getCurrentJobsData().put(job, data);
   }
 
 }

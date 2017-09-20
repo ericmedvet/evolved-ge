@@ -61,7 +61,7 @@ public class ComparableRankerTest {
     Individual<?, ?, NumericFitness> i3 = new Individual<>(null, null, new NumericFitness(2d), 0, null, null);
     List<Individual<?, ?, NumericFitness>> pop = Arrays.asList(i0, i1, i2, i3);
     for (int i = 0; i < 5; i++) {
-      List<List<Individual<?, ?, NumericFitness>>> ranked = instance.rank(pop);
+      List<List<Individual<?, ?, NumericFitness>>> ranked = instance.rank(pop, null);
       assertEquals("i0 rank should be in list 0", true, ranked.get(0).contains(i0));
       assertEquals("i1 rank should be in list 1", true, ranked.get(1).contains(i1));
       assertEquals("i2 rank should be in list 2", true, ranked.get(2).contains(i2));

@@ -62,5 +62,5 @@ public class SACConfiguration<I, G, T, F extends MultiObjectiveFitness> extends 
   public String toString() {
     return "SACConfiguration{" + "joiner=" + joiner + "} from "+super.toString();
   }
-  
+
 }

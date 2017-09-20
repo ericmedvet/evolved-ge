@@ -7,6 +7,7 @@ package it.units.malelab.ege.core.ranker;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Random;
 
 /**
  *
@@ -14,6 +15,6 @@ import java.util.List;
  */
 public interface Ranker<T> extends Serializable {
   
-  public List<List<T>> rank(List<T> ts);
+  public List<List<T>> rank(List<T> ts, Random random);
   
 }

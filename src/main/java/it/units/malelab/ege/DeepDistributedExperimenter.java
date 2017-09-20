@@ -23,21 +23,13 @@ import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.core.Problem;
 import it.units.malelab.ege.core.Sequence;
 import it.units.malelab.ege.core.evolver.DeterministicCrowdingConfiguration;
-import it.units.malelab.ege.core.evolver.DeterministicCrowdingEvolver;
-import it.units.malelab.ege.core.evolver.Evolver;
 import it.units.malelab.ege.core.evolver.PartitionConfiguration;
-import it.units.malelab.ege.core.evolver.PartitionEvolver;
 import it.units.malelab.ege.core.evolver.StandardConfiguration;
-import it.units.malelab.ege.core.evolver.StandardEvolver;
-import it.units.malelab.ege.core.fitness.Fitness;
 import it.units.malelab.ege.core.fitness.NumericFitness;
 import it.units.malelab.ege.core.initializer.MultiInitializer;
 import it.units.malelab.ege.core.initializer.PopulationInitializer;
 import it.units.malelab.ege.core.initializer.RandomInitializer;
-import it.units.malelab.ege.core.listener.CollectorGenerationLogger;
-import it.units.malelab.ege.core.listener.EvolverListener;
 import it.units.malelab.ege.core.listener.collector.BestPrinter;
-import it.units.malelab.ege.core.listener.collector.CacheStatistics;
 import it.units.malelab.ege.core.listener.collector.Diversity;
 import it.units.malelab.ege.core.listener.collector.NumericFirstBest;
 import it.units.malelab.ege.core.listener.collector.Population;
@@ -52,6 +44,8 @@ import it.units.malelab.ege.core.selector.Tournament;
 import it.units.malelab.ege.ge.genotype.BitsGenotypeFactory;
 import it.units.malelab.ege.ge.genotype.SGEGenotypeFactory;
 import it.units.malelab.ege.core.validator.Any;
+import it.units.malelab.ege.distributed.Job;
+import it.units.malelab.ege.distributed.Master;
 import it.units.malelab.ege.ge.mapper.BitsSGEMapper;
 import it.units.malelab.ege.ge.mapper.HierarchicalMapper;
 import it.units.malelab.ege.ge.mapper.PiGEMapper;
@@ -68,33 +62,40 @@ import it.units.malelab.ege.util.distance.Distance;
 import it.units.malelab.ege.util.distance.Hamming;
 import it.units.malelab.ege.util.distance.LeavesEdit;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.logging.LogManager;
 
 /**
  *
  * @author eric
  */
-public class DeepExperimenter {
-
-  private final static int N_THREADS = Runtime.getRuntime().availableProcessors() - 1;
+public class DeepDistributedExperimenter {
 
   public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
-    ExecutorService executor = Executors.newFixedThreadPool(N_THREADS);
-    Random random = new Random(1);
-    final int populationSize = 500;
-    final int generations = 50;
-    final int runs = 10;
-    final int tournamentSize = 5;
+    
+    args = new String[]{"hi", "9000", "/home/eric/experiments/ge/dist/result"};
+    
+    //prepare master
+    LogManager.getLogManager().readConfiguration(Master.class.getClassLoader().getResourceAsStream("logging.properties"));
+    String keyPhrase = args[0];
+    int port = Integer.parseInt(args[1]);
+    String baseResultFileName = args[2];
+    Master master = new Master(keyPhrase, port, baseResultFileName);
+    master.start();
+    List<Future<List<List<Node>>>> results = new ArrayList<>();
+    //prepare things
+    int populationSize = 50;
+    int generations = 10;
+    int runs = 3;
+    int tournamentSize = 5;
     //define problems, methods, mappers
     List<String> problems = Lists.newArrayList(
             "bool-parity-5", "bool-parity-8", "bool-mopm-3",
@@ -105,19 +106,12 @@ public class DeepExperimenter {
             "standard",
             "dc-g", "dc-p", "dc-f",
             "p-g-u-20", "p-p-a<-20", "p-p-a>-20", "p-p-u-20", "p-f-a<-20", "p-f-a>-20", "p-f-u-20", "p-f-l<-20", "p-f-l>-20");
+    methods = Arrays.asList("dc-p");
     List<String> mappers = Lists.newArrayList(
             "ge-8-5-1024",
             "whge-3-1024",
             "sge-6",
             "cfggp-12");
-    PrintStream filePrintStream = null;
-    if (args.length > 0) {
-      filePrintStream = new PrintStream(args[0]);
-    }
-    int startingRunIndex = 0;
-    if (args.length > 1) {
-      startingRunIndex = Integer.parseInt(args[1]);
-    }
     //prepare distances
     final Distance<Node<String>> phenotypeDistance = new CachedDistance<>(new LeavesEdit<String>());
     Distance<Sequence<Boolean>> bitsGenotypeDistance = new CachedDistance<>(new Hamming<Boolean>());
@@ -129,17 +123,15 @@ public class DeepExperimenter {
       }
     };
     //iterate
-    boolean header = true;
-    for (int run = startingRunIndex; run < startingRunIndex + runs; run++) {
+    for (int run = 0; run < runs; run++) {
       for (String pr : problems) {
         for (String me : methods) {
           for (String ma : mappers) {
-            Map<String, Object> constants = new LinkedHashMap<>();
-            constants.put("problem", pr);
-            constants.put("mapping", ma);
-            constants.put("method", me);
-            constants.put("run", run);
-            System.out.printf("%nProblem: %s\tMethod: %s\tMapping: %s\tRun: %d%n", pr, me, ma, run);
+            Map<String, Object> keys = new LinkedHashMap<>();
+            keys.put("problem", pr);
+            keys.put("mapping", ma);
+            keys.put("method", me);
+            keys.put(Master.RANDOM_SEED_NAME, run);
             //build problem
             Problem<String, NumericFitness> problem = null;
             if (p(pr, 1).equals("parity")) {
@@ -157,6 +149,7 @@ public class DeepExperimenter {
             } else if (p(pr, 1).equals("text")) {
               problem = new Text();
             }
+            StandardConfiguration configuration = null;
             //build mapper, operators, initializer, genotype distance
             Mapper mapper = null;
             Map operators = new Utils.MapBuilder<>()
@@ -197,10 +190,9 @@ public class DeepExperimenter {
                       .build());
               genotypeDistance = phenotypeDistance;
             }
-            //build configuration and evolver            
-            Evolver evolver = null;
+            //build configuration            
             if (p(me, 0).equals("standard")) {
-              StandardConfiguration configuration = new StandardConfiguration(
+              configuration = new StandardConfiguration(
                       populationSize, generations,
                       populationInitializer,
                       new Any(),
@@ -212,7 +204,6 @@ public class DeepExperimenter {
                       1,
                       true,
                       problem);
-              evolver = new StandardEvolver(configuration, false);
             } else if (p(me, 0).equals("dc")) {
               final Distance localGenotypeDistance = genotypeDistance;
               Distance distance = null;
@@ -238,7 +229,7 @@ public class DeepExperimenter {
                   }
                 };
               }
-              DeterministicCrowdingConfiguration configuration = new DeterministicCrowdingConfiguration(
+              configuration = new DeterministicCrowdingConfiguration(
                       distance,
                       populationSize,
                       generations,
@@ -249,7 +240,6 @@ public class DeepExperimenter {
                       new ComparableRanker(new IndividualComparator(IndividualComparator.Attribute.FITNESS)),
                       new Tournament(tournamentSize),
                       problem);
-              evolver = new DeterministicCrowdingEvolver(configuration, false);
             } else if (p(me, 0).equals("p")) {
               Ranker<Individual> parentInPartitionRanker = null;
               Comparator<Individual> partitionerComparator = null;
@@ -271,7 +261,7 @@ public class DeepExperimenter {
               } else if (p(me, 2).equals("l>")) {
                 parentInPartitionRanker = new ComparableRanker(Collections.reverseOrder(new IndividualComparator(IndividualComparator.Attribute.PHENO_SIZE)));
               }
-              PartitionConfiguration configuration = new PartitionConfiguration(
+              configuration = new PartitionConfiguration(
                       partitionerComparator,
                       i(p(me, 3)),
                       parentInPartitionRanker,
@@ -290,35 +280,24 @@ public class DeepExperimenter {
                       1,
                       true,
                       problem);
-              evolver = new PartitionEvolver(configuration, false);
             }
-            //prepare listeners and go
-            List<EvolverListener> listeners = new ArrayList<>();
-            listeners.add(new CollectorGenerationLogger<>(
-                    constants, System.out, true, 10, " ", " | ",
-                    new Population(),
-                    new NumericFirstBest(false, problem.getTestingFitnessComputer(), "%6.2f"),
-                    new Diversity(),
-                    new BestPrinter(problem.getPhenotypePrinter(), "%30.30s")
-            ));
-            if (filePrintStream != null) {
-              listeners.add(new CollectorGenerationLogger<>(
-                      constants, filePrintStream, false, header ? 0 : -1, ";", ";",
-                      new Population(),
-                      new NumericFirstBest(false, problem.getTestingFitnessComputer(), "%6.2f"),
-                      new Diversity(),
-                      new CacheStatistics()
-              ));
-            }
-            evolver.solve(executor, random, listeners);
-            header = false;
+            Job job = new Job(
+                    configuration,
+                    Arrays.asList(new Population(),
+                            new NumericFirstBest(false, problem.getTestingFitnessComputer(), "%6.2f"),
+                            new Diversity(),
+                            new BestPrinter(problem.getPhenotypePrinter(), "%30.30s")),
+                    keys,
+                    configuration.getOffspringSize());
+            System.out.printf("Submitting job: %s%n", job);
+            results.add(master.submit(job));
           }
         }
-
       }
     }
-    if (filePrintStream != null) {
-      filePrintStream.close();
+    System.out.printf("%d job submitted.%n", results.size());
+    for (Future<List<List<Node>>> result : results) {
+      System.out.printf("Got %d solutions%n", result.get().size());
     }
   }
 

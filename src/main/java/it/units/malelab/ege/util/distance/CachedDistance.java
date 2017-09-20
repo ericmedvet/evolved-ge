@@ -8,6 +8,8 @@ package it.units.malelab.ege.util.distance;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.Arrays;
 import java.util.List;
 
@@ -17,11 +19,22 @@ import java.util.List;
  */
 public class CachedDistance<T> implements Distance<T> {
 
-  private final LoadingCache<List<T>, Double> cache;
+  private transient LoadingCache<List<T>, Double> cache;
+  private final Distance<T> distance;
 
   private static final int CACHE_SIZE = 10000;
 
-  public CachedDistance(final Distance<T> distance) {
+  public CachedDistance(Distance<T> distance) {
+    this.distance = distance;
+    buildCache();
+  }
+
+  @Override
+  public double d(T t1, T t2) {
+    return cache.getUnchecked(Arrays.asList(t1, t2));
+  }
+
+  private void buildCache() {
     cache = CacheBuilder.newBuilder().maximumSize(CACHE_SIZE).build(new CacheLoader<List<T>, Double>() {
       @Override
       public Double load(List<T> ts) throws Exception {
@@ -32,9 +45,9 @@ public class CachedDistance<T> implements Distance<T> {
     });
   }
 
-  @Override
-  public double d(T t1, T t2) {
-    return cache.getUnchecked(Arrays.asList(t1, t2));
+  private void readObject(ObjectInputStream inputStream) throws IOException, ClassNotFoundException {
+    inputStream.defaultReadObject();
+    buildCache();
   }
 
 }

@@ -57,7 +57,7 @@ public class ParetoRankerTest {
     Individual<?, ?, MultiObjectiveFitness> i5 = new Individual<>(null, null, new MultiObjectiveFitness(5, 5), 0, null, null);
     List<Individual<?, ?, MultiObjectiveFitness>> pop = Arrays.asList(i0, i1, i2, i3, i4, i5);
     for (int i = 0; i<5; i++) {
-      List<List<Individual<?, ?, MultiObjectiveFitness>>> ranked = instance.rank(pop);
+      List<List<Individual<?, ?, MultiObjectiveFitness>>> ranked = instance.rank(pop, null);
       assertEquals("i0 rank should be in list 0", true, ranked.get(0).contains(i0));
       assertEquals("i1 rank should be in list 0", true, ranked.get(0).contains(i1));
       assertEquals("i2 rank should be in list 1", true, ranked.get(1).contains(i2));

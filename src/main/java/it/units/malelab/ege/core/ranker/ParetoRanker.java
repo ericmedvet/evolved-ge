@@ -10,6 +10,7 @@ import it.units.malelab.ege.core.fitness.MultiObjectiveFitness;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Random;
 
 /**
  *
@@ -18,7 +19,7 @@ import java.util.List;
 public class ParetoRanker<G, T, F extends MultiObjectiveFitness> implements Ranker<Individual<G, T, F>>, Comparator<MultiObjectiveFitness> {
 
   @Override
-  public List<List<Individual<G, T, F>>> rank(List<Individual<G, T, F>> individuals) {
+  public List<List<Individual<G, T, F>>> rank(List<Individual<G, T, F>> individuals, Random random) {
     List<List<Individual<G, T, F>>> ranks = new ArrayList<>();
     List<Individual<G, T, F>> localIndividuals = new ArrayList<>(individuals);
     while (!localIndividuals.isEmpty()) {

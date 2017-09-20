@@ -16,14 +16,8 @@ import java.util.Random;
  */
 public class RandomizerRanker<T> implements Ranker<T> {
   
-  private final Random random;
-
-  public RandomizerRanker(Random random) {
-    this.random = random;
-  }
-
   @Override
-  public List<List<T>> rank(List<T> ts) {
+  public List<List<T>> rank(List<T> ts, Random random) {
     List<List<T>> ranks = new ArrayList<>(ts.size());
     for (T t : ts) {
       ranks.add(Collections.singletonList(t));

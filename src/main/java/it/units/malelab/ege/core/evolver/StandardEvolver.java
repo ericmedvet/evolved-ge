@@ -71,13 +71,13 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
     List<Individual<G, T, F>> population = new ArrayList<>(Utils.getAll(executor.invokeAll(tasks)));
     int lastBroadcastGeneration = (int) Math.floor(births / configuration.getPopulationSize());
     Utils.broadcast(new EvolutionStartEvent<>(this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
-    Utils.broadcast(new GenerationEvent<>(configuration.getRanker().rank(population), lastBroadcastGeneration, this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
+    Utils.broadcast(new GenerationEvent<>(configuration.getRanker().rank(population, random), lastBroadcastGeneration, this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
     //iterate
     while (Math.round(births / configuration.getPopulationSize()) < configuration.getNumberOfGenerations()) {
       int currentGeneration = (int) Math.floor(births / configuration.getPopulationSize());
       tasks.clear();
       //re-rank
-      List<List<Individual<G, T, F>>> rankedPopulation = configuration.getRanker().rank(population);
+      List<List<Individual<G, T, F>>> rankedPopulation = configuration.getRanker().rank(population, random);
       //produce offsprings
       int i = 0;
       while (i < configuration.getOffspringSize()) {
@@ -110,7 +110,7 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
       //select survivals
       while (population.size() > configuration.getPopulationSize()) {
         //re-rank
-        rankedPopulation = configuration.getRanker().rank(population);
+        rankedPopulation = configuration.getRanker().rank(population, random);
         Individual<G, T, F> individual = configuration.getUnsurvivalSelector().select(rankedPopulation, random);
         population.remove(individual);
       }
@@ -121,7 +121,7 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
     }
     //end
     List<Node<T>> bestPhenotypes = new ArrayList<>();
-    List<List<Individual<G, T, F>>> rankedPopulation = configuration.getRanker().rank(population);
+    List<List<Individual<G, T, F>>> rankedPopulation = configuration.getRanker().rank(population, random);
     Utils.broadcast(new EvolutionEndEvent<>((List) rankedPopulation, configuration.getNumberOfGenerations(), this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
     for (Individual<G, T, F> individual : rankedPopulation.get(0)) {
       bestPhenotypes.add(individual.getPhenotype());

@@ -12,6 +12,8 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
@@ -19,6 +21,9 @@ import java.util.Objects;
  */
 public class Job<G, T, F extends Fitness> implements Serializable {
   
+  private static final AtomicInteger atomicInteger = new AtomicInteger();
+  
+  private final String id;
   private final Configuration<G, T, F> configuration;
   private final List<Collector<G, T, F>> collectors;
   private final Map<String, Object> keys;
@@ -29,6 +34,7 @@ public class Job<G, T, F extends Fitness> implements Serializable {
     this.collectors = collectors;
     this.keys = keys;
     this.estimatedMaxThreads = estimatedMaxThreads;
+    id = UUID.randomUUID().toString()+"-"+atomicInteger.incrementAndGet();
   }
 
   public Configuration<G, T, F> getConfiguration() {
@@ -50,10 +56,7 @@ public class Job<G, T, F extends Fitness> implements Serializable {
   @Override
   public int hashCode() {
     int hash = 7;
-    hash = 47 * hash + Objects.hashCode(this.configuration);
-    hash = 47 * hash + Objects.hashCode(this.collectors);
-    hash = 47 * hash + Objects.hashCode(this.keys);
-    hash = 47 * hash + this.estimatedMaxThreads;
+    hash = 13 * hash + Objects.hashCode(this.id);
     return hash;
   }
 
@@ -66,16 +69,7 @@ public class Job<G, T, F extends Fitness> implements Serializable {
       return false;
     }
     final Job<?, ?, ?> other = (Job<?, ?, ?>) obj;
-    if (!Objects.equals(this.configuration, other.configuration)) {
-      return false;
-    }
-    if (!Objects.equals(this.collectors, other.collectors)) {
-      return false;
-    }
-    if (!Objects.equals(this.keys, other.keys)) {
-      return false;
-    }
-    if (this.estimatedMaxThreads != other.estimatedMaxThreads) {
+    if (!Objects.equals(this.id, other.id)) {
       return false;
     }
     return true;
@@ -83,7 +77,7 @@ public class Job<G, T, F extends Fitness> implements Serializable {
 
   @Override
   public String toString() {
-    return "Job{" + "keys=" + keys + '}';
-  }  
+    return "Job{" + "id=" + id + ", keys=" + keys + '}';
+  }
   
 }

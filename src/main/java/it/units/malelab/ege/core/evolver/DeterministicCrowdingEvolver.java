@@ -53,13 +53,13 @@ public class DeterministicCrowdingEvolver<G, T, F extends Fitness> extends Stand
     List<Individual<G, T, F>> population = new ArrayList<>(Utils.getAll(executor.invokeAll(tasks)));
     int lastBroadcastGeneration = (int) Math.floor(births / configuration.getPopulationSize());
     Utils.broadcast(new EvolutionStartEvent<>(this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
-    Utils.broadcast(new GenerationEvent<>(configuration.getRanker().rank(population), lastBroadcastGeneration, this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
+    Utils.broadcast(new GenerationEvent<>(configuration.getRanker().rank(population, random), lastBroadcastGeneration, this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
     //iterate
     while (Math.round(births / configuration.getPopulationSize()) < configuration.getNumberOfGenerations()) {
       int currentGeneration = (int) Math.floor(births / configuration.getPopulationSize());
       tasks.clear();
       //re-rank
-      List<List<Individual<G, T, F>>> rankedPopulation = configuration.getRanker().rank(population);
+      List<List<Individual<G, T, F>>> rankedPopulation = configuration.getRanker().rank(population, random);
       //produce offsprings once
       GeneticOperator<G> operator = Utils.selectRandom(configuration.getOperators(), random);
       List<Individual<G, T, F>> parents = new ArrayList<>(operator.getParentsArity());
@@ -87,7 +87,7 @@ public class DeterministicCrowdingEvolver<G, T, F extends Fitness> extends Stand
         List<Individual<G,T,F>> competitors = new ArrayList<>(2);
         competitors.add(child);
         competitors.add(parents.get(closestParentIndex));
-        List<List<Individual<G,T,F>>> rankedCompetitors = configuration.getRanker().rank(competitors);
+        List<List<Individual<G,T,F>>> rankedCompetitors = configuration.getRanker().rank(competitors, random);
         if ((rankedCompetitors.get(0).size()==1)&&(rankedCompetitors.get(0).contains(child))) {
           population.remove(parents.get(closestParentIndex));
           if (population.size()<configuration.getPopulationSize()) {
@@ -103,7 +103,7 @@ public class DeterministicCrowdingEvolver<G, T, F extends Fitness> extends Stand
     //end
     executor.shutdown();
     List<Node<T>> bestPhenotypes = new ArrayList<>();
-    List<List<Individual<G, T, F>>> rankedPopulation = configuration.getRanker().rank(population);
+    List<List<Individual<G, T, F>>> rankedPopulation = configuration.getRanker().rank(population, random);
     Utils.broadcast(new EvolutionEndEvent<>((List) rankedPopulation, configuration.getNumberOfGenerations(), this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
     for (Individual<G, T, F> individual : rankedPopulation.get(0)) {
       bestPhenotypes.add(individual.getPhenotype());

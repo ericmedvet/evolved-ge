@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Random;
 
 /**
  *
@@ -24,7 +25,7 @@ public class ComparableRanker<T> implements Ranker<T> {
   }
 
   @Override
-  public List<List<T>> rank(List<T> individuals) {
+  public List<List<T>> rank(List<T> individuals, Random random) {
     List<List<T>> ranks = new ArrayList<>();
     Collections.sort(individuals, comparator);
     ranks.add(new ArrayList<>(Arrays.asList(individuals.get(0))));

@@ -60,7 +60,7 @@ public class PartitionEvolver<G, T, F extends Fitness> extends StandardEvolver<G
     trimPartitions(partitionedPopulation, random);
     int lastBroadcastGeneration = (int) Math.floor(births / configuration.getPopulationSize());
     Utils.broadcast(new EvolutionStartEvent<>(this, cacheStats(mappingCache, fitnessCache)), (List) listeners, executor);
-    Utils.broadcast(new GenerationEvent<>(configuration.getRanker().rank(all(partitionedPopulation)), lastBroadcastGeneration, this, cacheStats(mappingCache, fitnessCache)), (List) listeners, executor);
+    Utils.broadcast(new GenerationEvent<>(configuration.getRanker().rank(all(partitionedPopulation), random), lastBroadcastGeneration, this, cacheStats(mappingCache, fitnessCache)), (List) listeners, executor);
     //iterate
     while (Math.round(births / configuration.getPopulationSize()) < configuration.getNumberOfGenerations()) {
       int currentGeneration = (int) Math.floor(births / configuration.getPopulationSize());
@@ -73,7 +73,8 @@ public class PartitionEvolver<G, T, F extends Fitness> extends StandardEvolver<G
               random);
       List<List<Individual<G, T, F>>> parentRankedRepresenters = rankRepresenters(
               (Ranker) configuration.getRanker(),
-              parentRepresentedPartitions);
+              parentRepresentedPartitions,
+              random);
       //produce offsprings
       int i = 0;
       while (i < configuration.getOffspringSize()) {
@@ -126,21 +127,22 @@ public class PartitionEvolver<G, T, F extends Fitness> extends StandardEvolver<G
               random);
       List<List<Individual<G, T, F>>> unsurvivalRankedRepresenters = rankRepresenters(
               (Ranker) configuration.getRanker(),
-              unsurvivalRepresentedPartitions);
+              unsurvivalRepresentedPartitions,
+              random);
         partitionedPopulation.remove(unsurvivalRepresentedPartitions.get(configuration.getUnsurvivalSelector().select(unsurvivalRankedRepresenters, random)));
       }
       //trim partitions
       trimPartitions(partitionedPopulation, random);
       if ((int) Math.floor(births / configuration.getPopulationSize()) > lastBroadcastGeneration) {
         lastBroadcastGeneration = (int) Math.floor(births / configuration.getPopulationSize());
-        Utils.broadcast(new GenerationEvent<>(configuration.getRanker().rank(all(partitionedPopulation)), lastBroadcastGeneration, this, cacheStats(mappingCache, fitnessCache)), (List) listeners, executor);
+        Utils.broadcast(new GenerationEvent<>(configuration.getRanker().rank(all(partitionedPopulation), random), lastBroadcastGeneration, this, cacheStats(mappingCache, fitnessCache)), (List) listeners, executor);
       }
     }
     //end
-    Utils.broadcast(new EvolutionEndEvent<>(configuration.getRanker().rank(all(partitionedPopulation)), configuration.getNumberOfGenerations(), this, cacheStats(mappingCache, fitnessCache)), (List) listeners, executor);
+    Utils.broadcast(new EvolutionEndEvent<>(configuration.getRanker().rank(all(partitionedPopulation), random), configuration.getNumberOfGenerations(), this, cacheStats(mappingCache, fitnessCache)), (List) listeners, executor);
     executor.shutdown();
     List<Node<T>> bestPhenotypes = new ArrayList<>();
-    List<List<Individual<G, T, F>>> rankedPopulation = configuration.getRanker().rank(all(partitionedPopulation));
+    List<List<Individual<G, T, F>>> rankedPopulation = configuration.getRanker().rank(all(partitionedPopulation), random);
     for (Individual<G, T, F> individual : rankedPopulation.get(0)) {
       bestPhenotypes.add(individual.getPhenotype());
     }
@@ -150,7 +152,7 @@ public class PartitionEvolver<G, T, F extends Fitness> extends StandardEvolver<G
   private void trimPartitions(List<List<Individual<G, T, F>>> partitionedPopulation, Random random) {
     for (List<Individual<G, T, F>> partition : partitionedPopulation) {
       while (partition.size()>configuration.getPartitionSize()) {
-        List<List<Individual<G, T, F>>> rankedPartition = configuration.getUnsurvivalInPartitionRanker().rank(partition);
+        List<List<Individual<G, T, F>>> rankedPartition = configuration.getUnsurvivalInPartitionRanker().rank(partition, random);
         Individual<G, T, F> unsurvival = configuration.getUnsurvivalInPartitionSelector().select(rankedPartition, random);
         partition.remove(unsurvival);
       }
@@ -181,14 +183,14 @@ public class PartitionEvolver<G, T, F extends Fitness> extends StandardEvolver<G
     return all;
   }
 
-  private static <K> List<List<K>> rankRepresenters(Ranker<K> ranker, Map<K, List<K>> representedPartitions) {
-    return ranker.rank(new ArrayList<>(representedPartitions.keySet()));
+  private static <K> List<List<K>> rankRepresenters(Ranker<K> ranker, Map<K, List<K>> representedPartitions, Random random) {
+    return ranker.rank(new ArrayList<>(representedPartitions.keySet()), random);
   }
 
   private static <K> Map<K, List<K>> representedPartitions(Ranker<K> ranker, Selector<K> selector, List<List<K>> partitions, Random random) {
     Map<K, List<K>> representedPartitions = new LinkedHashMap<>();
     for (List<K> partition : partitions) {      
-      representedPartitions.put(selector.select(ranker.rank(partition), random), partition);
+      representedPartitions.put(selector.select(ranker.rank(partition, random), random), partition);
     }
     return representedPartitions;
   }

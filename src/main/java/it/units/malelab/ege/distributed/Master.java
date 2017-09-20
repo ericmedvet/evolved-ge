@@ -21,7 +21,6 @@ import it.units.malelab.ege.core.initializer.MultiInitializer;
 import it.units.malelab.ege.core.initializer.PopulationInitializer;
 import it.units.malelab.ege.core.initializer.RandomInitializer;
 import it.units.malelab.ege.core.listener.collector.BestPrinter;
-import it.units.malelab.ege.core.listener.collector.Collector;
 import it.units.malelab.ege.core.listener.collector.Diversity;
 import it.units.malelab.ege.core.listener.collector.NumericFirstBest;
 import it.units.malelab.ege.core.listener.collector.Population;
@@ -33,10 +32,13 @@ import it.units.malelab.ege.core.selector.Tournament;
 import it.units.malelab.ege.core.validator.Any;
 import it.units.malelab.ege.ge.genotype.BitsGenotype;
 import it.units.malelab.ege.util.Utils;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintStream;
+import java.lang.management.ManagementFactory;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -60,16 +62,16 @@ import java.util.logging.Logger;
  *
  * @author eric
  */
-public class Master implements Runnable {
+public class Master implements Runnable, PrintStreamFactory {
 
   private final static int JOB_POLLING_INTERVAL = 1;
   public final static String LOCAL_TIME_NAME = "local.time";
   public final static String GENERATION_NAME = "generation";
-  public final static String SEED_NAME = "random.seed";
+  public final static String RANDOM_SEED_NAME = "random.seed";
 
   private final String keyPhrase;
   private final int port;
-  private final PrintStreamFactory printStreamFactory;
+  private final String baseResultFileName;
 
   private final ExecutorService executor;
   private final Random random;
@@ -80,10 +82,10 @@ public class Master implements Runnable {
 
   private final static Logger L = Logger.getLogger(Master.class.getName());
 
-  public Master(String keyPhrase, int port, PrintStreamFactory printStreamFactory) {
+  public Master(String keyPhrase, int port, String baseResultFileName) {
     this.keyPhrase = keyPhrase;
     this.port = port;
-    this.printStreamFactory = printStreamFactory;
+    this.baseResultFileName = baseResultFileName;
     this.executor = Executors.newCachedThreadPool();
     random = new Random();
     streams = Collections.synchronizedMap(new HashMap<List<String>, PrintStream>());
@@ -91,55 +93,6 @@ public class Master implements Runnable {
     completedJobs = Collections.synchronizedMap(new HashMap<Job, List<List<Node>>>());
   }
 
-  public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
-    LogManager.getLogManager().readConfiguration(Master.class.getClassLoader().getResourceAsStream("logging.properties"));
-    Master master = new Master("hi", 9000, new PrintStreamFactory() {
-      @Override
-      public PrintStream build(List<String> keys) {
-        return System.out;
-      }
-    });
-
-    List<Future<List<List<Node>>>> results = new ArrayList<>();
-    Problem<String, NumericFitness> problem = new KLandscapes(8);
-    int maxDepth = 16;
-    for (int i = 0; i < 1; i++) {
-      Job job = new Job(
-              new StandardConfiguration<>(
-                      500,
-                      50,
-                      new MultiInitializer<>(new Utils.MapBuilder<PopulationInitializer<Node<String>>, Double>()
-                              .put(new RandomInitializer<>(new GrowTreeFactory<>(maxDepth, problem.getGrammar())), 0.5)
-                              .put(new RandomInitializer<>(new FullTreeFactory<>(maxDepth, problem.getGrammar())), 0.5)
-                              .build()
-                      ),
-                      new Any<Node<String>>(),
-                      new CfgGpMapper<String>(),
-                      new Utils.MapBuilder<GeneticOperator<Node<String>>, Double>()
-                              .put(new StandardTreeCrossover<String>(maxDepth), 0.8d)
-                              .put(new StandardTreeMutation<>(maxDepth, problem.getGrammar()), 0.2d)
-                              .build(),
-                      new ComparableRanker<>(new IndividualComparator<Node<String>, String, NumericFitness>(IndividualComparator.Attribute.FITNESS)),
-                      new Tournament<Individual<Node<String>, String, NumericFitness>>(3),
-                      new LastWorst<Individual<Node<String>, String, NumericFitness>>(),
-                      500,
-                      true,
-                      problem),
-              Arrays.asList(
-                      new Population<BitsGenotype, String, NumericFitness>(),
-                      new NumericFirstBest<BitsGenotype, String>(false, problem.getTestingFitnessComputer(), "%6.2f"),
-                      new Diversity<BitsGenotype, String, NumericFitness>(),
-                      new BestPrinter<BitsGenotype, String, NumericFitness>(problem.getPhenotypePrinter(), "%30.30s")
-              ),
-              Collections.singletonMap(SEED_NAME, i), 10);
-      results.add(master.submit(job));
-    }
-    master.start();
-    for (Future<List<List<Node>>> result : results) {
-      System.out.printf("Got %d solutions", result.get().size());
-    }
-  }
-  
   public void start() {
     executor.submit(this);
   }
@@ -191,14 +144,12 @@ public class Master implements Runnable {
             PrintStream ps = streams.get(streamKey);
             if (ps == null) {
               L.fine(String.format("Building new stream for %s.", streamKey));
-              ps = printStreamFactory.build(streamKey);
+              ps = build(streamKey);
               streams.put(streamKey, ps);
-              //TODO write header
             }
             for (Map<String, Object> dataItem : jobData.get(job)) {
               dataItemsCount = dataItemsCount + 1;
-              //TODO write seriously
-              //ps.println(dataItem);
+              DistributedUtils.writeData(ps, job, dataItem);
             }
           }
           L.fine(String.format("Client %s:%d sent %d data items from %d jobs.", socket.getInetAddress(), socket.getPort(), dataItemsCount, jobData.keySet().size()));
@@ -208,13 +159,21 @@ public class Master implements Runnable {
           completedJobs.putAll(newCompletedJobs);
           //possibly assign new jobs
           Integer freeRemoteThreads = (Integer) ois.readObject();
-          L.fine(String.format("Client %s:%d would accept %d jobs.", socket.getInetAddress(), socket.getPort(), freeRemoteThreads));
+          L.fine(String.format("Client %s:%d would accept jobs for %d threads.", socket.getInetAddress(), socket.getPort(), freeRemoteThreads));
           if ((freeRemoteThreads > 0) && !toDoJobs.isEmpty()) {
             //send one job (might be improved w/ better choice)
             synchronized (toDoJobs) {
-              int index = random.nextInt(toDoJobs.size());
-              Job job = toDoJobs.get(index);
-              List<Job> newJobs = Collections.singletonList(job);
+              List<Job> newJobs = new ArrayList<>();
+              int remaining = freeRemoteThreads;
+              for (Job job : toDoJobs) {
+                if (job.getEstimatedMaxThreads()<=remaining) {
+                  newJobs.add(job);
+                  remaining = remaining-job.getEstimatedMaxThreads();
+                }
+              }
+              if (newJobs.isEmpty()) {
+                newJobs.add(toDoJobs.get(random.nextInt(toDoJobs.size())));
+              }
               toDoJobs.removeAll(newJobs);
               L.info(String.format("Sending %d jobs to client %s:%d (%d remaining).", newJobs.size(), socket.getInetAddress(), socket.getPort(), toDoJobs.size()));
               oos.writeObject(newJobs);
@@ -222,6 +181,9 @@ public class Master implements Runnable {
           } else {
             oos.writeObject(Collections.EMPTY_LIST);
           }
+          //get stats
+          Map<String, Number> stats = (Map<String, Number>)ois.readObject();
+          L.fine(String.format("Client %s:%d stats: %s", socket.getInetAddress(), socket.getPort(), stats));
         } catch (IOException ex) {
           L.log(Level.WARNING, String.format("Cannot build Object streams: %s", ex.getMessage()), ex);
         } catch (ClassNotFoundException ex) {
@@ -269,18 +231,10 @@ public class Master implements Runnable {
         long elapsed = 0;
         while (true) {
           long m = System.currentTimeMillis();
-          
-          System.out.println(completedJobs.keySet());
-          System.out.println(isDone());
-          for (Job cJob : completedJobs.keySet()) {
-            System.out.printf("\t%s=%s (%d=%d)? %s %n", job, cJob, job.hashCode(), cJob.hashCode(), cJob.equals(job));
-          }
-          
           List<List<Node>> result = completedJobs.get(job);
           if (result!=null) {
             return result;
           }
-          System.out.println("will sleep for "+job.getKeys());
           Thread.sleep(JOB_POLLING_INTERVAL*1000);
           m = System.currentTimeMillis()-m;
           elapsed = elapsed+m;
@@ -293,4 +247,17 @@ public class Master implements Runnable {
     };
   }
 
+  @Override
+  public PrintStream build(List<String> keys) {
+    String fileName = baseResultFileName+"-"+keys.hashCode()+".txt";
+    try {
+      PrintStream ps = new PrintStream(fileName);
+      DistributedUtils.writeHeader(ps, keys);
+      return ps;
+    } catch (FileNotFoundException ex) {
+      L.log(Level.SEVERE, String.format("Cannot create file %s: %s", fileName, ex.getMessage()), ex);
+    }
+    return null;
+  }
+  
 }

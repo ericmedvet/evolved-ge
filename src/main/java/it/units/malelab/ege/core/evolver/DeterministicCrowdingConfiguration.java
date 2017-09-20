@@ -58,6 +58,6 @@ public class DeterministicCrowdingConfiguration<G, T, F extends Fitness> extends
   @Override
   public String toString() {
     return "DeterministicCrowdingEvolver{" + "individualDistance=" + individualDistance + '}';
-  }  
+  }
   
 }

@@ -6,15 +6,18 @@
 package it.units.malelab.ege.distributed;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import it.units.malelab.ege.core.Node;
-import it.units.malelab.ege.core.listener.AbstractListener;
-import it.units.malelab.ege.core.listener.event.GenerationEvent;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintStream;
+import java.lang.management.ManagementFactory;
+import java.lang.management.OperatingSystemMXBean;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -38,12 +41,17 @@ import java.util.logging.Logger;
  */
 public class Worker implements Runnable, PrintStreamFactory {
 
-  public final static int INTERVAL = 2;
+  public final static int MASTER_INTERVAL = 10;
+  public final static String STAT_CPU_SYSTEM_NAME = "cpu.system";
+  public final static String STAT_CPU_PROCESS_NAME = "cpu.process";
+  public final static String STAT_FREE_MEM_NAME = "memory.free";
+  public final static String STAT_MAX_MEM_NAME = "memory.max";
 
   private final String keyPhrase;
   private final InetAddress masterAddress;
   private final int masterPort;
   private final int nThreads;
+  private final String logDirectoryName;
 
   private final ScheduledExecutorService comExecutor;
   private final ExecutorService taskExecutor;
@@ -53,12 +61,14 @@ public class Worker implements Runnable, PrintStreamFactory {
   private final Map<Job, List<List<Node>>> completedJobs;
 
   private final static Logger L = Logger.getLogger(Worker.class.getName());
+  private final static OperatingSystemMXBean OS = ManagementFactory.getOperatingSystemMXBean();
 
-  public Worker(String keyPhrase, InetAddress masterAddress, int masterPort, int nThreads) {
+  public Worker(String keyPhrase, InetAddress masterAddress, int masterPort, int nThreads, String logDirectoryName) {
     this.keyPhrase = keyPhrase;
     this.masterAddress = masterAddress;
     this.masterPort = masterPort;
     this.nThreads = nThreads;
+    this.logDirectoryName = logDirectoryName;
     comExecutor = Executors.newSingleThreadScheduledExecutor();
     taskExecutor = Executors.newFixedThreadPool(nThreads);
     runExecutor = Executors.newCachedThreadPool();
@@ -69,13 +79,20 @@ public class Worker implements Runnable, PrintStreamFactory {
 
   public static void main(String[] args) throws UnknownHostException, IOException, ClassNotFoundException {
     LogManager.getLogManager().readConfiguration(Master.class.getClassLoader().getResourceAsStream("logging.properties"));
-    Worker worker = new Worker("hi", InetAddress.getLocalHost(), 9000, 3);
+    String keyPhrase = args[0];
+    InetAddress masterAddress = InetAddress.getByName(args[1]);
+    int masterPort = Integer.parseInt(args[2]);
+    String logDir = null;
+    if (args.length>3) {
+      logDir = args[3];
+    }
+    Worker worker = new Worker(keyPhrase, masterAddress, masterPort, Runtime.getRuntime().availableProcessors(), logDir);
     worker.run();
   }
 
   @Override
   public void run() {
-    comExecutor.scheduleAtFixedRate(getCommunicationRunnable(masterAddress, masterPort), 0, INTERVAL, TimeUnit.SECONDS);
+    comExecutor.scheduleAtFixedRate(getCommunicationRunnable(masterAddress, masterPort), 0, MASTER_INTERVAL, TimeUnit.SECONDS);
   }
 
   private Runnable getCommunicationRunnable(final InetAddress masterAddress, final int masterPort) {
@@ -113,6 +130,12 @@ public class Worker implements Runnable, PrintStreamFactory {
             currentJobs.add(job);
             runExecutor.submit(new JobRunnable(job, thisWorker));            
           }
+          //collect and send stats
+          Map<String, Number> stats = new HashMap<>();
+          stats.put(STAT_CPU_SYSTEM_NAME, OS.getSystemLoadAverage());
+          stats.put(STAT_MAX_MEM_NAME, Runtime.getRuntime().maxMemory());
+          stats.put(STAT_FREE_MEM_NAME, Runtime.getRuntime().freeMemory());
+          oos.writeObject(stats);
           //close
           socket.close();
         } catch (IOException ex) {
@@ -126,7 +149,24 @@ public class Worker implements Runnable, PrintStreamFactory {
 
   @Override
   public PrintStream build(List<String> keys) {
-    return System.out; //TODO put file here
+    if (logDirectoryName!=null) {
+      //possibly create dir
+      File logDir = new File(logDirectoryName);
+      if (!logDir.exists()) {
+        logDir.mkdir();
+      }
+      //create file
+      String fileName = ManagementFactory.getRuntimeMXBean().getName();
+      fileName = fileName+"-"+keys.hashCode()+".text";
+      try {
+        PrintStream ps = new PrintStream(logDirectoryName+File.separator+fileName);
+        DistributedUtils.writeHeader(ps, keys);
+        return ps;
+      } catch (FileNotFoundException ex) {
+        L.log(Level.SEVERE, String.format("Cannot create file %s: %s", fileName, ex.getMessage()), ex);
+      }
+    }
+    return null;
   }
 
   public ExecutorService getTaskExecutor() {
