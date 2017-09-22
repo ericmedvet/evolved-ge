@@ -6,43 +6,19 @@
 package it.units.malelab.ege.distributed;
 
 import com.google.common.collect.Multimap;
-import it.units.malelab.ege.benchmark.KLandscapes;
-import it.units.malelab.ege.cfggp.initializer.FullTreeFactory;
-import it.units.malelab.ege.cfggp.initializer.GrowTreeFactory;
-import it.units.malelab.ege.cfggp.mapper.CfgGpMapper;
-import it.units.malelab.ege.cfggp.operator.StandardTreeCrossover;
-import it.units.malelab.ege.cfggp.operator.StandardTreeMutation;
-import it.units.malelab.ege.core.Individual;
+import com.googlecode.lanterna.TextCharacter;
+import com.googlecode.lanterna.TextColor;
+import com.googlecode.lanterna.screen.Screen;
+import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import it.units.malelab.ege.core.Node;
-import it.units.malelab.ege.core.Problem;
-import it.units.malelab.ege.core.evolver.StandardConfiguration;
-import it.units.malelab.ege.core.fitness.NumericFitness;
-import it.units.malelab.ege.core.initializer.MultiInitializer;
-import it.units.malelab.ege.core.initializer.PopulationInitializer;
-import it.units.malelab.ege.core.initializer.RandomInitializer;
-import it.units.malelab.ege.core.listener.collector.BestPrinter;
-import it.units.malelab.ege.core.listener.collector.Diversity;
-import it.units.malelab.ege.core.listener.collector.NumericFirstBest;
-import it.units.malelab.ege.core.listener.collector.Population;
-import it.units.malelab.ege.core.operator.GeneticOperator;
-import it.units.malelab.ege.core.ranker.ComparableRanker;
-import it.units.malelab.ege.core.selector.IndividualComparator;
-import it.units.malelab.ege.core.selector.LastWorst;
-import it.units.malelab.ege.core.selector.Tournament;
-import it.units.malelab.ege.core.validator.Any;
-import it.units.malelab.ege.ge.genotype.BitsGenotype;
-import it.units.malelab.ege.util.Utils;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintStream;
-import java.lang.management.ManagementFactory;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -55,14 +31,13 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
-import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 /**
  *
  * @author eric
  */
-public class Master implements Runnable, PrintStreamFactory {
+public class Master implements PrintStreamFactory {
 
   private final static int JOB_POLLING_INTERVAL = 1;
   public final static String LOCAL_TIME_NAME = "local.time";
@@ -93,32 +68,58 @@ public class Master implements Runnable, PrintStreamFactory {
     completedJobs = Collections.synchronizedMap(new HashMap<Job, List<List<Node>>>());
   }
 
+  public static void main(String[] args) throws IOException {
+    new Master("hi", 9000, "me").start();
+  }
+
   public void start() {
-    executor.submit(this);
-  }
-
-  @Override
-  public void run() {
-    ServerSocket serverSocket = null;
+    executor.submit(getServerRunnable());
+    DefaultTerminalFactory terminalFactory = new DefaultTerminalFactory();
+    Screen screen;
     try {
-      serverSocket = new ServerSocket(port);
-      L.fine(String.format("Listening on port %d.", serverSocket.getLocalPort()));
+      screen = terminalFactory.createScreen();
+      screen.startScreen();
+      executor.submit(getUIRunnable(screen)); //TODO likely schedule, rather than just invoke
     } catch (IOException ex) {
-      L.log(Level.SEVERE, String.format("Cannot start server socket on port %d.", port), ex);
-      System.exit(-1);
-    }
-    while (true) {
-      try {
-        Socket socket = serverSocket.accept();
-        L.finer(String.format("Connection from %s:%d.", socket.getInetAddress(), socket.getPort()));
-        executor.submit(getServerRunnable(socket));
-      } catch (IOException ex) {
-        L.log(Level.WARNING, String.format("Cannot accept socket: %s", ex.getMessage()), ex);
-      }
+      L.log(Level.SEVERE, String.format("Cannot start screen: will run in log-only mode: %s", ex), ex);
     }
   }
+  
+  private Runnable getUIRunnable(final Screen screen) {
+    return new Runnable() {
+      @Override
+      public void run() {
+        //do things here
+      }
+    };
+  }
 
-  private Runnable getServerRunnable(final Socket socket) {
+  private Runnable getServerRunnable() {
+    return new Runnable() {
+      @Override
+      public void run() {
+        ServerSocket serverSocket = null;
+        try {
+          serverSocket = new ServerSocket(port);
+          L.fine(String.format("Listening on port %d.", serverSocket.getLocalPort()));
+        } catch (IOException ex) {
+          L.log(Level.SEVERE, String.format("Cannot start server socket on port %d.", port), ex);
+          System.exit(-1);
+        }
+        while (true) {
+          try {
+            Socket socket = serverSocket.accept();
+            L.finer(String.format("Connection from %s:%d.", socket.getInetAddress(), socket.getPort()));
+            executor.submit(getClientRunnable(socket));
+          } catch (IOException ex) {
+            L.log(Level.WARNING, String.format("Cannot accept socket: %s", ex.getMessage()), ex);
+          }
+        }
+      }
+    };
+  }
+
+  private Runnable getClientRunnable(final Socket socket) {
     return new Runnable() {
       @Override
       public void run() {
@@ -166,9 +167,9 @@ public class Master implements Runnable, PrintStreamFactory {
               List<Job> newJobs = new ArrayList<>();
               int remaining = freeRemoteThreads;
               for (Job job : toDoJobs) {
-                if (job.getEstimatedMaxThreads()<=remaining) {
+                if (job.getEstimatedMaxThreads() <= remaining) {
                   newJobs.add(job);
-                  remaining = remaining-job.getEstimatedMaxThreads();
+                  remaining = remaining - job.getEstimatedMaxThreads();
                 }
               }
               if (newJobs.isEmpty()) {
@@ -182,7 +183,7 @@ public class Master implements Runnable, PrintStreamFactory {
             oos.writeObject(Collections.EMPTY_LIST);
           }
           //get stats
-          Map<String, Number> stats = (Map<String, Number>)ois.readObject();
+          Map<String, Number> stats = (Map<String, Number>) ois.readObject();
           L.fine(String.format("Client %s:%d stats: %s", socket.getInetAddress(), socket.getPort(), stats));
         } catch (IOException ex) {
           L.log(Level.WARNING, String.format("Cannot build Object streams: %s", ex.getMessage()), ex);
@@ -207,14 +208,17 @@ public class Master implements Runnable, PrintStreamFactory {
       public boolean cancel(boolean mayInterruptIfRunning) {
         throw new UnsupportedOperationException("Not supported yet.");
       }
+
       @Override
       public boolean isCancelled() {
         return false;
       }
+
       @Override
       public boolean isDone() {
         return completedJobs.containsKey(job);
       }
+
       @Override
       public List<List<Node>> get() throws InterruptedException, ExecutionException {
         while (true) {
@@ -232,13 +236,13 @@ public class Master implements Runnable, PrintStreamFactory {
         while (true) {
           long m = System.currentTimeMillis();
           List<List<Node>> result = completedJobs.get(job);
-          if (result!=null) {
+          if (result != null) {
             return result;
           }
-          Thread.sleep(JOB_POLLING_INTERVAL*1000);
-          m = System.currentTimeMillis()-m;
-          elapsed = elapsed+m;
-          if ((timeout>0)&&elapsed>unit.toMillis(timeout)) {
+          Thread.sleep(JOB_POLLING_INTERVAL * 1000);
+          m = System.currentTimeMillis() - m;
+          elapsed = elapsed + m;
+          if ((timeout > 0) && elapsed > unit.toMillis(timeout)) {
             throw new TimeoutException();
           }
         }
@@ -249,7 +253,7 @@ public class Master implements Runnable, PrintStreamFactory {
 
   @Override
   public PrintStream build(List<String> keys) {
-    String fileName = baseResultFileName+"-"+keys.hashCode()+".txt";
+    String fileName = baseResultFileName + "-" + keys.hashCode() + ".txt";
     try {
       PrintStream ps = new PrintStream(fileName);
       DistributedUtils.writeHeader(ps, keys);
@@ -259,5 +263,5 @@ public class Master implements Runnable, PrintStreamFactory {
     }
     return null;
   }
-  
+
 }

@@ -140,7 +140,6 @@ public class PartitionEvolver<G, T, F extends Fitness> extends StandardEvolver<G
     }
     //end
     Utils.broadcast(new EvolutionEndEvent<>(configuration.getRanker().rank(all(partitionedPopulation), random), configuration.getNumberOfGenerations(), this, cacheStats(mappingCache, fitnessCache)), (List) listeners, executor);
-    executor.shutdown();
     List<Node<T>> bestPhenotypes = new ArrayList<>();
     List<List<Individual<G, T, F>>> rankedPopulation = configuration.getRanker().rank(all(partitionedPopulation), random);
     for (Individual<G, T, F> individual : rankedPopulation.get(0)) {

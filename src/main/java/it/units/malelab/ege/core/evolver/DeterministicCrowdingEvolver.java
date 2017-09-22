@@ -101,7 +101,6 @@ public class DeterministicCrowdingEvolver<G, T, F extends Fitness> extends Stand
       }
     }
     //end
-    executor.shutdown();
     List<Node<T>> bestPhenotypes = new ArrayList<>();
     List<List<Individual<G, T, F>>> rankedPopulation = configuration.getRanker().rank(population, random);
     Utils.broadcast(new EvolutionEndEvent<>((List) rankedPopulation, configuration.getNumberOfGenerations(), this, cacheStats(mappingCache, fitnessCache)), listeners, executor);

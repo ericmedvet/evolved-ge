@@ -6,7 +6,6 @@
 package it.units.malelab.ege.distributed;
 
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import it.units.malelab.ege.core.Node;
@@ -42,6 +41,8 @@ import java.util.logging.Logger;
 public class Worker implements Runnable, PrintStreamFactory {
 
   public final static int MASTER_INTERVAL = 10;
+  public final static int STATS_INTERVAL = 1;
+  
   public final static String STAT_CPU_SYSTEM_NAME = "cpu.system";
   public final static String STAT_CPU_PROCESS_NAME = "cpu.process";
   public final static String STAT_FREE_MEM_NAME = "memory.free";
@@ -59,6 +60,7 @@ public class Worker implements Runnable, PrintStreamFactory {
   private final Multimap<Job, Map<String, Object>> currentJobsData;
   private final Set<Job> currentJobs;
   private final Map<Job, List<List<Node>>> completedJobs;
+  private final Multimap<String, Number> stats;
 
   private final static Logger L = Logger.getLogger(Worker.class.getName());
   private final static OperatingSystemMXBean OS = ManagementFactory.getOperatingSystemMXBean();
@@ -72,9 +74,10 @@ public class Worker implements Runnable, PrintStreamFactory {
     comExecutor = Executors.newSingleThreadScheduledExecutor();
     taskExecutor = Executors.newFixedThreadPool(nThreads);
     runExecutor = Executors.newCachedThreadPool();
-    currentJobsData = (Multimap)Multimaps.synchronizedMultimap(ArrayListMultimap.create());
+    currentJobsData = (Multimap) Multimaps.synchronizedMultimap(ArrayListMultimap.create());
     currentJobs = Collections.synchronizedSet(new HashSet<Job>());
     completedJobs = Collections.synchronizedMap(new HashMap<Job, List<List<Node>>>());
+    stats = (Multimap) Multimaps.synchronizedMultimap(ArrayListMultimap.create());
   }
 
   public static void main(String[] args) throws UnknownHostException, IOException, ClassNotFoundException {
@@ -83,7 +86,7 @@ public class Worker implements Runnable, PrintStreamFactory {
     InetAddress masterAddress = InetAddress.getByName(args[1]);
     int masterPort = Integer.parseInt(args[2]);
     String logDir = null;
-    if (args.length>3) {
+    if (args.length > 3) {
       logDir = args[3];
     }
     Worker worker = new Worker(keyPhrase, masterAddress, masterPort, Runtime.getRuntime().availableProcessors(), logDir);
@@ -93,6 +96,7 @@ public class Worker implements Runnable, PrintStreamFactory {
   @Override
   public void run() {
     comExecutor.scheduleAtFixedRate(getCommunicationRunnable(masterAddress, masterPort), 0, MASTER_INTERVAL, TimeUnit.SECONDS);
+    comExecutor.scheduleAtFixedRate(getStatsCollectorRunnable(), 0, STATS_INTERVAL, TimeUnit.SECONDS);
   }
 
   private Runnable getCommunicationRunnable(final InetAddress masterAddress, final int masterPort) {
@@ -121,21 +125,27 @@ public class Worker implements Runnable, PrintStreamFactory {
           //possibly ask for new jobs
           int freeThreads = nThreads;
           for (Job job : currentJobs) {
-            freeThreads = freeThreads-job.getEstimatedMaxThreads();
+            freeThreads = freeThreads - job.getEstimatedMaxThreads();
           }
           oos.writeObject(new Integer(Math.max(0, freeThreads)));
-          List<Job> newJobs = (List<Job>)ois.readObject();
+          List<Job> newJobs = (List<Job>) ois.readObject();
           for (Job job : newJobs) {
             L.info(String.format("Got new job: %s", job.getKeys()));
             currentJobs.add(job);
-            runExecutor.submit(new JobRunnable(job, thisWorker));            
+            runExecutor.submit(new JobRunnable(job, thisWorker));
           }
           //collect and send stats
-          Map<String, Number> stats = new HashMap<>();
-          stats.put(STAT_CPU_SYSTEM_NAME, OS.getSystemLoadAverage());
-          stats.put(STAT_MAX_MEM_NAME, Runtime.getRuntime().maxMemory());
-          stats.put(STAT_FREE_MEM_NAME, Runtime.getRuntime().freeMemory());
-          oos.writeObject(stats);
+          Map<String, Number> avgStats = new HashMap<>();
+          for (String statName : stats.keySet()) {
+            double s = 0;
+            for (Number v : stats.get(statName)) {
+              s = s+v.doubleValue();
+            }
+            if (!stats.get(statName).isEmpty()) {
+              avgStats.put(statName, s/stats.get(statName).size());
+            }
+          }
+          oos.writeObject(avgStats);
           //close
           socket.close();
         } catch (IOException ex) {
@@ -147,9 +157,20 @@ public class Worker implements Runnable, PrintStreamFactory {
     };
   }
 
+  private Runnable getStatsCollectorRunnable() {
+    return new Runnable() {
+      @Override
+      public void run() {
+        stats.put(STAT_CPU_SYSTEM_NAME, OS.getSystemLoadAverage());
+        stats.put(STAT_MAX_MEM_NAME, Runtime.getRuntime().maxMemory());
+        stats.put(STAT_FREE_MEM_NAME, Runtime.getRuntime().freeMemory());
+      }
+    };
+  }
+
   @Override
   public PrintStream build(List<String> keys) {
-    if (logDirectoryName!=null) {
+    if (logDirectoryName != null) {
       //possibly create dir
       File logDir = new File(logDirectoryName);
       if (!logDir.exists()) {
@@ -157,9 +178,9 @@ public class Worker implements Runnable, PrintStreamFactory {
       }
       //create file
       String fileName = ManagementFactory.getRuntimeMXBean().getName();
-      fileName = fileName+"-"+keys.hashCode()+".text";
+      fileName = fileName + "-" + keys.hashCode() + ".text";
       try {
-        PrintStream ps = new PrintStream(logDirectoryName+File.separator+fileName);
+        PrintStream ps = new PrintStream(logDirectoryName + File.separator + fileName);
         DistributedUtils.writeHeader(ps, keys);
         return ps;
       } catch (FileNotFoundException ex) {
@@ -176,7 +197,7 @@ public class Worker implements Runnable, PrintStreamFactory {
   public Multimap<Job, Map<String, Object>> getCurrentJobsData() {
     return currentJobsData;
   }
-  
+
   public void notifyEndedJob(Job job, List<List<Node>> solutions) {
     currentJobs.remove(job);
     completedJobs.put(job, solutions);
