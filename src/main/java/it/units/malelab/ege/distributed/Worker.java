@@ -40,9 +40,9 @@ import java.util.logging.Logger;
  */
 public class Worker implements Runnable, PrintStreamFactory {
 
-  public final static int MASTER_INTERVAL = 10;
+  public final static int MASTER_INTERVAL = 5;
   public final static int STATS_INTERVAL = 1;
-  
+
   public final static String STAT_CPU_SYSTEM_NAME = "cpu.system";
   public final static String STAT_CPU_PROCESS_NAME = "cpu.process";
   public final static String STAT_FREE_MEM_NAME = "memory.free";
@@ -64,6 +64,7 @@ public class Worker implements Runnable, PrintStreamFactory {
 
   private final static Logger L = Logger.getLogger(Worker.class.getName());
   private final static OperatingSystemMXBean OS = ManagementFactory.getOperatingSystemMXBean();
+  private final static String workerName = ManagementFactory.getRuntimeMXBean().getName();
 
   public Worker(String keyPhrase, InetAddress masterAddress, int masterPort, int nThreads, String logDirectoryName) {
     this.keyPhrase = keyPhrase;
@@ -82,6 +83,9 @@ public class Worker implements Runnable, PrintStreamFactory {
 
   public static void main(String[] args) throws UnknownHostException, IOException, ClassNotFoundException {
     LogManager.getLogManager().readConfiguration(Master.class.getClassLoader().getResourceAsStream("logging.properties"));
+
+    args = new String[]{"hi", "127.0.1.1", "9000", "/home/eric/experiments/ge/dist/log"};
+
     String keyPhrase = args[0];
     InetAddress masterAddress = InetAddress.getByName(args[1]);
     int masterPort = Integer.parseInt(args[2]);
@@ -112,6 +116,8 @@ public class Worker implements Runnable, PrintStreamFactory {
           String challenge = DistributedUtils.decrypt((byte[]) ois.readObject(), keyPhrase);
           oos.writeObject(DistributedUtils.encrypt(DistributedUtils.reverse(challenge), keyPhrase));
           L.finer(String.format("Handshake response sent with \"%s\".", challenge));
+          //send name
+          oos.writeObject(workerName);
           //send updates
           synchronized (currentJobsData) { //to avoid losing data
             oos.writeObject(currentJobsData);
@@ -139,10 +145,10 @@ public class Worker implements Runnable, PrintStreamFactory {
           for (String statName : stats.keySet()) {
             double s = 0;
             for (Number v : stats.get(statName)) {
-              s = s+v.doubleValue();
+              s = s + v.doubleValue();
             }
             if (!stats.get(statName).isEmpty()) {
-              avgStats.put(statName, s/stats.get(statName).size());
+              avgStats.put(statName, s / stats.get(statName).size());
             }
           }
           oos.writeObject(avgStats);
@@ -177,8 +183,7 @@ public class Worker implements Runnable, PrintStreamFactory {
         logDir.mkdir();
       }
       //create file
-      String fileName = ManagementFactory.getRuntimeMXBean().getName();
-      fileName = fileName + "-" + keys.hashCode() + ".text";
+      String fileName = workerName + "-" + keys.hashCode() + ".text";
       try {
         PrintStream ps = new PrintStream(logDirectoryName + File.separator + fileName);
         DistributedUtils.writeHeader(ps, keys);

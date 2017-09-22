@@ -5,9 +5,14 @@
  */
 package it.units.malelab.ege.distributed;
 
+import com.google.common.collect.EvictingQueue;
 import com.google.common.collect.Multimap;
-import com.googlecode.lanterna.TextCharacter;
+import com.googlecode.lanterna.Symbols;
+import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.TextColor;
+import com.googlecode.lanterna.graphics.TextGraphics;
+import com.googlecode.lanterna.input.KeyStroke;
+import com.googlecode.lanterna.input.KeyType;
 import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import it.units.malelab.ege.core.Node;
@@ -19,18 +24,25 @@ import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Random;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 /**
@@ -40,6 +52,10 @@ import java.util.logging.Logger;
 public class Master implements PrintStreamFactory {
 
   private final static int JOB_POLLING_INTERVAL = 1;
+  private final static int UI_INTERVAL = 250;
+
+  private final static String STAT_LAST_CONTACT_DATE_NAME = "last.contact.date";
+
   public final static String LOCAL_TIME_NAME = "local.time";
   public final static String GENERATION_NAME = "generation";
   public final static String RANDOM_SEED_NAME = "random.seed";
@@ -48,12 +64,24 @@ public class Master implements PrintStreamFactory {
   private final int port;
   private final String baseResultFileName;
 
-  private final ExecutorService executor;
+  private final ExecutorService mainExecutor;
   private final Random random;
   private final Map<List<String>, PrintStream> streams;
 
   private final List<Job> toDoJobs;
+  private final Map<Job, Map<String, Queue>> ongoingJobs;
   private final Map<Job, List<List<Node>>> completedJobs;
+  private final Map<String, Map<String, Number>> clients;
+
+  static {
+    try {
+      LogManager.getLogManager().readConfiguration(Master.class.getClassLoader().getResourceAsStream("logging.properties"));
+    } catch (IOException ex) {
+      //ignore
+    } catch (SecurityException ex) {
+      //ignore
+    }
+  }
 
   private final static Logger L = Logger.getLogger(Master.class.getName());
 
@@ -61,35 +89,130 @@ public class Master implements PrintStreamFactory {
     this.keyPhrase = keyPhrase;
     this.port = port;
     this.baseResultFileName = baseResultFileName;
-    this.executor = Executors.newCachedThreadPool();
+    this.mainExecutor = Executors.newCachedThreadPool();
     random = new Random();
     streams = Collections.synchronizedMap(new HashMap<List<String>, PrintStream>());
     toDoJobs = Collections.synchronizedList(new ArrayList<Job>());
+    ongoingJobs = Collections.synchronizedMap(new HashMap<Job, Map<String, Queue>>());
     completedJobs = Collections.synchronizedMap(new HashMap<Job, List<List<Node>>>());
+    clients = Collections.synchronizedMap(new TreeMap<String, Map<String, Number>>());
   }
 
   public static void main(String[] args) throws IOException {
-    new Master("hi", 9000, "me").start();
+    new Master("hio", 9000, "me").start();
   }
 
   public void start() {
-    executor.submit(getServerRunnable());
+    mainExecutor.submit(getServerRunnable());
     DefaultTerminalFactory terminalFactory = new DefaultTerminalFactory();
     Screen screen;
     try {
       screen = terminalFactory.createScreen();
       screen.startScreen();
-      executor.submit(getUIRunnable(screen)); //TODO likely schedule, rather than just invoke
+      mainExecutor.submit(getUIRunnable(screen));
+      //should intercept all loggers
     } catch (IOException ex) {
       L.log(Level.SEVERE, String.format("Cannot start screen: will run in log-only mode: %s", ex), ex);
     }
   }
-  
+
   private Runnable getUIRunnable(final Screen screen) {
     return new Runnable() {
       @Override
       public void run() {
-        //do things here
+        TerminalSize terminalSize = screen.getTerminalSize();
+        while (true) {
+          KeyStroke keyStroke;
+          try {
+            keyStroke = screen.pollInput();
+          } catch (IOException ex) {
+            L.log(Level.WARNING, String.format("Cannot read user input: %s", ex), ex);
+            continue;
+          }
+          if (keyStroke != null && (keyStroke.getKeyType() == KeyType.Escape || keyStroke.getKeyType() == KeyType.EOF)) {
+            break;
+          }
+          TerminalSize newSize = screen.doResizeIfNecessary();
+          if (newSize != null) {
+            terminalSize = newSize;
+          }
+          int w = terminalSize.getColumns();
+          int h = terminalSize.getRows();
+          screen.clear();
+          //draw lines
+          TextGraphics g = screen.newTextGraphics();
+          g.setForegroundColor(TextColor.ANSI.BLUE);
+          g.drawLine(0, 0, w - 1, 0, Symbols.SINGLE_LINE_HORIZONTAL);
+          g.drawLine(0, h / 2, w - 1, h / 2, Symbols.SINGLE_LINE_HORIZONTAL);
+          g.drawLine(0, h - 1, w - 1, h - 1, Symbols.SINGLE_LINE_HORIZONTAL);
+          g.drawLine(0, 0, 0, h - 1, Symbols.SINGLE_LINE_VERTICAL);
+          g.drawLine(w - 1, 0, w - 1, h - 1, Symbols.SINGLE_LINE_VERTICAL);
+          g.drawLine(w / 2, 0, w / 2, h / 2, Symbols.SINGLE_LINE_VERTICAL);
+          g.setCharacter(0, 0, Symbols.SINGLE_LINE_TOP_LEFT_CORNER);
+          g.setCharacter(w - 1, 0, Symbols.SINGLE_LINE_TOP_RIGHT_CORNER);
+          g.setCharacter(0, h - 1, Symbols.SINGLE_LINE_BOTTOM_LEFT_CORNER);
+          g.setCharacter(w - 1, h - 1, Symbols.SINGLE_LINE_BOTTOM_RIGHT_CORNER);
+          g.setCharacter(w / 2, 0, Symbols.SINGLE_LINE_T_DOWN);
+          g.setCharacter(w / 2, h / 2, Symbols.SINGLE_LINE_T_UP);
+          g.setCharacter(0, h / 2, Symbols.SINGLE_LINE_T_RIGHT);
+          g.setCharacter(w - 1, h / 2, Symbols.SINGLE_LINE_T_LEFT);
+          //draw strings
+          g.setForegroundColor(TextColor.ANSI.WHITE);
+          g.setBackgroundColor(TextColor.ANSI.BLUE);
+          g.putString(2, 0, "Workers");
+          g.putString(w / 2 + 2, 0, "Job summary");
+          g.putString(2, h / 2, "Ongoing jobs");
+          //print client info
+          g.setBackgroundColor(TextColor.ANSI.BLACK);
+          int r = 0;
+          for (Map.Entry<String, Map<String, Number>> entry : clients.entrySet()) {
+            try {
+              long elapsed = (System.currentTimeMillis() - (Long) entry.getValue().getOrDefault(STAT_LAST_CONTACT_DATE_NAME, Double.NaN)) / 1000;
+              g.setForegroundColor(TextColor.ANSI.WHITE);
+              g.putString(1, 1 + r, String.format("%16.16s", entry.getKey()));
+              g.setForegroundColor(TextColor.ANSI.YELLOW);
+              if (elapsed > 300) {
+                g.putString(17 + 1, 1 + r, ">5m");
+              } else {
+                g.putString(17 + 1, 1 + r, String.format("%3ds", elapsed));
+              }
+              if (entry.getValue().containsKey(Worker.STAT_CPU_SYSTEM_NAME)) {
+                g.putString(17 + 1 + 7 + 1, 1 + r,
+                        String.format("%4.2f", entry.getValue().get(Worker.STAT_CPU_SYSTEM_NAME))
+                );
+              }
+              if (entry.getValue().containsKey(Worker.STAT_MAX_MEM_NAME)) {
+                g.putString(17 + 1 + 7 + 1 + 4 + 1, 1 + r, String.format("%.1f/%.1fGB",
+                        ((Double) entry.getValue().get(Worker.STAT_MAX_MEM_NAME) - (Double) entry.getValue().get(Worker.STAT_FREE_MEM_NAME)) / 1024d / 1024d / 1024d,
+                        (Double) entry.getValue().get(Worker.STAT_MAX_MEM_NAME) / 1024d / 1024d / 1024d)
+                );
+              }
+              r = r + 1;
+            } catch (Throwable t) {
+              t.printStackTrace();
+            };
+          }
+          //refresh
+          try {
+            screen.refresh();
+          } catch (IOException ex) {
+            L.log(Level.WARNING, String.format("Cannot update screen: %s", ex), ex);
+            continue;
+          }
+          try {
+            Thread.sleep(UI_INTERVAL);
+          } catch (InterruptedException ex) {
+            //ignore
+          }
+        }
+        screen.clear();
+        try {
+          screen.stopScreen();
+        } catch (IOException ex) {
+          //ignore
+        }
+        mainExecutor.shutdownNow();
+        System.exit(0);
       }
     };
   }
@@ -110,7 +233,7 @@ public class Master implements PrintStreamFactory {
           try {
             Socket socket = serverSocket.accept();
             L.finer(String.format("Connection from %s:%d.", socket.getInetAddress(), socket.getPort()));
-            executor.submit(getClientRunnable(socket));
+            mainExecutor.submit(getClientRunnable(socket));
           } catch (IOException ex) {
             L.log(Level.WARNING, String.format("Cannot accept socket: %s", ex.getMessage()), ex);
           }
@@ -137,12 +260,15 @@ public class Master implements PrintStreamFactory {
             throw new SecurityException("Client %s:%d did not correctly replied to the challenge!");
           }
           L.finer(String.format("Client %s:%d completed andshake correctly with \"%s\".", socket.getInetAddress(), socket.getPort(), randomData));
+          //get name
+          String clientName = (String) ois.readObject();
           //get updates
           int dataItemsCount = 0;
           Multimap<Job, Map<String, Object>> jobData = (Multimap<Job, Map<String, Object>>) ois.readObject();
           for (Job job : jobData.keySet()) {
             List<String> streamKey = DistributedUtils.jobKeys(job);
             PrintStream ps = streams.get(streamKey);
+            Map<String, Queue> jobHistoricData = ongoingJobs.get(job);
             if (ps == null) {
               L.fine(String.format("Building new stream for %s.", streamKey));
               ps = build(streamKey);
@@ -151,13 +277,20 @@ public class Master implements PrintStreamFactory {
             for (Map<String, Object> dataItem : jobData.get(job)) {
               dataItemsCount = dataItemsCount + 1;
               DistributedUtils.writeData(ps, job, dataItem);
+              for (Map.Entry<String, Object> entry : dataItem.entrySet()) {
+                Queue q = jobHistoricData.getOrDefault(entry.getKey(), EvictingQueue.create(2));
+                q.add(entry.getValue());
+              }
             }
           }
           L.fine(String.format("Client %s:%d sent %d data items from %d jobs.", socket.getInetAddress(), socket.getPort(), dataItemsCount, jobData.keySet().size()));
           //get results
           Map<Job, List<List<Node>>> newCompletedJobs = (Map<Job, List<List<Node>>>) ois.readObject();
           L.fine(String.format("Client %s:%d sent %d results.", socket.getInetAddress(), socket.getPort(), newCompletedJobs.size()));
-          completedJobs.putAll(newCompletedJobs);
+          synchronized (completedJobs) {
+            completedJobs.putAll(newCompletedJobs);
+            ongoingJobs.keySet().removeAll(newCompletedJobs.keySet());
+          }
           //possibly assign new jobs
           Integer freeRemoteThreads = (Integer) ois.readObject();
           L.fine(String.format("Client %s:%d would accept jobs for %d threads.", socket.getInetAddress(), socket.getPort(), freeRemoteThreads));
@@ -176,6 +309,9 @@ public class Master implements PrintStreamFactory {
                 newJobs.add(toDoJobs.get(random.nextInt(toDoJobs.size())));
               }
               toDoJobs.removeAll(newJobs);
+              for (Job newJob : newJobs) {
+                ongoingJobs.put(newJob, new HashMap<String, Queue>());
+              }
               L.info(String.format("Sending %d jobs to client %s:%d (%d remaining).", newJobs.size(), socket.getInetAddress(), socket.getPort(), toDoJobs.size()));
               oos.writeObject(newJobs);
             }
@@ -184,6 +320,8 @@ public class Master implements PrintStreamFactory {
           }
           //get stats
           Map<String, Number> stats = (Map<String, Number>) ois.readObject();
+          stats.put(STAT_LAST_CONTACT_DATE_NAME, System.currentTimeMillis());
+          clients.put(clientName, stats);
           L.fine(String.format("Client %s:%d stats: %s", socket.getInetAddress(), socket.getPort(), stats));
         } catch (IOException ex) {
           L.log(Level.WARNING, String.format("Cannot build Object streams: %s", ex.getMessage()), ex);

@@ -84,7 +84,6 @@ public class DeepDistributedExperimenter {
     args = new String[]{"hi", "9000", "/home/eric/experiments/ge/dist/result"};
     
     //prepare master
-    LogManager.getLogManager().readConfiguration(Master.class.getClassLoader().getResourceAsStream("logging.properties"));
     String keyPhrase = args[0];
     int port = Integer.parseInt(args[1]);
     String baseResultFileName = args[2];
