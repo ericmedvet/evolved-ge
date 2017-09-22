@@ -84,7 +84,6 @@ public class JobRunnable implements Runnable {
         if (logPrintStream!=null) {
           DistributedUtils.writeData(logPrintStream, job, data);
         }
-        System.out.println(data);
       }
     });
     try {
