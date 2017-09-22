@@ -20,11 +20,11 @@ import java.util.Map;
 public class DistributedUtils {
 
   public static byte[] encrypt(String s, String key) {
-    return s.getBytes();
+    return s.getBytes(); //TODO implement
   }
 
   public static String decrypt(byte[] bytes, String key) {
-    return new String(bytes);
+    return new String(bytes); //TODO implement
   }
 
   public static String reverse(String s) {

@@ -99,7 +99,7 @@ public class Master implements PrintStreamFactory {
   }
 
   public static void main(String[] args) throws IOException {
-    new Master("hio", 9000, "me").start();
+    new Master("hi", 9000, "me").start();
   }
 
   public void start() {
