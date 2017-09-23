@@ -24,25 +24,24 @@ import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Random;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 /**
@@ -53,6 +52,7 @@ public class Master implements PrintStreamFactory {
 
   private final static int JOB_POLLING_INTERVAL = 1;
   private final static int UI_INTERVAL = 250;
+  private final static int LOG_QUEUE_SIZE = 5;
 
   private final static String STAT_LAST_CONTACT_DATE_NAME = "last.contact.date";
 
@@ -72,6 +72,7 @@ public class Master implements PrintStreamFactory {
   private final Map<Job, Map<String, Queue>> ongoingJobs;
   private final Map<Job, List<List<Node>>> completedJobs;
   private final Map<String, Map<String, Number>> clients;
+  private final Queue<LogRecord> logQueue;
 
   static {
     try {
@@ -96,6 +97,7 @@ public class Master implements PrintStreamFactory {
     ongoingJobs = Collections.synchronizedMap(new HashMap<Job, Map<String, Queue>>());
     completedJobs = Collections.synchronizedMap(new HashMap<Job, List<List<Node>>>());
     clients = Collections.synchronizedMap(new TreeMap<String, Map<String, Number>>());
+    logQueue = EvictingQueue.create(LOG_QUEUE_SIZE);
   }
 
   public static void main(String[] args) throws IOException {
@@ -110,7 +112,28 @@ public class Master implements PrintStreamFactory {
       screen = terminalFactory.createScreen();
       screen.startScreen();
       mainExecutor.submit(getUIRunnable(screen));
-      //should intercept all loggers
+      //redirect logging
+      LogManager.getLogManager().reset();
+      LogManager.getLogManager().getLogger("").setLevel(Level.ALL);
+      LogManager.getLogManager().getLogger("").addHandler(new Handler() {
+        @Override
+        public void publish(LogRecord record) {
+          synchronized (logQueue) {
+            if (record.getSourceClassName().startsWith("it.units")) {
+              logQueue.add(record);
+            }
+          }
+        }
+
+        @Override
+        public void flush() {
+        }
+
+        @Override
+        public void close() throws SecurityException {
+        }
+      });
+      L.fine("Starting logging in UI");
     } catch (IOException ex) {
       L.log(Level.SEVERE, String.format("Cannot start screen: will run in log-only mode: %s", ex), ex);
     }
@@ -144,6 +167,7 @@ public class Master implements PrintStreamFactory {
           g.setForegroundColor(TextColor.ANSI.BLUE);
           g.drawLine(0, 0, w - 1, 0, Symbols.SINGLE_LINE_HORIZONTAL);
           g.drawLine(0, h / 2, w - 1, h / 2, Symbols.SINGLE_LINE_HORIZONTAL);
+          g.drawLine(0, h - 1 - LOG_QUEUE_SIZE - 1, w - 1, h - 1 - LOG_QUEUE_SIZE - 1, Symbols.SINGLE_LINE_HORIZONTAL);
           g.drawLine(0, h - 1, w - 1, h - 1, Symbols.SINGLE_LINE_HORIZONTAL);
           g.drawLine(0, 0, 0, h - 1, Symbols.SINGLE_LINE_VERTICAL);
           g.drawLine(w - 1, 0, w - 1, h - 1, Symbols.SINGLE_LINE_VERTICAL);
@@ -156,41 +180,61 @@ public class Master implements PrintStreamFactory {
           g.setCharacter(w / 2, h / 2, Symbols.SINGLE_LINE_T_UP);
           g.setCharacter(0, h / 2, Symbols.SINGLE_LINE_T_RIGHT);
           g.setCharacter(w - 1, h / 2, Symbols.SINGLE_LINE_T_LEFT);
+          g.setCharacter(0, h - 1 - LOG_QUEUE_SIZE - 1, Symbols.SINGLE_LINE_T_RIGHT);
+          g.setCharacter(w - 1, h - 1 - LOG_QUEUE_SIZE - 1, Symbols.SINGLE_LINE_T_LEFT);
           //draw strings
           g.setForegroundColor(TextColor.ANSI.WHITE);
           g.setBackgroundColor(TextColor.ANSI.BLUE);
           g.putString(2, 0, "Workers");
           g.putString(w / 2 + 2, 0, "Job summary");
-          g.putString(2, h / 2, "Ongoing jobs");
+          g.putString(2, h / 2, String.format("Ongoing jobs (%d)", ongoingJobs.size()));
+          g.putString(2, h - 1 - LOG_QUEUE_SIZE - 1, String.format("Log (%d)", logQueue.size()));
           //print client info
           g.setBackgroundColor(TextColor.ANSI.BLACK);
           int r = 0;
           for (Map.Entry<String, Map<String, Number>> entry : clients.entrySet()) {
-            try {
-              long elapsed = (System.currentTimeMillis() - (Long) entry.getValue().getOrDefault(STAT_LAST_CONTACT_DATE_NAME, Double.NaN)) / 1000;
-              g.setForegroundColor(TextColor.ANSI.WHITE);
-              g.putString(1, 1 + r, String.format("%16.16s", entry.getKey()));
-              g.setForegroundColor(TextColor.ANSI.YELLOW);
-              if (elapsed > 300) {
-                g.putString(17 + 1, 1 + r, ">5m");
+            long elapsed = (System.currentTimeMillis() - (Long) entry.getValue().getOrDefault(STAT_LAST_CONTACT_DATE_NAME, Double.NaN)) / 1000;
+            g.setForegroundColor(TextColor.ANSI.WHITE);
+            g.putString(1, 1 + r, String.format("%16.16s", entry.getKey()));
+            g.setForegroundColor(TextColor.ANSI.WHITE);
+            if (elapsed > 300) {
+              g.putString(17 + 1, 1 + r, ">5m");
+            } else {
+              g.putString(17 + 1, 1 + r, String.format("%3ds", elapsed));
+            }
+            if (entry.getValue().containsKey(Worker.STAT_CPU_SYSTEM_NAME)) {
+              g.putString(17 + 1 + 7 + 1, 1 + r,
+                      String.format("%4.2f", entry.getValue().get(Worker.STAT_CPU_SYSTEM_NAME))
+              );
+            }
+            if (entry.getValue().containsKey(Worker.STAT_MAX_MEM_NAME)) {
+              g.putString(17 + 1 + 7 + 1 + 4 + 1, 1 + r, String.format("%.1f/%.1fGB",
+                      ((Double) entry.getValue().get(Worker.STAT_MAX_MEM_NAME) - (Double) entry.getValue().get(Worker.STAT_FREE_MEM_NAME)) / 1024d / 1024d / 1024d,
+                      (Double) entry.getValue().get(Worker.STAT_MAX_MEM_NAME) / 1024d / 1024d / 1024d)
+              );
+            }
+            r = r + 1;
+          }
+          //print log
+          synchronized (logQueue) {
+            for (int i = 0; i < logQueue.size(); i++) {
+              LogRecord logRecord = (LogRecord) logQueue.toArray()[i];
+              if (logRecord.getLevel().equals(Level.SEVERE)) {
+                g.setForegroundColor(TextColor.ANSI.RED);
+              } else if (logRecord.getLevel().equals(Level.WARNING)) {
+                g.setForegroundColor(TextColor.ANSI.YELLOW);
+              } else if (logRecord.getLevel().equals(Level.INFO)) {
+                g.setForegroundColor(TextColor.ANSI.GREEN);
               } else {
-                g.putString(17 + 1, 1 + r, String.format("%3ds", elapsed));
+                g.setForegroundColor(TextColor.ANSI.WHITE);
               }
-              if (entry.getValue().containsKey(Worker.STAT_CPU_SYSTEM_NAME)) {
-                g.putString(17 + 1 + 7 + 1, 1 + r,
-                        String.format("%4.2f", entry.getValue().get(Worker.STAT_CPU_SYSTEM_NAME))
-                );
-              }
-              if (entry.getValue().containsKey(Worker.STAT_MAX_MEM_NAME)) {
-                g.putString(17 + 1 + 7 + 1 + 4 + 1, 1 + r, String.format("%.1f/%.1fGB",
-                        ((Double) entry.getValue().get(Worker.STAT_MAX_MEM_NAME) - (Double) entry.getValue().get(Worker.STAT_FREE_MEM_NAME)) / 1024d / 1024d / 1024d,
-                        (Double) entry.getValue().get(Worker.STAT_MAX_MEM_NAME) / 1024d / 1024d / 1024d)
-                );
-              }
-              r = r + 1;
-            } catch (Throwable t) {
-              t.printStackTrace();
-            };
+              g.setCharacter(1, h - 1 - LOG_QUEUE_SIZE + i, Symbols.BULLET);
+              g.setForegroundColor(TextColor.ANSI.WHITE);
+              g.putString(3, h - 1 - LOG_QUEUE_SIZE + i, l(String.format("%1$td/%1$tm %1$tH:%1$tM:%1$tS %2$s",
+                      new Date(logRecord.getMillis()),
+                      logRecord.getMessage()
+              ), w-4));
+            }
           }
           //refresh
           try {
@@ -245,8 +289,7 @@ public class Master implements PrintStreamFactory {
   private Runnable getClientRunnable(final Socket socket) {
     return new Runnable() {
       @Override
-      public void run() {
-        ObjectOutputStream oos = null;
+      public void run() {        ObjectOutputStream oos = null;
         ObjectInputStream ois = null;
         try {
           oos = new ObjectOutputStream(socket.getOutputStream());
@@ -257,6 +300,7 @@ public class Master implements PrintStreamFactory {
           oos.writeObject(DistributedUtils.encrypt(randomData, keyPhrase));
           String reversed = DistributedUtils.decrypt((byte[]) ois.readObject(), keyPhrase);
           if (!DistributedUtils.reverse(reversed).equals(randomData)) {
+            L.warning(String.format("Client %s:%d did not correctly replied to the challenge!", socket.getInetAddress(), socket.getPort(), randomData));
             throw new SecurityException("Client %s:%d did not correctly replied to the challenge!");
           }
           L.finer(String.format("Client %s:%d completed andshake correctly with \"%s\".", socket.getInetAddress(), socket.getPort(), randomData));
@@ -400,6 +444,10 @@ public class Master implements PrintStreamFactory {
       L.log(Level.SEVERE, String.format("Cannot create file %s: %s", fileName, ex.getMessage()), ex);
     }
     return null;
+  }
+  
+  private String l(String s, int w) {
+    return s.substring(0, Math.min(s.length(), w));
   }
 
 }

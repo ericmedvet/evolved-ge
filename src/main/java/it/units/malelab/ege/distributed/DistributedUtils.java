@@ -6,12 +6,23 @@
 package it.units.malelab.ege.distributed;
 
 import it.units.malelab.ege.core.listener.collector.Collector;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.security.InvalidKeyException;
+import java.security.Key;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  *
@@ -19,12 +30,39 @@ import java.util.Map;
  */
 public class DistributedUtils {
 
-  public static byte[] encrypt(String s, String key) {
-    return s.getBytes(); //TODO implement
+  private final static Logger L = Logger.getLogger(DistributedUtils.class.getName());
+
+  public static byte[] encrypt(String s, String keyString) {
+    return cipher(s.getBytes(), keyString, Cipher.ENCRYPT_MODE);
   }
 
-  public static String decrypt(byte[] bytes, String key) {
-    return new String(bytes); //TODO implement
+  public static String decrypt(byte[] bytes, String keyString) {
+    return new String(cipher(bytes, keyString, Cipher.DECRYPT_MODE));
+  }
+  
+  public static byte[] cipher(byte[] bytes, String keyString, int mode) {
+    try {
+      Cipher c = Cipher.getInstance("AES");
+      byte[] keyBytes = new byte[16];
+      byte[] shortKeyBytes = Base64.getEncoder().encode(keyString.getBytes());
+      System.arraycopy(shortKeyBytes, 0, keyBytes, 0, shortKeyBytes.length);
+      Key key = new SecretKeySpec(keyBytes, "AES");
+      c.init(mode, key);
+      return c.doFinal(bytes);
+    } catch (NoSuchAlgorithmException ex) {
+      L.log(Level.SEVERE, String.format("Cannot encrypt: %s", ex), ex);
+    } catch (NoSuchPaddingException ex) {
+      L.log(Level.SEVERE, String.format("Cannot encrypt: %s", ex), ex);
+    //} catch (IOException ex) {
+      L.log(Level.SEVERE, String.format("Cannot encrypt: %s", ex), ex);
+    } catch (InvalidKeyException ex) {
+      L.log(Level.SEVERE, String.format("Cannot encrypt: %s", ex), ex);
+    } catch (IllegalBlockSizeException ex) {
+      L.log(Level.SEVERE, String.format("Cannot encrypt: %s", ex), ex);
+    } catch (BadPaddingException ex) {
+      L.log(Level.SEVERE, String.format("Cannot encrypt: %s", ex), ex);
+    }
+    return bytes;
   }
 
   public static String reverse(String s) {
