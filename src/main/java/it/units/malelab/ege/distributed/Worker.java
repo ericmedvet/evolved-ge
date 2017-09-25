@@ -47,6 +47,7 @@ public class Worker implements Runnable, PrintStreamFactory {
   public final static String STAT_CPU_PROCESS_NAME = "cpu.process";
   public final static String STAT_FREE_MEM_NAME = "memory.free";
   public final static String STAT_MAX_MEM_NAME = "memory.max";
+  public final static String STAT_CORES = "cores";
 
   private final String keyPhrase;
   private final InetAddress masterAddress;
@@ -64,7 +65,7 @@ public class Worker implements Runnable, PrintStreamFactory {
 
   private final static Logger L = Logger.getLogger(Worker.class.getName());
   private final static OperatingSystemMXBean OS = ManagementFactory.getOperatingSystemMXBean();
-  private final static String workerName = ManagementFactory.getRuntimeMXBean().getName();
+  private final static String WORKER_NAME = ManagementFactory.getRuntimeMXBean().getName();
 
   public Worker(String keyPhrase, InetAddress masterAddress, int masterPort, int nThreads, String logDirectoryName) {
     this.keyPhrase = keyPhrase;
@@ -117,7 +118,7 @@ public class Worker implements Runnable, PrintStreamFactory {
           oos.writeObject(DistributedUtils.encrypt(DistributedUtils.reverse(challenge), keyPhrase));
           L.finer(String.format("Handshake response sent with \"%s\".", challenge));
           //send name
-          oos.writeObject(workerName);
+          oos.writeObject(WORKER_NAME);
           //send updates
           synchronized (currentJobsData) { //to avoid losing data
             oos.writeObject(currentJobsData);
@@ -170,6 +171,7 @@ public class Worker implements Runnable, PrintStreamFactory {
         stats.put(STAT_CPU_SYSTEM_NAME, OS.getSystemLoadAverage());
         stats.put(STAT_MAX_MEM_NAME, Runtime.getRuntime().maxMemory());
         stats.put(STAT_FREE_MEM_NAME, Runtime.getRuntime().freeMemory());
+        stats.put(STAT_CORES, Runtime.getRuntime().availableProcessors());
       }
     };
   }
@@ -183,7 +185,7 @@ public class Worker implements Runnable, PrintStreamFactory {
         logDir.mkdir();
       }
       //create file
-      String fileName = workerName + "-" + keys.hashCode() + ".text";
+      String fileName = WORKER_NAME + "-" + keys.hashCode() + ".txt";
       try {
         PrintStream ps = new PrintStream(logDirectoryName + File.separator + fileName);
         DistributedUtils.writeHeader(ps, keys);

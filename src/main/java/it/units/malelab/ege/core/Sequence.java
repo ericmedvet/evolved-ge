@@ -5,13 +5,13 @@
  */
 package it.units.malelab.ege.core;
 
-import java.util.Set;
+import java.io.Serializable;
 
 /**
  *
  * @author eric
  */
-public interface Sequence<T> {
+public interface Sequence<T> extends Serializable {
   
   public T get(int index);
   public int size();

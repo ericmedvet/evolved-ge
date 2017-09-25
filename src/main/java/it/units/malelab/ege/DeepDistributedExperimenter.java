@@ -71,7 +71,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.logging.LogManager;
+import java.util.logging.Logger;
 
 /**
  *
@@ -79,6 +79,8 @@ import java.util.logging.LogManager;
  */
 public class DeepDistributedExperimenter {
 
+  private final static Logger L = Logger.getLogger(DeepDistributedExperimenter.class.getName());
+  
   public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
     
     args = new String[]{"hi", "9000", "/home/eric/experiments/ge/dist/result"};
@@ -92,7 +94,7 @@ public class DeepDistributedExperimenter {
     List<Future<List<List<Node>>>> results = new ArrayList<>();
     //prepare things
     int populationSize = 50;
-    int generations = 10;
+    int generations = 50;
     int runs = 3;
     int tournamentSize = 5;
     //define problems, methods, mappers
@@ -288,15 +290,15 @@ public class DeepDistributedExperimenter {
                             new BestPrinter(problem.getPhenotypePrinter(), "%30.30s")),
                     keys,
                     configuration.getOffspringSize());
-            System.out.printf("Submitting job: %s%n", job);
+            L.info(String.format("Submitting job: %s%n", job));
             results.add(master.submit(job));
           }
         }
       }
     }
-    System.out.printf("%d job submitted.%n", results.size());
+    L.info(String.format("%d job submitted.%n", results.size()));
     for (Future<List<List<Node>>> result : results) {
-      System.out.printf("Got %d solutions%n", result.get().size());
+      L.info(String.format("Got %d solutions%n", result.get().size()));
     }
   }
 
