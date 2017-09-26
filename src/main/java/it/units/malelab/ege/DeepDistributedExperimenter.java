@@ -81,10 +81,8 @@ public class DeepDistributedExperimenter {
 
   private final static Logger L = Logger.getLogger(DeepDistributedExperimenter.class.getName());
   
+  //java -cp EvolvedGrammaticalEvolution-1.0-SNAPSHOT.jar:. it.units.malelab.ege.DeepDistributedExperimenter hi 9000 diversities
   public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
-    
-    args = new String[]{"hi", "9000", "/home/eric/experiments/ge/dist/result"};
-    
     //prepare master
     String keyPhrase = args[0];
     int port = Integer.parseInt(args[1]);
@@ -93,11 +91,11 @@ public class DeepDistributedExperimenter {
     master.start();
     List<Future<List<List<Node>>>> results = new ArrayList<>();
     //prepare things
-    int populationSize = 50;
+    int populationSize = 500;
     int generations = 50;
-    int runs = 3;
     int tournamentSize = 5;
     //define problems, methods, mappers
+    int[] runs = new int[] {25,26,27,28,29,30};
     List<String> problems = Lists.newArrayList(
             "bool-parity-5", "bool-parity-8", "bool-mopm-3",
             "sr-keijzer6", "sr-nguyen7", "sr-pagie1",
@@ -107,7 +105,6 @@ public class DeepDistributedExperimenter {
             "standard",
             "dc-g", "dc-p", "dc-f",
             "p-g-u-20", "p-p-a<-20", "p-p-a>-20", "p-p-u-20", "p-f-a<-20", "p-f-a>-20", "p-f-u-20", "p-f-l<-20", "p-f-l>-20");
-    methods = Arrays.asList("dc-p");
     List<String> mappers = Lists.newArrayList(
             "ge-8-5-1024",
             "whge-3-1024",
@@ -124,7 +121,7 @@ public class DeepDistributedExperimenter {
       }
     };
     //iterate
-    for (int run = 0; run < runs; run++) {
+    for (int run : runs) {
       for (String pr : problems) {
         for (String me : methods) {
           for (String ma : mappers) {

@@ -82,19 +82,21 @@ public class Worker implements Runnable, PrintStreamFactory {
     stats = (Multimap) Multimaps.synchronizedMultimap(ArrayListMultimap.create());
   }
 
+  //java -cp EvolvedGrammaticalEvolution-1.0-SNAPSHOT.jar:. it.units.malelab.ege.distributed.Worker hi 35.194.17.98 9000 0 ./log
   public static void main(String[] args) throws UnknownHostException, IOException, ClassNotFoundException {
     LogManager.getLogManager().readConfiguration(Master.class.getClassLoader().getResourceAsStream("logging.properties"));
-
-    args = new String[]{"hi", "127.0.1.1", "9000", "/home/eric/experiments/ge/dist/log"};
-
     String keyPhrase = args[0];
     InetAddress masterAddress = InetAddress.getByName(args[1]);
     int masterPort = Integer.parseInt(args[2]);
-    String logDir = null;
-    if (args.length > 3) {
-      logDir = args[3];
+    int nThreads = Integer.parseInt(args[3]);
+    if (nThreads<=0) {
+      nThreads = Runtime.getRuntime().availableProcessors();
     }
-    Worker worker = new Worker(keyPhrase, masterAddress, masterPort, Runtime.getRuntime().availableProcessors(), logDir);
+    String logDir = null;
+    if (args.length > 4) {
+      logDir = args[4];
+    }
+    Worker worker = new Worker(keyPhrase, masterAddress, masterPort, nThreads, logDir);
     worker.run();
   }
 

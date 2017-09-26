@@ -32,6 +32,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.math3.stat.StatUtils;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
@@ -418,6 +419,39 @@ public class Utils {
       n.getChildren().add(child);
     }
     return n;
+  }
+
+  public static String formatName(String name, String format, boolean doFormat) {
+    if (!doFormat) {
+      return name;
+    }
+    String acronym = "";
+    String[] pieces = name.split("\\.");
+    for (String piece : pieces) {
+      acronym = acronym + piece.substring(0, 1);
+    }
+    acronym = pad(acronym, formatSize(format), doFormat);
+    return acronym;
+  }
+
+  public static int formatSize(String format) {
+    int size = 0;
+    Matcher matcher = Pattern.compile("\\d++").matcher(format);
+    if (matcher.find()) {
+      size = Integer.parseInt(matcher.group());
+      if (format.contains("+")) {
+        size = size + 1;
+      }
+      return size;
+    }
+    return String.format(format, null).length();
+  }
+
+  public static String pad(String s, int length, boolean doFormat) {
+    while (doFormat && (s.length() < length)) {
+      s = " " + s;
+    }
+    return s;
   }
 
 }

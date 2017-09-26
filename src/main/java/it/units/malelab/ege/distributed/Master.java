@@ -17,6 +17,7 @@ import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.core.listener.collector.Collector;
+import it.units.malelab.ege.util.Utils;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -28,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -52,7 +54,7 @@ import java.util.logging.Logger;
 public class Master implements PrintStreamFactory {
 
   private final static int JOB_POLLING_INTERVAL = 1;
-  private final static int UI_INTERVAL = 250;
+  private final static int UI_INTERVAL = 500;
   private final static int LOG_QUEUE_SIZE = 5;
 
   private final static String STAT_LAST_CONTACT_DATE_NAME = "last.contact.date";
@@ -75,7 +77,8 @@ public class Master implements PrintStreamFactory {
   private final Map<Job, List<List<Node>>> completedJobs;
   private final Map<String, Map<String, Number>> clients;
   private final Queue<LogRecord> logQueue;
-  private final Map<String, Integer> jobKeyFormattedSizes;
+  private final Map<String, String> jobKeyFormats;
+  private final Map<String, String> collectorKeyFormats;
 
   static {
     try {
@@ -99,11 +102,9 @@ public class Master implements PrintStreamFactory {
     completedJobs = Collections.synchronizedMap(new HashMap<Job, List<List<Node>>>());
     clients = Collections.synchronizedMap(new TreeMap<String, Map<String, Number>>());
     logQueue = EvictingQueue.create(LOG_QUEUE_SIZE);
-    jobKeyFormattedSizes = Collections.synchronizedMap(new TreeMap<String, Integer>());
-  }
-
-  public static void main(String[] args) throws IOException {
-    new Master("hi", 9000, "me").start();
+    jobKeyFormats = Collections.synchronizedMap(new TreeMap<String, String>());
+    collectorKeyFormats = Collections.synchronizedMap(new LinkedHashMap<String, String>());
+    collectorKeyFormats.put(GENERATION_NAME, "%3d");
   }
 
   public void start() {
@@ -263,11 +264,17 @@ public class Master implements PrintStreamFactory {
               int x = jix + 2;
               for (Object keyValue : allKeyCounts.get(keyName).keySet()) {
                 int[] counts = allKeyCounts.get(keyName).get(keyValue);
-                g.setForegroundColor((counts[1] > 0) ? TextColor.ANSI.GREEN : TextColor.ANSI.YELLOW);
                 double completionRate = (double) counts[2] / (double) (counts[0] + counts[1] + counts[2]);
                 if (x >= w - 1) {
                   x = jix + 2;
                   y = y + 1;
+                }
+                if (completionRate == 1) {
+                  g.setForegroundColor(TextColor.ANSI.GREEN);
+                } else if (counts[1] > 0) {
+                  g.setForegroundColor(TextColor.ANSI.YELLOW);
+                } else {
+                  g.setForegroundColor(TextColor.ANSI.RED);
                 }
                 if (completionRate == 0) {
                   g.setCharacter(x, y, '-');
@@ -286,55 +293,67 @@ public class Master implements PrintStreamFactory {
             }
             //print ongoing job info
             y = ojy;
+            int x = ojx;
+            //  legend
+            g.setForegroundColor(TextColor.ANSI.BLUE);
+            for (Map.Entry<String, String> formattedKeyEntry : jobKeyFormats.entrySet()) {
+              String columnName = String.format(formattedKeyEntry.getValue(), formattedKeyEntry.getKey());
+              g.putString(x, y, columnName);
+              x = x + columnName.length() + 1;
+            }
+            for (Map.Entry<String, String> formattedKeyEntry : collectorKeyFormats.entrySet()) {
+              String columnName = Utils.formatName(formattedKeyEntry.getKey(), formattedKeyEntry.getValue(), true);
+              g.putString(x, y, columnName);
+              x = x + columnName.length() + 2;
+            }
+            y = y + 1;
+            //  data
             for (Map.Entry<Job, Map<String, List>> entry : ongoingJobs.entrySet()) {
-              int x = ojx;
+              x = ojx;
               g.setForegroundColor(TextColor.ANSI.CYAN);
-              for (Map.Entry<String, Integer> formattedKeyEntry : jobKeyFormattedSizes.entrySet()) {
-                g.putString(x, y, entry.getKey().getKeys().get(formattedKeyEntry.getKey()).toString());
-                x = x + formattedKeyEntry.getValue() + 1;
+              for (Map.Entry<String, String> formattedKeyEntry : jobKeyFormats.entrySet()) {
+                String s = String.format(formattedKeyEntry.getValue(), entry.getKey().getKeys().get(formattedKeyEntry.getKey()).toString());
+                g.putString(x, y, s);
+                x = x + s.length() + 1;
               }
               g.setForegroundColor(TextColor.ANSI.WHITE);
               Map<String, List> data = entry.getValue();
               if (!data.containsKey(GENERATION_NAME)) {
                 continue;
               }
-              g.putString(x, y, String.format("%3d", data.get(GENERATION_NAME).get(data.get(GENERATION_NAME).size() - 1)));
-              x = x + 4;
-              for (Collector collector : (List<Collector>) entry.getKey().getCollectors()) {
-                for (Map.Entry<String, String> formattedNameEntry : ((Map<String, String>) collector.getFormattedNames()).entrySet()) {
-                  String name = formattedNameEntry.getKey();
-                  String format = formattedNameEntry.getValue();
-                  String formatted;
-                  if (data.containsKey(name)) {
-                    Object currentValue = data.get(name).get(data.get(name).size() - 1);
-                    Object lastValue = null;
-                    if (data.get(name).size() > 1) {
-                      lastValue = data.get(name).get(data.get(name).size() - 2);
-                    }
-                    formatted = String.format(format, currentValue);
-                    if (x + formatted.length() + 1 < w - 1) {
-                      g.setForegroundColor(TextColor.ANSI.WHITE);
-                      g.putString(x, y, formatted);
-                    }
-                    if ((lastValue != null) && (currentValue instanceof Number)) {
-                      double currentNumber = ((Number) currentValue).doubleValue();
-                      double lastNumber = ((Number) lastValue).doubleValue();
-                      if (currentNumber > lastNumber) {
-                        g.setForegroundColor(TextColor.ANSI.RED);
-                        g.setCharacter(x + formatted.length(), y, Symbols.ARROW_UP);
-                      } else if (currentNumber < lastNumber) {
-                        g.setForegroundColor(TextColor.ANSI.GREEN);
-                        g.setCharacter(x + formatted.length(), y, Symbols.ARROW_DOWN);
-                      } else {
-                        g.setForegroundColor(TextColor.ANSI.YELLOW);
-                        g.setCharacter(x + formatted.length(), y, '=');
-                      }
-                    }
-                  } else {
-                    formatted = String.format(format, (Object[]) null);
+              for (Map.Entry<String, String> formattedKeyEntry : collectorKeyFormats.entrySet()) {
+                String name = formattedKeyEntry.getKey();
+                String format = formattedKeyEntry.getValue();
+                String formatted;
+                if (data.containsKey(name)) {
+                  Object currentValue = data.get(name).get(data.get(name).size() - 1);
+                  Object lastValue = null;
+                  if (data.get(name).size() > 1) {
+                    lastValue = data.get(name).get(data.get(name).size() - 2);
                   }
-                  x = x + formatted.length() + 2;
+                  formatted = String.format(format, currentValue);
+                  if (x + formatted.length() + 1 < w - 1) {
+                    g.setForegroundColor(TextColor.ANSI.WHITE);
+                    g.putString(x, y, formatted);
+                  }
+                  if ((lastValue != null) && (currentValue instanceof Number)) {
+                    double currentNumber = ((Number) currentValue).doubleValue();
+                    double lastNumber = ((Number) lastValue).doubleValue();
+                    if (currentNumber > lastNumber) {
+                      g.setForegroundColor(TextColor.ANSI.RED);
+                      g.setCharacter(x + formatted.length(), y, Symbols.ARROW_UP);
+                    } else if (currentNumber < lastNumber) {
+                      g.setForegroundColor(TextColor.ANSI.GREEN);
+                      g.setCharacter(x + formatted.length(), y, Symbols.ARROW_DOWN);
+                    } else {
+                      g.setForegroundColor(TextColor.ANSI.YELLOW);
+                      g.setCharacter(x + formatted.length(), y, '=');
+                    }
+                  }
+                } else {
+                  formatted = String.format(format, (Object[]) null);
                 }
+                x = x + formatted.length() + 2;
               }
               y = y + 1;
             }
@@ -522,13 +541,26 @@ public class Master implements PrintStreamFactory {
     toDoJobs.add(job);
     //update job keys format
     for (Map.Entry<String, Object> keyEntry : ((Map<String, Object>) job.getKeys()).entrySet()) {
-      if (!jobKeyFormattedSizes.containsKey(keyEntry.getKey())) {
-        jobKeyFormattedSizes.put(keyEntry.getKey(), keyEntry.getValue().toString().length());
+      String currentFormat = String.format("%%%1$d.%1$ds", keyEntry.getValue().toString().length());
+      if (!jobKeyFormats.containsKey(keyEntry.getKey())) {
+        jobKeyFormats.put(keyEntry.getKey(), currentFormat);
       } else {
-        jobKeyFormattedSizes.put(keyEntry.getKey(), Math.max(
-                keyEntry.getValue().toString().length(),
-                jobKeyFormattedSizes.get(keyEntry.getKey())
-        ));
+        String existingFormat = jobKeyFormats.get(keyEntry.getKey());
+        if (Utils.formatSize(currentFormat) > Utils.formatSize(existingFormat)) {
+          jobKeyFormats.put(keyEntry.getKey(), currentFormat);
+        }
+      }
+    }
+    //update collector format
+    for (Collector collector : (List<Collector>) job.getCollectors()) {
+      for (Map.Entry<String, String> formattedName : ((Map<String, String>) collector.getFormattedNames()).entrySet()) {
+        if (!collectorKeyFormats.containsKey(formattedName.getKey())) {
+          collectorKeyFormats.put(formattedName.getKey(), formattedName.getValue());
+        } else {
+          if (Utils.formatSize(formattedName.getValue()) > Utils.formatSize(collectorKeyFormats.get(formattedName.getKey()))) {
+            collectorKeyFormats.put(formattedName.getKey(), formattedName.getValue());
+          }
+        }
       }
     }
     return new Future<List<List<Node>>>() {

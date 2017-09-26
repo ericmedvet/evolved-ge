@@ -9,6 +9,7 @@ import it.units.malelab.ege.core.fitness.Fitness;
 import it.units.malelab.ege.core.listener.collector.Collector;
 import it.units.malelab.ege.core.listener.event.EvolutionEvent;
 import it.units.malelab.ege.core.listener.event.GenerationEvent;
+import it.units.malelab.ege.util.Utils;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,7 +56,7 @@ public class CollectorGenerationLogger<G, T, F extends Fitness> extends Abstract
     for (Collector<G, T, F> collector : collectors) {
       Map<String, String> localFormattedNames = new LinkedHashMap<>();
       for (String name : collector.getFormattedNames().keySet()) {
-        localFormattedNames.put(name, formatName(name, collector.getFormattedNames().get(name)));
+        localFormattedNames.put(name, Utils.formatName(name, collector.getFormattedNames().get(name), format));
       }
       formattedNames.add(localFormattedNames);
     }
@@ -72,7 +73,7 @@ public class CollectorGenerationLogger<G, T, F extends Fitness> extends Abstract
       //print header: constants
       int k = 0;
       for (String name : constants.keySet()) {
-        ps.print(pad(name, constants.getOrDefault(name, "").toString().length()));
+        ps.print(Utils.pad(name, constants.getOrDefault(name, "").toString().length(), format));
         if (k != constants.size() - 1) {
           ps.print(innerSeparator);
         }
@@ -103,7 +104,7 @@ public class CollectorGenerationLogger<G, T, F extends Fitness> extends Abstract
     //print values: constants
     int k = 0;
     for (String name : constants.keySet()) {
-      ps.print(pad(constants.get(name).toString(), name.length()));
+      ps.print(Utils.pad(constants.get(name).toString(), name.length(), format));
       if (k != constants.size() - 1) {
         ps.print(innerSeparator);
       }
@@ -119,7 +120,7 @@ public class CollectorGenerationLogger<G, T, F extends Fitness> extends Abstract
       for (String name : formattedNames.get(i).keySet()) {
         if (format) {
           String value = String.format(collectors.get(i).getFormattedNames().get(name), values.get(name));
-          ps.print(pad(value, formattedNames.get(i).get(name).length()));
+          ps.print(Utils.pad(value, formattedNames.get(i).get(name).length(), format));
         } else {
           ps.print(values.get(name));
         }
@@ -134,33 +135,6 @@ public class CollectorGenerationLogger<G, T, F extends Fitness> extends Abstract
     }
     ps.println();
     lines = lines + 1;
-  }
-
-  private String formatName(String name, String format) {
-    if (!this.format) {
-      return name;
-    }
-    String acronym = "";
-    String[] pieces = name.split("\\.");
-    for (String piece : pieces) {
-      acronym = acronym + piece.substring(0, 1);
-    }
-    Matcher matcher = Pattern.compile("\\d++").matcher(format);
-    if (matcher.find()) {
-      int size = Integer.parseInt(matcher.group());
-      if (format.contains("+")) {
-        size = size+1;
-      }
-      acronym = pad(acronym, size);
-    }
-    return acronym;
-  }
-
-  private String pad(String s, int length) {
-    while (format && (s.length() < length)) {
-      s = " " + s;
-    }
-    return s;
   }
 
   @Override
