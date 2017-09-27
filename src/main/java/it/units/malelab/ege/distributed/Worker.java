@@ -173,7 +173,7 @@ public class Worker implements Runnable, PrintStreamFactory {
         stats.put(STAT_CPU_SYSTEM_NAME, OS.getSystemLoadAverage());
         stats.put(STAT_MAX_MEM_NAME, Runtime.getRuntime().maxMemory());
         stats.put(STAT_FREE_MEM_NAME, Runtime.getRuntime().freeMemory());
-        stats.put(STAT_CORES, Runtime.getRuntime().availableProcessors());
+        stats.put(STAT_CORES, nThreads);
       }
     };
   }
