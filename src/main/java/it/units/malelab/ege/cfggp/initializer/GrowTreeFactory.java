@@ -57,10 +57,11 @@ public class GrowTreeFactory<T> implements Factory<Node<T>> {
           }
           if (allTerminals) {
             availableOptions.add(option);
-          } else {
-            return null;
           }
         }
+      }
+      if (availableOptions.isEmpty()) {
+        return null;
       }
       int optionIndex = random.nextInt(availableOptions.size());
       for (T childSymbol : availableOptions.get(optionIndex)) {
