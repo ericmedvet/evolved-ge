@@ -36,7 +36,7 @@ public class GrowTreeFactory<T> implements Factory<Node<T>> {
   }
 
   public Node<T> build(Random random, T symbol, int maxDepth, int depth) {
-    if (depth==maxDepth) {
+    if (depth == maxDepth) {
       return null;
     }
     Node<T> tree = new Node<>(symbol);
@@ -65,9 +65,14 @@ public class GrowTreeFactory<T> implements Factory<Node<T>> {
       }
       int optionIndex = random.nextInt(availableOptions.size());
       for (T childSymbol : availableOptions.get(optionIndex)) {
-        Node<T> child = build(random, childSymbol, maxDepth, depth + 1);
-        if (child == null) {
-          return null;
+        Node<T> child;
+        if (grammar.getRules().containsKey(childSymbol)) {
+          child = build(random, childSymbol, maxDepth, depth + 1);
+          if (child == null) {
+            return null;
+          }
+        } else {
+          child = new Node(childSymbol);
         }
         tree.getChildren().add(child);
       }

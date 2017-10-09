@@ -5,11 +5,9 @@
  */
 package it.units.malelab.ege.cfggp.initializer;
 
-import it.units.malelab.ege.core.Factory;
 import it.units.malelab.ege.core.Grammar;
 import it.units.malelab.ege.core.Node;
 import java.util.ArrayList;
-import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.Random;
 
@@ -35,18 +33,21 @@ public class FullTreeFactory<T> extends GrowTreeFactory<T> {
       if (depth < maxDepth - 1) {
         availableOptions = new ArrayList<>();
         for (List<T> option : options) {
-          boolean allTerminals = true;
+          boolean hasTerminal = false;
           for (T optionSymbol : option) {
-            if (grammar.getRules().containsKey(optionSymbol)) {
-              allTerminals = false;
+            if (!grammar.getRules().containsKey(optionSymbol)) {
+              hasTerminal = true;
               break;
             }
           }
-          if (!allTerminals) {
+          if (!hasTerminal) {
             availableOptions.add(option);
           }
         }
         if (availableOptions.isEmpty()) {
+          //if no available options, use all options: the reason is that in many
+          //cases, there are decoration symbols in the grammar making the
+          //non-terminal-only case very rare
           availableOptions.addAll(options);
         }
       } else {
@@ -61,32 +62,25 @@ public class FullTreeFactory<T> extends GrowTreeFactory<T> {
           }
           if (allTerminals) {
             availableOptions.add(option);
-          } else {
-            return null;
           }
+        }
+        if (availableOptions.isEmpty()) {
+          //here all options are too deep
+          return null;
         }
       }
       int optionIndex = random.nextInt(availableOptions.size());
-      List<Node<T>> children = new ArrayList<>();
-      boolean allOk = true;
       for (T childSymbol : availableOptions.get(optionIndex)) {
-        Node<T> child = build(random, childSymbol, maxDepth, depth + 1);
-        if (child == null) {
-          allOk = false;
-          break;
-        }
-        children.add(child);
-      }
-      if (allOk) {
-        tree.getChildren().addAll(children);
-      } else {
-        for (T childSymbol : options.get(random.nextInt(options.size()))) {
-          Node<T> child = build(random, childSymbol, maxDepth, depth + 1);
+        Node<T> child;
+        if (grammar.getRules().containsKey(childSymbol)) {
+          child = build(random, childSymbol, maxDepth, depth + 1);
           if (child == null) {
             return null;
           }
-          tree.getChildren().add(child);
+        } else {
+          child = new Node(childSymbol);
         }
+        tree.getChildren().add(child);
       }
     }
     return tree;
