@@ -45,7 +45,7 @@ import it.units.malelab.ege.ge.genotype.BitsGenotypeFactory;
 import it.units.malelab.ege.ge.genotype.SGEGenotypeFactory;
 import it.units.malelab.ege.core.validator.Any;
 import it.units.malelab.ege.distributed.Job;
-import it.units.malelab.ege.distributed.Master;
+import it.units.malelab.ege.distributed.master.Master;
 import it.units.malelab.ege.ge.mapper.BitsSGEMapper;
 import it.units.malelab.ege.ge.mapper.HierarchicalMapper;
 import it.units.malelab.ege.ge.mapper.PiGEMapper;
@@ -83,6 +83,9 @@ public class DeepDistributedExperimenter {
   
   //java -cp EvolvedGrammaticalEvolution-1.0-SNAPSHOT.jar:. it.units.malelab.ege.DeepDistributedExperimenter hi 9000 diversities
   public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
+    
+    args = new String[]{"hi", "9000", "/home/eric/experiments/ge/dist/diversities"};
+    
     //prepare master
     String keyPhrase = args[0];
     int port = Integer.parseInt(args[1]);
@@ -91,20 +94,22 @@ public class DeepDistributedExperimenter {
     master.start();
     List<Future<List<List<Node>>>> results = new ArrayList<>();
     //prepare things
-    int populationSize = 500;
+    int populationSize = 50;
     int generations = 50;
     int tournamentSize = 5;
     //define problems, methods, mappers
-    int[] runs = new int[] {25,26,27,28,29,30};
+    int[] runs = new int[] {1,2};
     List<String> problems = Lists.newArrayList(
             "bool-parity-5", "bool-parity-8", "bool-mopm-3",
             "sr-keijzer6", "sr-nguyen7", "sr-pagie1",
             "syn-klandscapes-7", "syn-text"
     );
+    problems = problems.subList(0, 2);
     List<String> methods = Lists.newArrayList(
             "standard",
             "dc-g", "dc-p", "dc-f",
             "p-g-u-20", "p-p-a<-20", "p-p-a>-20", "p-p-u-20", "p-f-a<-20", "p-f-a>-20", "p-f-u-20", "p-f-l<-20", "p-f-l>-20");
+    methods = methods.subList(0, 2);
     List<String> mappers = Lists.newArrayList(
             "ge-8-5-1024",
             "whge-3-1024",

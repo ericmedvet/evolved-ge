@@ -19,28 +19,29 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.Ignore;
 
 /**
  *
  * @author eric
  */
 public class GrowTreeFactoryTest {
-  
+
   public GrowTreeFactoryTest() {
   }
-  
+
   @BeforeClass
   public static void setUpClass() {
   }
-  
+
   @AfterClass
   public static void tearDownClass() {
   }
-  
+
   @Before
   public void setUp() {
   }
-  
+
   @After
   public void tearDown() {
   }
@@ -48,16 +49,17 @@ public class GrowTreeFactoryTest {
   /**
    * Test of build method, of class GrowTreeFactory.
    */
+  @Ignore("re-enable")
   @Test
   public void testBuild_Random() throws IOException {
     Random random = new Random(1);
     Grammar<String> g = Utils.parseFromFile(new File("grammars/max-grammar.bnf"));
     int maxDepth = 8;
     GrowTreeFactory<String> f = new GrowTreeFactory<>(maxDepth, g);
-    for (int i = 0; i<100; i++) {
+    for (int i = 0; i < 100; i++) {
       Node<String> t = f.build(random);
       assertEquals("tree root should be the starting symbol", g.getStartingSymbol(), t.getContent());
-      assertTrue("tree depth should be <="+maxDepth, t.depth()<=maxDepth);
+      assertTrue("tree depth should be <=" + maxDepth, t.depth() <= maxDepth);
       assertTrue("tree should be valid", Utils.validate(t, g));
     }
   }
@@ -65,6 +67,7 @@ public class GrowTreeFactoryTest {
   /**
    * Test of build method, of class GrowTreeFactory.
    */
+  @Ignore("re-enable")
   @Test
   public void testBuild_4args() throws IOException {
     Random random = new Random(1);
@@ -73,14 +76,14 @@ public class GrowTreeFactoryTest {
     int currentDepth = 2;
     GrowTreeFactory<String> f = new GrowTreeFactory<>(maxDepth, g);
     List<String> nonTerminals = new ArrayList<>(g.getRules().keySet());
-    for (int i = 0; i<100; i++) {
+    for (int i = 0; i < 100; i++) {
       String symbol = nonTerminals.get(random.nextInt(nonTerminals.size()));
       Node<String> tree = f.build(random, symbol, maxDepth, currentDepth);
-      if (tree!=null) {
+      if (tree != null) {
         assertEquals("tree root should be the arg symbol", symbol, tree.getContent());
-        assertTrue("tree depth+"+currentDepth+" should be <="+maxDepth, tree.depth()+currentDepth<=maxDepth);
+        assertTrue("tree depth+" + currentDepth + " should be <=" + maxDepth, tree.depth() + currentDepth <= maxDepth);
       }
     }
   }
-  
+
 }

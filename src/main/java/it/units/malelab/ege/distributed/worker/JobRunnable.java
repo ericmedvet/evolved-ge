@@ -3,8 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package it.units.malelab.ege.distributed;
+package it.units.malelab.ege.distributed.worker;
 
+import it.units.malelab.ege.distributed.master.Master;
+import it.units.malelab.ege.distributed.worker.Worker;
 import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.core.evolver.DeterministicCrowdingConfiguration;
 import it.units.malelab.ege.core.evolver.DeterministicCrowdingEvolver;
@@ -18,6 +20,8 @@ import it.units.malelab.ege.core.listener.EvolverListener;
 import it.units.malelab.ege.core.listener.collector.Collector;
 import it.units.malelab.ege.core.listener.event.EvolutionEvent;
 import it.units.malelab.ege.core.listener.event.GenerationEvent;
+import it.units.malelab.ege.distributed.DistributedUtils;
+import it.units.malelab.ege.distributed.Job;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Calendar;

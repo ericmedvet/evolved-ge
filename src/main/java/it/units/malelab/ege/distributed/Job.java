@@ -79,5 +79,9 @@ public class Job<G, T, F extends Fitness> implements Serializable {
   public String toString() {
     return "Job{" + "id=" + id + ", keys=" + keys + '}';
   }
+
+  public String getId() {
+    return id;
+  }
   
 }
