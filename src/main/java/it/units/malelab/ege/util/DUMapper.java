@@ -14,11 +14,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import javax.imageio.ImageIO;
-import org.apache.commons.math3.stat.StatUtils;
 
 /**
  *
@@ -32,8 +30,10 @@ public class DUMapper {
   public static void main(String[] args) throws IOException {
     double[][][] gomeaData = getGomeaData("/home/eric/experiments/dumapper/gomea-1", "eric_population_%d.dat", 50, 127);
     saveImages("/home/eric/experiments/dumapper/gomea-1.%s.png", false, 4, gomeaData);
-    double[][][] gsgpData = getGsgpData("/home/eric/experiments/dumapper/gsgp-1", "blocks.txt", 11, 20, 20);
-    saveImages("/home/eric/experiments/dumapper/gsgp-1.%s.png", false, 10, gsgpData);
+    for (int i = 1; i<=10; i++) {
+      double[][][] gsgpData = getGsgpData("/home/eric/experiments/dumapper/gsgp/airfoil/"+i, "blocks.txt", 101, 100, 100);
+      saveImages("/home/eric/experiments/dumapper/gsgp-airfoil-"+i+".%s.png", false, 2, gsgpData);
+    }
   }
   
   private static void saveImages(String fileName, boolean margin, int scale, double[][][] data) {
@@ -103,7 +103,8 @@ public class DUMapper {
         double[] genes = new double[genotypeSize];
         double maxGene = 0d;
         for (int i = 0; i < genotypeSize; i++) {
-          int gene = Integer.parseInt(pieces[i]);
+          //int gene = Integer.parseInt(pieces[i]);
+          double gene = Double.parseDouble(pieces[i]);
           genes[i] = gene;
           maxGene = Math.max(maxGene, gene);
           popGenes[i][p] = gene;
