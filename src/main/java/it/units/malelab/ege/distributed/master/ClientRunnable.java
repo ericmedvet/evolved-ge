@@ -56,10 +56,10 @@ public class ClientRunnable implements Runnable {
       L.finer(String.format("Client %s:%d completed andshake correctly with \"%s\".", socket.getInetAddress(), socket.getPort(), randomData));
       //read worker message
       WorkerMessage workerMessage = (WorkerMessage) ois.readObject();
-      ClientInfo clientInfo = master.getClientInfos().get(workerMessage.getName());
+      ClientInfo clientInfo = master.getClients().get(workerMessage.getName());
       if (clientInfo == null) {
         clientInfo = new ClientInfo();
-        master.getClientInfos().put(workerMessage.getName(), clientInfo);
+        master.getClients().put(workerMessage.getName(), clientInfo);
       }
       clientInfo.setLastMessage(workerMessage);
       clientInfo.setLastContactDate(new Date());
@@ -104,9 +104,6 @@ public class ClientRunnable implements Runnable {
       oos.writeObject(masterMessage);
     } catch (IOException ex) {
       L.log(Level.WARNING, String.format("Cannot connect to client: %s", ex.getMessage()), ex);
-      
-      ex.printStackTrace();
-      
     } catch (ClassNotFoundException ex) {
       L.log(Level.WARNING, String.format("Cannot decode response: %s", ex.getMessage()), ex);
     } finally {

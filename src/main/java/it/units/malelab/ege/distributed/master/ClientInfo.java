@@ -18,20 +18,11 @@ import java.util.Set;
  */
 public class ClientInfo {
   
-  private final Set<Job> jobs;
   private WorkerMessage lastMessage;
   private Date lastContactDate;
   
-  public ClientInfo() {
-    this.jobs = Collections.synchronizedSet(new HashSet<Job>());
-  }
-
   public WorkerMessage getLastMessage() {
     return lastMessage;
-  }
-
-  public Set<Job> getJobs() {
-    return jobs;
   }
 
   public Date getLastContactDate() {

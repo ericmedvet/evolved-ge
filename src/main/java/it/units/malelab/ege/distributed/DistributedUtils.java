@@ -7,7 +7,6 @@ package it.units.malelab.ege.distributed;
 
 import it.units.malelab.ege.distributed.master.Master;
 import it.units.malelab.ege.core.listener.collector.Collector;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.security.InvalidKeyException;
 import java.security.Key;

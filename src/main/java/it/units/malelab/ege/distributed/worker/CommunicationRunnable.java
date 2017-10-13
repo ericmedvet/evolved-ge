@@ -84,9 +84,11 @@ public class CommunicationRunnable implements Runnable {
       //close
       socket.close();
     } catch (IOException ex) {
-      L.log(Level.WARNING, String.format("Cannot connect to master: %s", ex.getMessage()), ex);
+      L.log(Level.SEVERE, String.format("Cannot connect to master: %s", ex.getMessage()), ex);
     } catch (ClassNotFoundException ex) {
-      L.log(Level.WARNING, String.format("Cannot decode response: %s", ex.getMessage()), ex);
+      L.log(Level.SEVERE, String.format("Cannot decode response: %s", ex.getMessage()), ex);
+    } catch (Throwable ex) {
+      L.log(Level.SEVERE, String.format("Some error: %s", ex.getMessage()), ex);
     }
   }
 

@@ -81,6 +81,9 @@ public class Worker implements Runnable, PrintStreamFactory {
   //java -cp target/EvolvedGrammaticalEvolution-1.0-SNAPSHOT.jar:. it.units.malelab.ege.distributed.worker.Worker hi 127.0.0.1 9000 2 ~/experiments/ge/dist/log/
   public static void main(String[] args) throws UnknownHostException, IOException, ClassNotFoundException {
     LogManager.getLogManager().readConfiguration(Master.class.getClassLoader().getResourceAsStream("logging.properties"));
+    
+    args = new String[]{"hi", "127.0.0.1", "9000", "2", "/home/eric/experiments/ge/dist/log"};
+    
     String keyPhrase = args[0];
     InetAddress masterAddress = InetAddress.getByName(args[1]);
     int masterPort = Integer.parseInt(args[2]);
@@ -118,6 +121,8 @@ public class Worker implements Runnable, PrintStreamFactory {
         return ps;
       } catch (FileNotFoundException ex) {
         L.log(Level.SEVERE, String.format("Cannot create file %s: %s", fileName, ex.getMessage()), ex);
+        
+        ex.printStackTrace();
       }
     }
     return null;

@@ -94,7 +94,7 @@ public class DeepDistributedExperimenter {
     master.start();
     List<Future<List<List<Node>>>> results = new ArrayList<>();
     //prepare things
-    int populationSize = 50;
+    int populationSize = 500;
     int generations = 50;
     int tournamentSize = 5;
     //define problems, methods, mappers

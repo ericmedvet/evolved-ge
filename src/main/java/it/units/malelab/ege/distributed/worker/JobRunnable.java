@@ -6,7 +6,6 @@
 package it.units.malelab.ege.distributed.worker;
 
 import it.units.malelab.ege.distributed.master.Master;
-import it.units.malelab.ege.distributed.worker.Worker;
 import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.core.evolver.DeterministicCrowdingConfiguration;
 import it.units.malelab.ege.core.evolver.DeterministicCrowdingEvolver;
@@ -79,7 +78,7 @@ public class JobRunnable implements Runnable {
         Map<String, Object> data = new LinkedHashMap<>();
         int generation = ((GenerationEvent) event).getGeneration();
         data.put(Master.GENERATION_NAME, generation);
-        data.put(Master.LOCAL_TIME_NAME, Calendar.getInstance().getTime());
+        data.put(Master.LOCAL_TIME_NAME, Calendar.getInstance().getTime().getTime());
         for (Collector collector : (List<Collector>) job.getCollectors()) {
           data.putAll(collector.collect((GenerationEvent) event));
         }

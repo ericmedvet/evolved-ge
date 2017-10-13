@@ -24,6 +24,7 @@ public class JobInfo {
   private final Job job;
   private final List<Map<String, Object>> data;
   private List<List<Node>> results;
+  private String clientName;
 
   public JobInfo(Job job) {
     this.job = job;
@@ -54,5 +55,13 @@ public class JobInfo {
   public void setResults(List<List<Node>> results) {
     this.results = results;
   }
-  
+
+  public String getClientName() {
+    return clientName;
+  }
+
+  public void setClientName(String clientName) {
+    this.clientName = clientName;
+  }
+
 }
