@@ -51,7 +51,7 @@ public class JobRunnable implements Runnable {
 
   @Override
   public void run() {
-    L.fine(String.format("Starting job: %s", job.getKeys()));
+    L.fine(String.format("Starting job: %s %s", job.getId(), job.getKeys()));
     //prepare evolver
     Evolver evolver = null;
     if (job.getConfiguration().getClass().equals(StandardConfiguration.class)) {
@@ -93,11 +93,11 @@ public class JobRunnable implements Runnable {
     try {
       List<List<Node>> finalBestRank = evolver.solve(worker.getTaskExecutor(), random, listeners);
       worker.notifyEndedJob(job, finalBestRank);
-      L.fine(String.format("Ended job: %s", job.getKeys()));
+      L.fine(String.format("Ended job: %s %s", job.getId(), job.getKeys()));
     } catch (InterruptedException ex) {
-      L.log(Level.SEVERE, String.format("Interrupted job: %s", job.getKeys()), ex);
+      L.log(Level.SEVERE, String.format("Interrupted job: %s %s", job.getId(), job.getKeys()), ex);
     } catch (ExecutionException ex) {
-      L.log(Level.SEVERE, String.format("Exception in job: %s", job.getKeys()), ex);
+      L.log(Level.SEVERE, String.format("Exception in job: %s %s", job.getId(), job.getKeys()), ex);
     }
   }
 

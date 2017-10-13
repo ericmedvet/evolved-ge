@@ -99,14 +99,18 @@ public class UIRunnable implements Runnable {
         //print client info
         g.setBackgroundColor(TextColor.ANSI.BLACK);
         int y = cy;
-        //TODO add table headers
+        g.setForegroundColor(TextColor.ANSI.BLUE);
+        g.putString(cx, y, String.format("%-16.16s %3.3s %2.2s %5.5s %4.4s %s",
+                "Worker", "T", "Js", "Threads", "Load", "Memory"
+        ));
+        y = cy + 1;
         for (ClientInfo clientInfo : master.getClientInfos().values()) {
           Long elapsed = null;
           if (clientInfo.getLastContactDate() != null) {
             elapsed = (System.currentTimeMillis() - clientInfo.getLastContactDate().getTime()) / 1000;
           }
           g.setForegroundColor(TextColor.ANSI.WHITE);
-          g.putString(cx, y, String.format("%16.16s", clientInfo.getLastMessage().getName()));
+          g.putString(cx, y, String.format("%-16.16s", clientInfo.getLastMessage().getName()));
           if (elapsed <= clientInfo.getLastMessage().getInterval()) {
             g.setForegroundColor(TextColor.ANSI.GREEN);
             g.putString(cx + 17, y, String.format("%2ds", elapsed));
@@ -123,11 +127,12 @@ public class UIRunnable implements Runnable {
           }
           g.setForegroundColor(TextColor.ANSI.WHITE);
           g.putString(cx + 17 + 3 + 1, y, String.format("%2d %2d/%2d %4.2f %.1f/%.1fGB",
+                  clientInfo.getJobs().size(),
                   clientInfo.getLastMessage().getFreeThreads(),
                   clientInfo.getLastMessage().getMaxThreads(),
                   clientInfo.getLastMessage().getStats().get(StatsRunnable.STAT_CPU_SYSTEM_NAME),
-                  clientInfo.getLastMessage().getStats().get(StatsRunnable.STAT_FREE_MEM_NAME),
-                  clientInfo.getLastMessage().getStats().get(StatsRunnable.STAT_MAX_MEM_NAME)
+                  clientInfo.getLastMessage().getStats().containsKey(StatsRunnable.STAT_FREE_MEM_NAME) ? clientInfo.getLastMessage().getStats().get(StatsRunnable.STAT_FREE_MEM_NAME).doubleValue() / 1024d / 1024d / 1024d : null,
+                  clientInfo.getLastMessage().getStats().containsKey(StatsRunnable.STAT_MAX_MEM_NAME) ? clientInfo.getLastMessage().getStats().get(StatsRunnable.STAT_MAX_MEM_NAME).doubleValue() / 1024d / 1024d / 1024d : null
           ));
           y = y + 1;
         }
@@ -223,8 +228,8 @@ public class UIRunnable implements Runnable {
           Map<String, Object>[] allData = master.getCurrentJobsData().get(job).toArray(new Map[0]);
           Map<String, Object> currentData = allData[allData.length - 1];
           Map<String, Object> previousData = Collections.EMPTY_MAP;
-          if (allData.length>1) {
-            previousData = allData[allData.length-2];
+          if (allData.length > 1) {
+            previousData = allData[allData.length - 2];
           }
           if (!currentData.containsKey(GENERATION_NAME)) {
             continue;

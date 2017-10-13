@@ -5,10 +5,8 @@
  */
 package it.units.malelab.ege.distributed.master;
 
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.EvictingQueue;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import it.units.malelab.ege.core.Node;
@@ -61,16 +59,14 @@ public class Master implements PrintStreamFactory {
 
   private final ExecutorService mainExecutor;
   private final Map<List<String>, PrintStream> streams;
-
+  
   private final List<Job> toDoJobs;
   private final Queue<LogRecord> logQueue;
   private final Map<String, String> jobKeyFormats;
   private final Map<String, String> collectorKeyFormats;
 
   private final Map<String, ClientInfo> clientInfos;
-  private final Multimap<Job, Map<String, Object>> currentJobsData;
-  private final Map<Job, List<List<Node>>> completedJobsResults;
-  private final Map<String, Job> jobs;
+  private final Map<String, JobInfo> jobs;
 
   static {
     try {
@@ -90,9 +86,7 @@ public class Master implements PrintStreamFactory {
     streams = Collections.synchronizedMap(new HashMap<List<String>, PrintStream>());
     toDoJobs = Collections.synchronizedList(new ArrayList<Job>());
     clientInfos = Collections.synchronizedMap(new TreeMap<String, ClientInfo>());
-    completedJobsResults = Collections.synchronizedMap(new HashMap<Job, List<List<Node>>>());
-    currentJobsData = (Multimap) Multimaps.synchronizedMultimap(ArrayListMultimap.create());
-    jobs = Collections.synchronizedMap(new HashMap<String, Job>());
+    jobs = Collections.synchronizedMap(new HashMap<String, JobInfo>());
     logQueue = EvictingQueue.create(UIRunnable.LOG_QUEUE_SIZE);
     jobKeyFormats = Collections.synchronizedMap(new TreeMap<String, String>());
     collectorKeyFormats = Collections.synchronizedMap(new LinkedHashMap<String, String>());
@@ -136,8 +130,10 @@ public class Master implements PrintStreamFactory {
   }
 
   public Future<List<List<Node>>> submit(final Job job) {
+    jobs.put(job.getId(), new JobInfo(job));
     toDoJobs.add(job);
-    //update job keys format
+    //TODO move to UIRunnable
+    //update job keys format    
     for (Map.Entry<String, Object> keyEntry : ((Map<String, Object>) job.getKeys()).entrySet()) {
       String currentFormat = String.format("%%%1$d.%1$ds", keyEntry.getValue().toString().length());
       if (!jobKeyFormats.containsKey(keyEntry.getKey())) {
@@ -149,6 +145,7 @@ public class Master implements PrintStreamFactory {
         }
       }
     }
+    //TODO move to UIRunnable
     //update collector format
     for (Collector collector : (List<Collector>) job.getCollectors()) {
       for (Map.Entry<String, String> formattedName : ((Map<String, String>) collector.getFormattedNames()).entrySet()) {
@@ -174,7 +171,7 @@ public class Master implements PrintStreamFactory {
 
       @Override
       public boolean isDone() {
-        return completedJobsResults.containsKey(job);
+        return jobs.get(job.getId()).getStatus().equals(JobInfo.Status.DONE);
       }
 
       @Override
@@ -193,7 +190,7 @@ public class Master implements PrintStreamFactory {
         long elapsed = 0;
         while (true) {
           long m = System.currentTimeMillis();
-          List<List<Node>> result = completedJobsResults.get(job);
+          List<List<Node>> result = jobs.get(job.getId()).getResults();
           if (result != null) {
             return result;
           }
@@ -255,12 +252,13 @@ public class Master implements PrintStreamFactory {
     }
     completedJobsResults.put(job, results);
     //save on disk and clear entry from ongoing jobs
+    currentJobsData.keySet().remove(job);
   }
 
   public Job pullJob(int threads, String clientName) {
     ClientInfo clientInfo = clientInfos.get(clientName);
     if (clientInfo==null) {
-      L.warning(String.format("Client \"%\" does not exist!", clientName));
+      L.warning(String.format("Client \"%s\" does not exist!", clientName));
       return null;
     }
     Job chosenJob = null;

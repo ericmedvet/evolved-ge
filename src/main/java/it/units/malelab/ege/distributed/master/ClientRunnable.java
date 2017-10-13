@@ -44,9 +44,6 @@ public class ClientRunnable implements Runnable {
       oos.flush();
       ois = new ObjectInputStream(socket.getInputStream());
       //handshake
-      
-      System.out.println("hands init!");
-      
       String randomData = Double.toHexString((new Random()).nextDouble());
       oos.writeObject(DistributedUtils.encrypt(randomData, master.getKeyPhrase()));
       String reversed = DistributedUtils.decrypt((byte[]) ois.readObject(), master.getKeyPhrase());
@@ -56,9 +53,6 @@ public class ClientRunnable implements Runnable {
                 socket.getPort(), randomData));
         throw new SecurityException("Client did not correctly replied to the challenge!");
       }
-      
-      System.out.println("hands!");
-      
       L.finer(String.format("Client %s:%d completed andshake correctly with \"%s\".", socket.getInetAddress(), socket.getPort(), randomData));
       //read worker message
       WorkerMessage workerMessage = (WorkerMessage) ois.readObject();

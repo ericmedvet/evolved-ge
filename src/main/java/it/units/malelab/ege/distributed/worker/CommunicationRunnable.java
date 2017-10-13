@@ -14,7 +14,6 @@ import it.units.malelab.ege.distributed.master.MasterMessage;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.InetAddress;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.List;
@@ -86,9 +85,6 @@ public class CommunicationRunnable implements Runnable {
       socket.close();
     } catch (IOException ex) {
       L.log(Level.WARNING, String.format("Cannot connect to master: %s", ex.getMessage()), ex);
-      
-      ex.printStackTrace();
-      
     } catch (ClassNotFoundException ex) {
       L.log(Level.WARNING, String.format("Cannot decode response: %s", ex.getMessage()), ex);
     }

@@ -40,7 +40,7 @@ import java.util.logging.Logger;
  */
 public class Worker implements Runnable, PrintStreamFactory {
 
-  public final static int MASTER_INTERVAL = 10;
+  public final static int MASTER_INTERVAL = 5;
   public final static int STATS_INTERVAL = 1;
 
   private final String keyPhrase;
@@ -78,7 +78,7 @@ public class Worker implements Runnable, PrintStreamFactory {
     interval = MASTER_INTERVAL;
   }
 
-  //java -cp EvolvedGrammaticalEvolution-1.0-SNAPSHOT.jar:. it.units.malelab.ege.distributed.Worker hi 35.194.17.98 9000 0 ./log
+  //java -cp target/EvolvedGrammaticalEvolution-1.0-SNAPSHOT.jar:. it.units.malelab.ege.distributed.worker.Worker hi 127.0.0.1 9000 2 ~/experiments/ge/dist/log/
   public static void main(String[] args) throws UnknownHostException, IOException, ClassNotFoundException {
     LogManager.getLogManager().readConfiguration(Master.class.getClassLoader().getResourceAsStream("logging.properties"));
     String keyPhrase = args[0];
@@ -111,7 +111,7 @@ public class Worker implements Runnable, PrintStreamFactory {
         logDir.mkdir();
       }
       //create file
-      String fileName = name + "-" + keys.hashCode() + ".txt";
+      String fileName = name.replaceAll("[^a-zA-Z0-9]", "") + "-" + keys.hashCode() + ".txt";
       try {
         PrintStream ps = new PrintStream(logDirectoryName + File.separator + fileName);
         DistributedUtils.writeHeader(ps, keys);
@@ -177,7 +177,7 @@ public class Worker implements Runnable, PrintStreamFactory {
   }
   
   public void submitJob(Job job) {
-    L.info(String.format("Got new job: %s", job.getKeys()));
+    L.info(String.format("Got new job: %s %s", job.getId(), job.getKeys()));
     currentJobs.add(job);
     runExecutor.submit(new JobRunnable(job, this));    
   }
