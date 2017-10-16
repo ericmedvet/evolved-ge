@@ -15,11 +15,11 @@ import java.util.Map;
  *
  * @author eric
  */
-public class MultiObjectiveFitnessFirstBest<G extends Sequence, T> extends Best<G, T, MultiObjectiveFitness> {
+public class MultiObjectiveFitnessFirstBest<G extends Sequence, T, O extends Comparable<O>> extends Best<G, T, MultiObjectiveFitness<O>> {
 
   private final String[] fitnessFormats;
 
-  public MultiObjectiveFitnessFirstBest(boolean ancestry, FitnessComputer<T, MultiObjectiveFitness> validationFitnessComputer, String... fitnessFormats) {
+  public MultiObjectiveFitnessFirstBest(boolean ancestry, FitnessComputer<T, MultiObjectiveFitness<O>> validationFitnessComputer, String... fitnessFormats) {
     super(ancestry, validationFitnessComputer);
     this.fitnessFormats = fitnessFormats;
   }
@@ -34,7 +34,7 @@ public class MultiObjectiveFitnessFirstBest<G extends Sequence, T> extends Best<
   }
 
   @Override
-  protected Map<String, Object> getFitnessIndexes(MultiObjectiveFitness fitness) {
+  protected Map<String, Object> getFitnessIndexes(MultiObjectiveFitness<O> fitness) {
     Map<String, Object> indexes = new LinkedHashMap<>();
     for (int i = 0; i<Math.min(fitnessFormats.length, fitness.getValue().length); i++) {
       indexes.put(""+i, fitness.getValue()[i]);

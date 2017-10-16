@@ -18,7 +18,7 @@ import java.util.Random;
  *
  * @author eric
  */
-public class BinaryRegex extends Problem<String, MultiObjectiveFitness> {
+public class BinaryRegex extends Problem<String, MultiObjectiveFitness<Double>> {
 
   private final static BinaryClassification<String, String> DATASET = new RegexMatch("01", 20, 100, new Random(1l), "0+1?0+", "1010.+0101", "111.+", "1?0.+01?");
 

@@ -265,4 +265,8 @@ public class Master {
     return jobInfos;
   }
 
+  public PrintStreamFactory getPrintStreamFactory() {
+    return printStreamFactory;
+  }
+
 }

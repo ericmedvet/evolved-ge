@@ -21,7 +21,7 @@ import java.util.Random;
  *
  * @author eric
  */
-public class MapperGeneration extends Problem<String, MultiObjectiveFitness> {
+public class MapperGeneration extends Problem<String, MultiObjectiveFitness<Double>> {
 
   public MapperGeneration(
           int genotypeSize,

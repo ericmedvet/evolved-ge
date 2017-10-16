@@ -122,7 +122,7 @@ public class MapperGenerationExperimenter {
     MappingPropertiesFitness.Property[] properties = propertySet.toArray(new MappingPropertiesFitness.Property[0]);
     Random random = new Random(1l);
     ExecutorService executor = Executors.newFixedThreadPool(N_THREADS);
-    Problem<String, MultiObjectiveFitness> problem = new MapperGeneration(
+    Problem<String, MultiObjectiveFitness<Double>> problem = new MapperGeneration(
             learningGenotypeSize,
             nGenotypes,
             learningMaxMappingDepth,
@@ -167,13 +167,13 @@ public class MapperGenerationExperimenter {
     //prepare configuration
     for (int s = 0; s < runs; s++) {
       Random innerRandom = new Random(1l);
-      PartitionConfiguration<Node<String>, String, MultiObjectiveFitness> configuration = new PartitionConfiguration<>(
-              new IndividualComparator<Node<String>, String, MultiObjectiveFitness>(IndividualComparator.Attribute.PHENO),
+      PartitionConfiguration<Node<String>, String, MultiObjectiveFitness<Double>> configuration = new PartitionConfiguration<>(
+              new IndividualComparator<Node<String>, String, MultiObjectiveFitness<Double>>(IndividualComparator.Attribute.PHENO),
               10,
-              new ComparableRanker<>(new IndividualComparator<Node<String>, String, MultiObjectiveFitness>(IndividualComparator.Attribute.AGE)),
-              new FirstBest<Individual<Node<String>, String, MultiObjectiveFitness>>(),
-              new ComparableRanker<>(new IndividualComparator<Node<String>, String, MultiObjectiveFitness>(IndividualComparator.Attribute.AGE)),
-              new LastWorst<Individual<Node<String>, String, MultiObjectiveFitness>>(),
+              new ComparableRanker<>(new IndividualComparator<Node<String>, String, MultiObjectiveFitness<Double>>(IndividualComparator.Attribute.AGE)),
+              new FirstBest<Individual<Node<String>, String, MultiObjectiveFitness<Double>>>(),
+              new ComparableRanker<>(new IndividualComparator<Node<String>, String, MultiObjectiveFitness<Double>>(IndividualComparator.Attribute.AGE)),
+              new LastWorst<Individual<Node<String>, String, MultiObjectiveFitness<Double>>>(),
               popSize,
               50,
               new MultiInitializer<>(new Utils.MapBuilder<PopulationInitializer<Node<String>>, Double>()
@@ -187,31 +187,31 @@ public class MapperGenerationExperimenter {
                       .put(new StandardTreeCrossover<String>(maxDepth), 0.8d)
                       .put(new StandardTreeMutation<>(maxDepth, problem.getGrammar()), 0.2d)
                       .build(),
-              new ParetoRanker<Node<String>, String, MultiObjectiveFitness>(),
-              new Tournament<Individual<Node<String>, String, MultiObjectiveFitness>>(3),
-              new LastWorst<Individual<Node<String>, String, MultiObjectiveFitness>>(),
+              new ParetoRanker<Node<String>, String, MultiObjectiveFitness<Double>>(),
+              new Tournament<Individual<Node<String>, String, MultiObjectiveFitness<Double>>>(3),
+              new LastWorst<Individual<Node<String>, String, MultiObjectiveFitness<Double>>>(),
               popSize,
               true,
               problem);
-      List<EvolverListener<Node<String>, String, MultiObjectiveFitness>> listeners = new ArrayList<>();
+      List<EvolverListener<Node<String>, String, MultiObjectiveFitness<Double>>> listeners = new ArrayList<>();
       listeners.add(new CollectorGenerationLogger<>(
               (Map) Collections.singletonMap("run", s), System.out, true, 10, " ", " | ",
-              new Population<Node<String>, String, MultiObjectiveFitness>(),
-              new MultiObjectiveFitnessFirstBest<Node<String>, String>(false, problem.getTestingFitnessComputer(), rep("%4.2f", properties.length)),
-              new Diversity<Node<String>, String, MultiObjectiveFitness>(),
-              new BestPrinter<Node<String>, String, MultiObjectiveFitness>(problem.getPhenotypePrinter(), "%30.30s")
+              new Population<Node<String>, String, MultiObjectiveFitness<Double>>(),
+              new MultiObjectiveFitnessFirstBest<Node<String>, String, Double>(false, problem.getTestingFitnessComputer(), rep("%4.2f", properties.length)),
+              new Diversity<Node<String>, String, MultiObjectiveFitness<Double>>(),
+              new BestPrinter<Node<String>, String, MultiObjectiveFitness<Double>>(problem.getPhenotypePrinter(), "%30.30s")
       ));
       if (mainFilePrintStream != null) {
         listeners.add(new CollectorGenerationLogger<>(
                 (Map) Collections.singletonMap("run", s), mainFilePrintStream, false, mainHeader ? 0 : -1, ";", ";",
-                new Population<Node<String>, String, MultiObjectiveFitness>(),
-                new MultiObjectiveFitnessFirstBest<Node<String>, String>(false, problem.getTestingFitnessComputer(), rep("%4.2f", properties.length)),
-                new Diversity<Node<String>, String, MultiObjectiveFitness>(),
-                new BestPrinter<Node<String>, String, MultiObjectiveFitness>(problem.getPhenotypePrinter(), "%30.30s")
+                new Population<Node<String>, String, MultiObjectiveFitness<Double>>(),
+                new MultiObjectiveFitnessFirstBest<Node<String>, String, Double>(false, problem.getTestingFitnessComputer(), rep("%4.2f", properties.length)),
+                new Diversity<Node<String>, String, MultiObjectiveFitness<Double>>(),
+                new BestPrinter<Node<String>, String, MultiObjectiveFitness<Double>>(problem.getPhenotypePrinter(), "%30.30s")
         ));
       }
       mainHeader = false;
-      Evolver<Node<String>, String, MultiObjectiveFitness> evolver = new PartitionEvolver<>(configuration, false);
+      Evolver<Node<String>, String, MultiObjectiveFitness<Double>> evolver = new PartitionEvolver<>(configuration, false);
       List<Node<String>> bests = evolver.solve(executor, random, listeners);
       System.out.printf("Found %d solutions.%n", bests.size());
       String mapperName = "best";

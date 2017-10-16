@@ -11,16 +11,16 @@ import java.util.Arrays;
  *
  * @author eric
  */
-public class MultiObjectiveFitness implements Fitness<Comparable[]> {
+public class MultiObjectiveFitness<T extends Comparable<T>> implements Fitness<T[]> {
   
-  private final Comparable[] values;
+  private final T[] values;
 
-  public MultiObjectiveFitness(Comparable... values) {
+  public MultiObjectiveFitness(T... values) {
     this.values = values;
   }    
 
   @Override
-  public Comparable[] getValue() {
+  public T[] getValue() {
     return values;
   }
 

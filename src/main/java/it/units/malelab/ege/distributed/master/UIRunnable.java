@@ -161,8 +161,8 @@ public class UIRunnable implements Runnable {
     int x = 0;
     int y = 0;
     //build columns
-    Map<String, String> jobKeyFormats = new LinkedHashMap<>();
-    Map<String, String> collectorKeyFormats = new LinkedHashMap<>();
+    Map<String, String> jobKeyFormats = new TreeMap<>();
+    Map<String, String> collectorKeyFormats = new TreeMap<>();
     collectorKeyFormats.put(GENERATION_NAME, "%3d");
     int nOngoingJobs = 0;
     List<JobInfo> jobInfos = new ArrayList<>();
@@ -228,7 +228,11 @@ public class UIRunnable implements Runnable {
       x = x + 17;
       g.setForegroundColor(TextColor.ANSI.CYAN);
       for (Map.Entry<String, String> formattedKeyEntry : jobKeyFormats.entrySet()) {
-        String s = String.format(formattedKeyEntry.getValue(), jobInfo.getJob().getKeys().get(formattedKeyEntry.getKey()).toString());
+        String value = "";
+        if (jobInfo.getJob().getKeys().containsKey(formattedKeyEntry.getKey())) {
+          value = jobInfo.getJob().getKeys().get(formattedKeyEntry.getKey()).toString();
+        }
+        String s = String.format(formattedKeyEntry.getValue(), value);
         putString(g, x, y, x0, y0, w, h, s);
         x = x + s.length() + 1;
       }
@@ -277,13 +281,15 @@ public class UIRunnable implements Runnable {
     int nToDoJobs = 0;
     int nOngoingJobs = 0;
     int nDoneJobs = 0;
-    for (JobInfo jobInfo : master.getJobs().values()) {
-      if (jobInfo.getStatus().equals(JobInfo.Status.TO_DO)) {
-        nToDoJobs = nToDoJobs + 1;
-      } else if (jobInfo.getStatus().equals(JobInfo.Status.ONGOING)) {
-        nOngoingJobs = nOngoingJobs + 1;
-      } else if (jobInfo.getStatus().equals(JobInfo.Status.DONE)) {
-        nDoneJobs = nDoneJobs + 1;
+    synchronized (master.getJobs()) {
+      for (JobInfo jobInfo : master.getJobs().values()) {
+        if (jobInfo.getStatus().equals(JobInfo.Status.TO_DO)) {
+          nToDoJobs = nToDoJobs + 1;
+        } else if (jobInfo.getStatus().equals(JobInfo.Status.ONGOING)) {
+          nOngoingJobs = nOngoingJobs + 1;
+        } else if (jobInfo.getStatus().equals(JobInfo.Status.DONE)) {
+          nDoneJobs = nDoneJobs + 1;
+        }
       }
     }
     //print job info

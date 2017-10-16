@@ -5,11 +5,13 @@
  */
 package it.units.malelab.ege.benchmark.mapper.element;
 
+import java.io.Serializable;
+
 /**
  *
  * @author eric
  */
-public interface Element {
+public interface Element extends Serializable {
   
   public String toString();
   

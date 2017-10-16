@@ -38,7 +38,7 @@ import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
  *
  * @author eric
  */
-public class MappingPropertiesFitness implements FitnessComputer<String, MultiObjectiveFitness> {
+public class MappingPropertiesFitness implements FitnessComputer<String, MultiObjectiveFitness<Double>> {
 
   private final static int EXPRESSIVENESS_DEPTH = 2;
 
@@ -49,7 +49,21 @@ public class MappingPropertiesFitness implements FitnessComputer<String, MultiOb
   
   private final double[] genotypeDistances;
   
-  public static enum Property {REDUNDANCY, NON_UNIFORMITY, NON_LOCALITY};
+  public static enum Property {
+    REDUNDANCY("r"),
+    NON_UNIFORMITY("nu"),
+    NON_LOCALITY("nl");
+    private final String shortName;
+
+    private Property(String shortName) {
+      this.shortName = shortName;
+    }
+
+    public String getShortName() {
+      return shortName;
+    }
+    
+  };
 
   public MappingPropertiesFitness(int genotypeSize, int n, int maxMappingDepth, Random random, List<Problem<String, NumericFitness>> problems, Property... properties) {
     this.maxMappingDepth = maxMappingDepth;
@@ -84,7 +98,7 @@ public class MappingPropertiesFitness implements FitnessComputer<String, MultiOb
   }
 
   @Override
-  public MultiObjectiveFitness compute(Node<String> mapperRawPhenotype) {
+  public MultiObjectiveFitness<Double> compute(Node<String> mapperRawPhenotype) {
     Map<Property, double[]> propertyValues = new LinkedHashMap<>();
     for (Property property : properties) {
       propertyValues.put(property, new double[problems.size()]);
@@ -130,17 +144,17 @@ public class MappingPropertiesFitness implements FitnessComputer<String, MultiOb
     for (int j = 0; j<properties.length; j++) {
       meanValues[j] = StatUtils.mean(propertyValues.get(properties[j]));
     }
-    MultiObjectiveFitness mof = new MultiObjectiveFitness(meanValues);
+    MultiObjectiveFitness<Double> mof = new MultiObjectiveFitness<Double>(meanValues);
     return mof;
   }
 
   @Override
-  public MultiObjectiveFitness worstValue() {
+  public MultiObjectiveFitness<Double> worstValue() {
     Double[] worstValues = new Double[properties.length];
     for (int i = 0; i<properties.length; i++) {
       worstValues[i] = Double.POSITIVE_INFINITY;
     }
-    MultiObjectiveFitness mof = new MultiObjectiveFitness(worstValues);
+    MultiObjectiveFitness<Double> mof = new MultiObjectiveFitness<Double>(worstValues);
     return mof;
   }
 

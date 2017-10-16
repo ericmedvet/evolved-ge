@@ -12,7 +12,7 @@ import java.util.List;
  *
  * @author eric
  */
-public class BinaryClassification<I, T> implements FitnessComputer<T, MultiObjectiveFitness> {
+public class BinaryClassification<I, T> implements FitnessComputer<T, MultiObjectiveFitness<Double>> {
   
   public static interface Classifier<I, T> {
     public boolean classify(I instance, Node<T> classifier);
@@ -36,7 +36,7 @@ public class BinaryClassification<I, T> implements FitnessComputer<T, MultiObjec
   }
   
   @Override
-  public MultiObjectiveFitness compute(Node<T> phenotype) {
+  public MultiObjectiveFitness<Double> compute(Node<T> phenotype) {
     double falsePositives = 0;
     double falseNegatives = 0;
     for (I positive : positives) {
@@ -45,14 +45,14 @@ public class BinaryClassification<I, T> implements FitnessComputer<T, MultiObjec
     for (I negative : negatives) {
       falsePositives = falsePositives+(classifier.classify(negative, phenotype)?1:0);
     }
-    return new MultiObjectiveFitness(
+    return new MultiObjectiveFitness<Double>(
             falsePositives/(double)negatives.size(),
             falseNegatives/(double)positives.size());
   }
 
   @Override
-  public MultiObjectiveFitness worstValue() {
-    return new MultiObjectiveFitness(1d, 1d);
+  public MultiObjectiveFitness<Double> worstValue() {
+    return new MultiObjectiveFitness<Double>(1d, 1d);
   }
 
   public List<I> getPositives() {

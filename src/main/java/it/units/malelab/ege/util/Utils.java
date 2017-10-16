@@ -10,8 +10,10 @@ import it.units.malelab.ege.core.Individual;
 import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.core.Grammar;
 import it.units.malelab.ege.core.Sequence;
+import it.units.malelab.ege.core.fitness.MultiObjectiveFitness;
 import it.units.malelab.ege.core.listener.EvolverListener;
 import it.units.malelab.ege.core.listener.event.EvolutionEvent;
+import it.units.malelab.ege.util.distance.Distance;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -452,6 +454,42 @@ public class Utils {
       s = " " + s;
     }
     return s;
+  }
+
+  public static <T> Set<T> maximallySparseSubset(Map<T, MultiObjectiveFitness<Double>> points, int n) {
+    Set<T> remainingPoints = new LinkedHashSet<>(points.keySet());
+    Set<T> selectedPoints = new LinkedHashSet<>();
+    Distance<MultiObjectiveFitness<Double>> d = new Distance<MultiObjectiveFitness<Double>>() {
+      @Override
+      public double d(MultiObjectiveFitness<Double> mof1, MultiObjectiveFitness<Double> mof2) {
+        double d = 0;
+        for (int i = 0; i < Math.min(mof1.getValue().length, mof2.getValue().length); i++) {
+          d = d + Math.pow(mof1.getValue()[i] - mof2.getValue()[i], 2d);
+        }
+        return Math.sqrt(d);
+      }
+    };
+    while (!remainingPoints.isEmpty() && (selectedPoints.size() < n)) {
+      T selected = remainingPoints.iterator().next();;
+      if (!selectedPoints.isEmpty()) {
+        //add point with max distance from selected points
+        double maxSumOfDs = Double.NEGATIVE_INFINITY;
+        for (T t : remainingPoints) {
+          double sumOfDs = 0;
+          for (T otherT : selectedPoints) {
+            sumOfDs = sumOfDs + d.d(points.get(t), points.get(otherT));
+          }
+          if (sumOfDs > maxSumOfDs) {
+            maxSumOfDs = sumOfDs;
+            selected = t;
+          }
+        }
+        //sort
+      }
+      remainingPoints.remove(selected);
+      selectedPoints.add(selected);
+    }
+    return selectedPoints;
   }
 
 }
