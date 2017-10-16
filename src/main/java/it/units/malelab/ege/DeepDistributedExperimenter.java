@@ -84,15 +84,16 @@ public class DeepDistributedExperimenter {
   //java -cp EvolvedGrammaticalEvolution-1.0-SNAPSHOT.jar:. it.units.malelab.ege.DeepDistributedExperimenter hi 9000 diversities
   public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
     
-    args = new String[]{"hi", "9000", "/home/eric/experiments/ge/dist/diversities"};
+    args = new String[]{"hi", "9000", "/home/eric/experiments/ge/dist/", "diversities"};
     
     //prepare master
     String keyPhrase = args[0];
     int port = Integer.parseInt(args[1]);
-    String baseResultFileName = args[2];
-    Master master = new Master(keyPhrase, port, baseResultFileName);
+    String baseResultDirName = args[2];
+    String baseResultFileName = args[3];
+    Master master = new Master(keyPhrase, port, baseResultDirName, baseResultFileName);
     master.start();
-    List<Future<List<List<Node>>>> results = new ArrayList<>();
+    List<Future<List<Node>>> results = new ArrayList<>();
     //prepare things
     int populationSize = 500;
     int generations = 50;
@@ -299,7 +300,7 @@ public class DeepDistributedExperimenter {
       }
     }
     L.info(String.format("%d job submitted.%n", results.size()));
-    for (Future<List<List<Node>>> result : results) {
+    for (Future<List<Node>> result : results) {
       L.info(String.format("Got %d solutions%n", result.get().size()));
     }
   }

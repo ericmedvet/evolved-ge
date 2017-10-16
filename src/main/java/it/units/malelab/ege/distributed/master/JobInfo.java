@@ -23,7 +23,7 @@ public class JobInfo {
   private Status status;
   private final Job job;
   private final List<Map<String, Object>> data;
-  private List<List<Node>> results;
+  private List<Node> results;
   private String clientName;
 
   public JobInfo(Job job) {
@@ -48,11 +48,11 @@ public class JobInfo {
     return data;
   }      
 
-  public List<List<Node>> getResults() {
+  public List<Node> getResults() {
     return results;
   }
 
-  public void setResults(List<List<Node>> results) {
+  public void setResults(List<Node> results) {
     this.results = results;
   }
 

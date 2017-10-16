@@ -9,21 +9,16 @@ import com.google.common.collect.EvictingQueue;
 import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import it.units.malelab.ege.core.Node;
-import it.units.malelab.ege.core.listener.collector.Collector;
 import it.units.malelab.ege.distributed.DistributedUtils;
 import it.units.malelab.ege.distributed.Job;
 import it.units.malelab.ege.distributed.PrintStreamFactory;
-import it.units.malelab.ege.util.Utils;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -33,6 +28,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Handler;
@@ -45,13 +41,16 @@ import java.util.logging.Logger;
  *
  * @author eric
  */
-public class Master implements PrintStreamFactory {
+public class Master {
 
   private final static int JOB_POLLING_INTERVAL = 1;
 
   public final static String LOCAL_TIME_NAME = "local.time";
   public final static String GENERATION_NAME = "generation";
+  public final static String CLIENT_NAME = "client";
+  public final static String JOB_ID_NAME = "job.id";
   public final static String RANDOM_SEED_NAME = "random.seed";
+    
   private final static Logger L = Logger.getLogger(Master.class.getName());
 
   private final String keyPhrase;
@@ -59,11 +58,12 @@ public class Master implements PrintStreamFactory {
   private final String baseResultFileName;
 
   private final ExecutorService mainExecutor;
-  private final Map<List<String>, PrintStream> streams;
+  private final ScheduledExecutorService scheduledExecutor;
 
   private final Queue<LogRecord> logs;
   private final Map<String, ClientInfo> clients;
   private final Map<String, JobInfo> jobs;
+  private final PrintStreamFactory printStreamFactory;
 
   static {
     try {
@@ -75,20 +75,21 @@ public class Master implements PrintStreamFactory {
     }
   }
 
-  public Master(String keyPhrase, int port, String baseResultFileName) {
+  public Master(String keyPhrase, int port, String baseResultDirName, String baseResultFileName) {
     this.keyPhrase = keyPhrase;
     this.port = port;
     this.baseResultFileName = baseResultFileName;
-    this.mainExecutor = Executors.newCachedThreadPool();
-    streams = Collections.synchronizedMap(new HashMap<List<String>, PrintStream>());
+    mainExecutor = Executors.newCachedThreadPool();
+    scheduledExecutor = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
     clients = Collections.synchronizedMap(new TreeMap<String, ClientInfo>());
     jobs = Collections.synchronizedMap(new HashMap<String, JobInfo>());
     logs = EvictingQueue.create(UIRunnable.LOG_QUEUE_SIZE);
+    printStreamFactory = new PrintStreamFactory(baseResultDirName);
   }
 
   public void start() {
     mainExecutor.submit(new ServerRunnable(this));
-    //TODO build and add a job rescheduler
+    scheduledExecutor.scheduleAtFixedRate(new ClientCheckerRunnable(this), 0, ClientCheckerRunnable.INTERVAL, TimeUnit.SECONDS);
     DefaultTerminalFactory terminalFactory = new DefaultTerminalFactory();
     Screen screen;
     try {
@@ -97,7 +98,7 @@ public class Master implements PrintStreamFactory {
       mainExecutor.submit(new UIRunnable(screen, this));
       //redirect logging
       LogManager.getLogManager().reset();
-      LogManager.getLogManager().getLogger("").setLevel(Level.ALL);
+      LogManager.getLogManager().getLogger("").setLevel(Level.INFO);
       LogManager.getLogManager().getLogger("").addHandler(new Handler() {
         @Override
         public void publish(LogRecord record) {
@@ -122,9 +123,9 @@ public class Master implements PrintStreamFactory {
     }
   }
 
-  public Future<List<List<Node>>> submit(final Job job) {
+  public Future<List<Node>> submit(final Job job) {
     jobs.put(job.getId(), new JobInfo(job));
-    return new Future<List<List<Node>>>() {
+    return new Future<List<Node>>() {
       @Override
       public boolean cancel(boolean mayInterruptIfRunning) {
         throw new UnsupportedOperationException("Not supported yet.");
@@ -141,7 +142,7 @@ public class Master implements PrintStreamFactory {
       }
 
       @Override
-      public List<List<Node>> get() throws InterruptedException, ExecutionException {
+      public List<Node> get() throws InterruptedException, ExecutionException {
         while (true) {
           try {
             return get(-1, TimeUnit.MILLISECONDS);
@@ -152,11 +153,11 @@ public class Master implements PrintStreamFactory {
       }
 
       @Override
-      public List<List<Node>> get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+      public List<Node> get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
         long elapsed = 0;
         while (true) {
           long m = System.currentTimeMillis();
-          List<List<Node>> result = jobs.get(job.getId()).getResults();
+          List<Node> result = jobs.get(job.getId()).getResults();
           if (result != null) {
             return result;
           }
@@ -170,19 +171,6 @@ public class Master implements PrintStreamFactory {
       }
 
     };
-  }
-
-  @Override
-  public PrintStream build(List<String> keys) {
-    String fileName = baseResultFileName + "-" + keys.hashCode() + ".txt";
-    try {
-      PrintStream ps = new PrintStream(fileName);
-      DistributedUtils.writeHeader(ps, keys);
-      return ps;
-    } catch (FileNotFoundException ex) {
-      L.log(Level.SEVERE, String.format("Cannot create file %s: %s", fileName, ex.getMessage()), ex);
-    }
-    return null;
   }
 
   public String getKeyPhrase() {
@@ -210,7 +198,7 @@ public class Master implements PrintStreamFactory {
     jobInfo.getData().addAll(data);
   }
 
-  public void pushJobResults(String jobId, List<List<Node>> results) {
+  public void pushJobResults(String jobId, List<Node> results) {
     JobInfo jobInfo = jobs.get(jobId);
     if (jobInfo == null) {
       L.warning(String.format("Job \"%s\" does not exist!", jobId));
@@ -218,6 +206,9 @@ public class Master implements PrintStreamFactory {
     }
     jobInfo.setResults(results);
     //save on disk and clear entry from ongoing jobs
+    PrintStream ps = printStreamFactory.get(DistributedUtils.jobKeys(jobInfo.getJob()), baseResultFileName);
+    DistributedUtils.writeData(ps, jobInfo.getJob(), jobInfo.getData());
+    jobInfo.getData().clear();    
     jobInfo.setStatus(JobInfo.Status.DONE);
   }
 

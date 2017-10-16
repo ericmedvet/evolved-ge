@@ -7,7 +7,6 @@ package it.units.malelab.ege.distributed.worker;
 
 import com.google.common.collect.Multimap;
 import it.units.malelab.ege.core.Node;
-import it.units.malelab.ege.distributed.Job;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
@@ -24,9 +23,9 @@ public class WorkerMessage implements Serializable {
   private final int freeThreads;
   private final int maxThreads;
   private final Multimap<String, Map<String, Object>> jobsData;
-  private final Map<String, List<List<Node>>> jobsResults;
+  private final Map<String, List<Node>> jobsResults;
 
-  public WorkerMessage(String name, int interval, Map<String, Number> stats, int freeThreads, int maxThreads, Multimap<String, Map<String, Object>> jobsData, Map<String, List<List<Node>>> jobsResults) {
+  public WorkerMessage(String name, int interval, Map<String, Number> stats, int freeThreads, int maxThreads, Multimap<String, Map<String, Object>> jobsData, Map<String, List<Node>> jobsResults) {
     this.name = name;
     this.interval = interval;
     this.stats = stats;
@@ -60,7 +59,7 @@ public class WorkerMessage implements Serializable {
     return jobsData;
   }
 
-  public Map<String, List<List<Node>>> getJobsResults() {
+  public Map<String, List<Node>> getJobsResults() {
     return jobsResults;
   }
   

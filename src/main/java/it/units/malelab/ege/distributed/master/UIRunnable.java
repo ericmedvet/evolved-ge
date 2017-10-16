@@ -6,7 +6,6 @@
 package it.units.malelab.ege.distributed.master;
 
 import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
 import com.googlecode.lanterna.Symbols;
 import com.googlecode.lanterna.TerminalSize;
@@ -16,7 +15,6 @@ import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
 import com.googlecode.lanterna.screen.Screen;
 import it.units.malelab.ege.core.listener.collector.Collector;
-import it.units.malelab.ege.distributed.Job;
 import static it.units.malelab.ege.distributed.master.Master.GENERATION_NAME;
 import it.units.malelab.ege.distributed.worker.StatsRunnable;
 import it.units.malelab.ege.util.Utils;
@@ -206,6 +204,8 @@ public class UIRunnable implements Runnable {
     }
     //legend
     g.setForegroundColor(TextColor.ANSI.BLUE);
+    putString(g, x, y, x0, y0, w, h, String.format("%-16.16s", "Worker"));
+    x = x + 17;
     for (Map.Entry<String, String> formattedKeyEntry : jobKeyFormats.entrySet()) {
       String columnName = String.format(formattedKeyEntry.getValue(), formattedKeyEntry.getKey());
       putString(g, x, y, x0, y0, w, h, columnName);
@@ -223,6 +223,9 @@ public class UIRunnable implements Runnable {
         continue;
       }
       x = 0;
+      g.setForegroundColor(TextColor.ANSI.WHITE);
+      putString(g, x, y, x0, y0, w, h, String.format("%-16.16s", jobInfo.getClientName()));
+      x = x + 17;
       g.setForegroundColor(TextColor.ANSI.CYAN);
       for (Map.Entry<String, String> formattedKeyEntry : jobKeyFormats.entrySet()) {
         String s = String.format(formattedKeyEntry.getValue(), jobInfo.getJob().getKeys().get(formattedKeyEntry.getKey()).toString());
@@ -392,7 +395,7 @@ public class UIRunnable implements Runnable {
   }
 
   private void putString(TextGraphics g, int x, int y, int x0, int y0, int w, int h, String s) {
-    if ((x >= w-1) || (y >= h)) {
+    if ((x >= w - 1) || (y >= h)) {
       return;
     }
     if (x + s.length() >= w - 1) {

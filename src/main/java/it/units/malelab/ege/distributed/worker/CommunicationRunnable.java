@@ -58,13 +58,19 @@ public class CommunicationRunnable implements Runnable {
       }
       //prepare jobs data
       Multimap<String, Map<String, Object>> jobsData = ArrayListMultimap.create();
-      for (Job job : worker.getCurrentJobsData().keySet()) {
-        jobsData.putAll(job.getId(), worker.getCurrentJobsData().get(job));
+      synchronized (worker.getCurrentJobsData()) {
+        for (Job job : worker.getCurrentJobsData().keySet()) {
+          jobsData.putAll(job.getId(), worker.getCurrentJobsData().get(job));
+        }
+        worker.getCurrentJobsData().clear();
       }
       //prepare jobs result
-      Map<String, List<List<Node>>> jobsResults = new HashMap<>();
-      for (Map.Entry<Job, List<List<Node>>> jobResultsEntry : worker.getCompletedJobsResults().entrySet()) {
-        jobsResults.put(jobResultsEntry.getKey().getId(), jobResultsEntry.getValue());
+      Map<String, List<Node>> jobsResults = new HashMap<>();
+      synchronized (worker.getCompletedJobsResults()) {
+        for (Map.Entry<Job, List<Node>> jobResultsEntry : worker.getCompletedJobsResults().entrySet()) {
+          jobsResults.put(jobResultsEntry.getKey().getId(), jobResultsEntry.getValue());
+        }
+        worker.getCompletedJobsResults().clear();
       }
       //send worker message
       WorkerMessage workerMessage = new WorkerMessage(
@@ -77,7 +83,7 @@ public class CommunicationRunnable implements Runnable {
               jobsResults);
       oos.writeObject(workerMessage);
       //read and consume master message
-      MasterMessage masterMessage = (MasterMessage)ois.readObject();
+      MasterMessage masterMessage = (MasterMessage) ois.readObject();
       for (Job job : masterMessage.getNewJobs()) {
         worker.submitJob(job);
       }

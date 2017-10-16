@@ -53,7 +53,7 @@ public class ClientRunnable implements Runnable {
                 socket.getPort(), randomData));
         throw new SecurityException("Client did not correctly replied to the challenge!");
       }
-      L.finer(String.format("Client %s:%d completed andshake correctly with \"%s\".", socket.getInetAddress(), socket.getPort(), randomData));
+      L.finer(String.format("Client %s:%d completed handshake correctly with \"%s\".", socket.getInetAddress(), socket.getPort(), randomData));
       //read worker message
       WorkerMessage workerMessage = (WorkerMessage) ois.readObject();
       ClientInfo clientInfo = master.getClients().get(workerMessage.getName());
@@ -78,7 +78,7 @@ public class ClientRunnable implements Runnable {
       for (String jobId : workerMessage.getJobsResults().keySet()) {
         master.pushJobResults(jobId, workerMessage.getJobsResults().get(jobId));
       }
-      L.fine(String.format("Client %s sent %d results.",
+      L.log(workerMessage.getJobsResults().isEmpty()?Level.FINE:Level.INFO, String.format("Client %s sent %d results.",
               workerMessage.getName(),
               workerMessage.getJobsResults().size()));
       L.fine(String.format("Client %s would accept jobs for %d threads.",

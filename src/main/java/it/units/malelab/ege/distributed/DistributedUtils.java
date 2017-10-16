@@ -7,15 +7,21 @@ package it.units.malelab.ege.distributed;
 
 import it.units.malelab.ege.distributed.master.Master;
 import it.units.malelab.ege.core.listener.collector.Collector;
+import it.units.malelab.ege.util.Pair;
 import java.io.PrintStream;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.crypto.BadPaddingException;
@@ -39,7 +45,7 @@ public class DistributedUtils {
   public static String decrypt(byte[] bytes, String keyString) {
     return new String(cipher(bytes, keyString, Cipher.DECRYPT_MODE));
   }
-  
+
   public static byte[] cipher(byte[] bytes, String keyString, int mode) {
     try {
       Cipher c = Cipher.getInstance("AES");
@@ -53,7 +59,7 @@ public class DistributedUtils {
       L.log(Level.SEVERE, String.format("Cannot encrypt: %s", ex), ex);
     } catch (NoSuchPaddingException ex) {
       L.log(Level.SEVERE, String.format("Cannot encrypt: %s", ex), ex);
-    //} catch (IOException ex) {
+      //} catch (IOException ex) {
       L.log(Level.SEVERE, String.format("Cannot encrypt: %s", ex), ex);
     } catch (InvalidKeyException ex) {
       L.log(Level.SEVERE, String.format("Cannot encrypt: %s", ex), ex);
@@ -75,6 +81,8 @@ public class DistributedUtils {
   public static List<String> jobKeys(Job job) {
     List<String> keys = new ArrayList<>();
     keys.addAll(job.getKeys().keySet());
+    keys.add(Master.CLIENT_NAME);
+    keys.add(Master.JOB_ID_NAME);
     keys.add(Master.GENERATION_NAME);
     keys.add(Master.LOCAL_TIME_NAME);
     for (Collector collector : (List<Collector>) job.getCollectors()) {
@@ -90,14 +98,37 @@ public class DistributedUtils {
     ps.println(keys.get(keys.size() - 1));
   }
 
-  public static void writeData(PrintStream ps, Job job, Map<String, Object> data) {
+  public static void writeData(PrintStream ps, Job job, List<Map<String, Object>> data) {
     List<String> keys = jobKeys(job);
-    Map<String, Object> allData = new HashMap<>(data);
-    allData.putAll(job.getKeys());
-    for (int i = 0; i < keys.size() - 1; i++) {
-      ps.print(allData.get(keys.get(i)) + ";");
+    for (Map<String, Object> dataItem : data) {
+      Map<String, Object> allData = new HashMap<>(dataItem);
+      allData.putAll(job.getKeys());
+      for (int i = 0; i < keys.size() - 1; i++) {
+        ps.print(allData.get(keys.get(i)) + ";");
+      }
+      ps.println(allData.get(keys.get(keys.size() - 1)));
     }
-    ps.println(allData.get(keys.get(keys.size() - 1)));
+  }
+
+  public static <K, V> Pair<K, V> getAny(Map<K, Future<V>> futures, long millis) {
+    while (true) {
+      if (futures.isEmpty()) {
+        return null;
+      }
+      for (Map.Entry<K, Future<V>> entry : futures.entrySet()) {
+        try {
+          V v = entry.getValue().get(millis, TimeUnit.MILLISECONDS);
+          futures.remove(entry.getKey());
+          return new Pair<>(entry.getKey(), v);
+        } catch (InterruptedException ex) {
+          //ignore
+        } catch (ExecutionException ex) {
+          //ignore
+        } catch (TimeoutException ex) {
+          //ignore
+        }
+      }
+    }
   }
 
 }
