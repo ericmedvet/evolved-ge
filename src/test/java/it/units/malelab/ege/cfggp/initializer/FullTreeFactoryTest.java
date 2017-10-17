@@ -10,8 +10,6 @@ import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.util.Utils;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -19,7 +17,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import org.junit.Ignore;
 
 /**
  *
@@ -52,13 +49,16 @@ public class FullTreeFactoryTest {
   @Test
   public void testBuild() throws IOException {
     Random random = new Random(1);
-    Grammar<String> g = Utils.parseFromFile(new File("grammars/text.bnf"));
     int maxDepth = 12;
-    FullTreeFactory<String> f = new FullTreeFactory<>(maxDepth, g);
-    for (int i = 0; i < 100; i++) {
-      Node<String> tree = f.build(random);
-      assertEquals("tree root should be the starting symbol", g.getStartingSymbol(), tree.getContent());
-      assertTrue("tree depth should be <=" + maxDepth, tree.depth() <= maxDepth);
+    String[] grammars = new String[]{"grammars/max-grammar.bnf", "grammars/text.bnf", "grammars/mapper.bnf", "grammars/symbolic-regression.bnf"};
+    for (String grammar : grammars) {
+      Grammar<String> g = Utils.parseFromFile(new File(grammar));
+      FullTreeFactory<String> f = new FullTreeFactory<>(maxDepth, g);
+      for (int i = 0; i < 100; i++) {
+        Node<String> tree = f.build(random);
+        assertEquals("tree root should be the starting symbol", g.getStartingSymbol(), tree.getContent());
+        assertTrue("tree depth should be <=" + maxDepth, tree.depth() <= maxDepth);
+      }
     }
   }
 

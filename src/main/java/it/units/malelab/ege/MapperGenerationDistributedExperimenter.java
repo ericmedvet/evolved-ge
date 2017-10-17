@@ -77,7 +77,7 @@ public class MapperGenerationDistributedExperimenter {
   private final int expressivenessDepth = 2;
   private final int nGenotypes = 100;
   private final int nOfFirstRank = 10;
-  private final int learningMaxDepth = 16;
+  private final int learningMaxDepth = 14;
   private final int learningPopSize = 50; //500
   private final int learningRuns = 2; //10
   private final int learningMaxPartitionSize = 10;

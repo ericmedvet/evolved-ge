@@ -11,12 +11,9 @@ import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.util.GrammarUtils;
 import it.units.malelab.ege.util.Pair;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 
 /**
  *
@@ -40,6 +37,7 @@ public class GrowTreeFactory<T> implements Factory<Node<T>> {
     Node<T> tree = null;
     while (tree == null) {
       tree = build(random, grammar.getStartingSymbol(), maxDepth);
+      break;
     }
     return tree;
   }
@@ -90,8 +88,9 @@ public class GrowTreeFactory<T> implements Factory<Node<T>> {
       }
       for (int i = 0; i<availableOptions.get(optionIndex).size(); i++) {
         int childTargetDepth = targetDepth -1;
-        if ((i!=fullIndex)&&(childTargetDepth>0)) {
-          childTargetDepth = random.nextInt(childTargetDepth);
+        Pair<Double, Double> minMax = nonTerminalDepths.get(availableOptions.get(optionIndex).get(i));
+        if ((i!=fullIndex)&&(childTargetDepth>minMax.getFirst())) {          
+          childTargetDepth = random.nextInt(childTargetDepth-minMax.getFirst().intValue())+minMax.getFirst().intValue();
         }
         Node<T> child = build(random, availableOptions.get(optionIndex).get(i), childTargetDepth);
         if (child == null) {
