@@ -83,9 +83,6 @@ public class DeepDistributedExperimenter {
   
   //java -cp EvolvedGrammaticalEvolution-1.0-SNAPSHOT.jar:. it.units.malelab.ege.DeepDistributedExperimenter hi 9000 diversities
   public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
-    
-    args = new String[]{"hi", "9000", "/home/eric/experiments/ge/dist/", "diversities"};
-    
     //prepare master
     String keyPhrase = args[0];
     int port = Integer.parseInt(args[1]);

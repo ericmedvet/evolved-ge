@@ -7,6 +7,7 @@ package it.units.malelab.ege.cfggp.initializer;
 
 import it.units.malelab.ege.core.Grammar;
 import it.units.malelab.ege.core.Node;
+import it.units.malelab.ege.util.Pair;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -20,70 +21,47 @@ public class FullTreeFactory<T> extends GrowTreeFactory<T> {
   public FullTreeFactory(int maxDepth, Grammar<T> grammar) {
     super(maxDepth, grammar);
   }
-
+  
   @Override
-  public Node<T> build(Random random, T symbol, int maxDepth, int depth) {
-    if (depth == maxDepth) {
+  public Node<T> build(Random random) {
+    Node<T> tree = null;
+    while (tree == null) {
+      tree = build(random, grammar.getStartingSymbol(), super.maxDepth);
+    }
+    return tree;
+  }  
+
+  public Node<T> build(Random random, T symbol, int targetDepth) {
+    if (targetDepth<0) {
       return null;
     }
     Node<T> tree = new Node<>(symbol);
     if (grammar.getRules().containsKey(symbol)) {
+      //a non-terminal
       List<List<T>> options = grammar.getRules().get(symbol);
-      List<List<T>> availableOptions;
-      if (depth < maxDepth - 1) {
-        availableOptions = new ArrayList<>();
-        for (List<T> option : options) {
-          boolean hasTerminal = false;
-          for (T optionSymbol : option) {
-            if (!grammar.getRules().containsKey(optionSymbol)) {
-              hasTerminal = true;
-              break;
-            }
-          }
-          if (!hasTerminal) {
-            availableOptions.add(option);
-          }
-        }
-        if (availableOptions.isEmpty()) {
-          //if no available options, use all options: the reason is that in many
-          //cases, there are decoration symbols in the grammar making the
-          //non-terminal-only case very rare
-          availableOptions.addAll(options);
-        }
-      } else {
-        availableOptions = new ArrayList<>();
-        for (List<T> option : options) {
-          boolean allTerminals = true;
-          for (T optionSymbol : option) {
-            if (grammar.getRules().containsKey(optionSymbol)) {
-              allTerminals = false;
-              break;
-            }
-          }
-          if (allTerminals) {
-            availableOptions.add(option);
-          }
-        }
-        if (availableOptions.isEmpty()) {
-          //here all options are too deep
-          return null;
+      List<List<T>> availableOptions = new ArrayList<>();
+      //general idea: try the following
+      //1. choose expansion with min,max including target depth
+      //2. choose expansion
+      for (List<T> option : options) {        
+        Pair<Double, Double> minMax = optionMinMaxDepth(option);
+        if (((targetDepth-1)>=minMax.getFirst())&&((targetDepth-1)<=minMax.getSecond())) {
+          availableOptions.add(option);
         }
       }
+      if (availableOptions.isEmpty()) {
+        availableOptions.addAll(options);
+      }
       int optionIndex = random.nextInt(availableOptions.size());
-      for (T childSymbol : availableOptions.get(optionIndex)) {
-        Node<T> child;
-        if (grammar.getRules().containsKey(childSymbol)) {
-          child = build(random, childSymbol, maxDepth, depth + 1);
-          if (child == null) {
-            return null;
-          }
-        } else {
-          child = new Node(childSymbol);
+      for (int i = 0; i<availableOptions.get(optionIndex).size(); i++) {
+        Node<T> child = build(random, availableOptions.get(optionIndex).get(i), targetDepth-1);
+        if (child == null) {
+          return null;
         }
         tree.getChildren().add(child);
       }
     }
     return tree;
   }
-
+  
 }

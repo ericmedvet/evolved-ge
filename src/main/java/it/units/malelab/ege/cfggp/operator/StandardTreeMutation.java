@@ -31,13 +31,12 @@ public class StandardTreeMutation<T>  extends AbstractMutation<Node<T>> {
   @Override
   public List<Node<T>> apply(List<Node<T>> parents, Random random) {
     Node<T> child = new Node<>(parents.get(0));
-    child.propagateParentship();
     List<Node<T>> nonTerminalNodes = new ArrayList<>();
     getNonTerminalNodes(child, nonTerminalNodes);
     Collections.shuffle(nonTerminalNodes, random);
     boolean done = false;
     for (Node<T> toReplaceSubTree : nonTerminalNodes) {
-      Node<T> newSubTree = factory.build(random, toReplaceSubTree.getContent(), maxDepth, toReplaceSubTree.getAncestors().size());
+      Node<T> newSubTree = factory.build(random, toReplaceSubTree.getContent(), toReplaceSubTree.depth());
       if (newSubTree!=null) {
         toReplaceSubTree.getChildren().clear();
         toReplaceSubTree.getChildren().addAll(newSubTree.getChildren());

@@ -1,5 +1,5 @@
 <mapper> ::= <n> <lg>
-<n> ::= <const_n> | <var_n> | <fun_n_g> ( <g> ) | <fun_n_n,n> ( <n> , <n> ) | <fun_n_ln,n> ( <ln> , <n> ) | <fun_n_ln,n> ( <ln> , <n> ) | <fun_n_lg> ( <lg> )
+<n> ::= <const_n> | <var_n> | <fun_n_g> ( <g> ) | <fun_n_n,n> ( <n> , <n> ) | <fun_n_ln> ( <ln> ) | <fun_n_ln,n> ( <ln> , <n> ) | <fun_n_lg> ( <lg> )
 <ln> ::= <var_ln> | <fun_ln_n> ( <n> ) | <fun_ln_n,n> ( <n> , <n> ) | apply ( <fun_n_g> , <lg> )
 <g> ::= <var_g> | <fun_g_g,n> ( <g> , <n> ) | <fun_g_lg,n> ( <lg> , <n> )
 <lg> ::= <fun_lg_g,n> ( <g> , <n> ) | <fun_lg_g,ln> ( <g> , <ln> ) | apply ( <fun_g_g,n> , <ln> , <g> )

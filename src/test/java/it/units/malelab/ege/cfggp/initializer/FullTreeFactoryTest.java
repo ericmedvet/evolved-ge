@@ -49,29 +49,16 @@ public class FullTreeFactoryTest {
   /**
    * Test of build method, of class FullTreeFactory.
    */
-  @Ignore("re-enable")
   @Test
   public void testBuild() throws IOException {
     Random random = new Random(1);
-    Grammar<String> g = Utils.parseFromFile(new File("grammars/max-grammar.bnf"));
-    int maxDepth = 8;
-    int currentDepth = 2;
-    GrowTreeFactory<String> f = new GrowTreeFactory<>(maxDepth, g);
-    List<String> nonTerminals = new ArrayList<>(g.getRules().keySet());
+    Grammar<String> g = Utils.parseFromFile(new File("grammars/text.bnf"));
+    int maxDepth = 12;
+    FullTreeFactory<String> f = new FullTreeFactory<>(maxDepth, g);
     for (int i = 0; i < 100; i++) {
-      String symbol = nonTerminals.get(random.nextInt(nonTerminals.size()));
-      Node<String> tree = f.build(random, symbol, maxDepth, currentDepth);
-
-      if (tree != null) {
-        System.out.printf("%d %d<%d%n", i, tree.depth() + currentDepth, maxDepth);
-      } else {
-        System.out.printf("%d null%n", i);
-      }
-
-      if (tree != null) {
-        assertEquals("tree root should be the arg symbol", symbol, tree.getContent());
-        assertTrue("tree depth+" + currentDepth + " should be <=" + maxDepth, tree.depth() + currentDepth <= maxDepth);
-      }
+      Node<String> tree = f.build(random);
+      assertEquals("tree root should be the starting symbol", g.getStartingSymbol(), tree.getContent());
+      assertTrue("tree depth should be <=" + maxDepth, tree.depth() <= maxDepth);
     }
   }
 

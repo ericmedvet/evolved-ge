@@ -123,9 +123,6 @@ public class MapperGenerationDistributedExperimenter {
   }
 
   public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
-
-    args = new String[]{"hi", "9000", "/home/eric/experiments/ge/dist", "map_gen"};
-
     String keyPhrase = args[0];
     int port = Integer.parseInt(args[1]);
     String baseResultDirName = args[2];
@@ -165,7 +162,7 @@ public class MapperGenerationDistributedExperimenter {
       String propertiesString = Joiner.on("/").join(propertyString);
       List<Collector<Node<String>, String, MultiObjectiveFitness<Double>>> collectors = Arrays.asList(
               new Population<Node<String>, String, MultiObjectiveFitness<Double>>(),
-              new MultiObjectiveFitnessFirstBest<Node<String>, String, Double>(false, problem.getTestingFitnessComputer(), Collections.nCopies(properties.length, "%4.2f").toArray(new String[properties.length])),
+              new MultiObjectiveFitnessFirstBest<Node<String>, String, Double>(false, problem.getTestingFitnessComputer(), "%4.2f", "%4.2f", "%4.2f"),
               new Diversity<Node<String>, String, MultiObjectiveFitness<Double>>(),
               new BestPrinter<Node<String>, String, MultiObjectiveFitness<Double>>(problem.getPhenotypePrinter(), "%40.40s"));
       for (int r = 0; r < learningRuns; r++) {
@@ -224,7 +221,7 @@ public class MapperGenerationDistributedExperimenter {
     data.put("non.locality", mof.getValue()[1]);
     data.put("non.uniformity", mof.getValue()[2]);
     List<String> keys = new ArrayList<String>(data.keySet());
-    PrintStream mappersPs = master.getPrintStreamFactory().get(keys, baseResultFileName + "-mappers");
+    PrintStream mappersPs = master.getPrintStreamFactory().get(keys, baseResultFileName + ".mappers");
     for (int i = 0; i < keys.size(); i++) {
       mappersPs.print(data.get(keys.get(i)));
       if (i != (keys.size() - 1)) {

@@ -492,4 +492,24 @@ public class Utils {
     return selectedPoints;
   }
 
+  public static double avgDepth(Node tree) {
+    List<Double> depths = new ArrayList<>();
+    collectLeafDepths(tree, 0, depths);
+    double[] values = new double[depths.size()];
+    for (int i = 0; i<depths.size(); i++) {
+      values[i] = depths.get(i);
+    }
+    return StatUtils.mean(values);
+  }
+  
+  private static void collectLeafDepths(Node tree, int d, List<Double> depths) {
+    if (tree.getChildren().isEmpty()) {
+      depths.add((double)d);
+      return;
+    }
+    for (Node child : (List<Node>)tree.getChildren()) {
+      collectLeafDepths(child, d+1, depths);
+    }    
+  }
+
 }
