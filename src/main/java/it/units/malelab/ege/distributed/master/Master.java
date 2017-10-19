@@ -158,6 +158,7 @@ public class Master {
         while (true) {
           long m = System.currentTimeMillis();
           List<Node> result = jobs.get(job.getId()).getResults();
+          jobs.get(job.getId()).setResults(null);
           if (result != null) {
             return result;
           }

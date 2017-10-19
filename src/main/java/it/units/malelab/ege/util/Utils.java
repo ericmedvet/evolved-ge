@@ -472,15 +472,15 @@ public class Utils {
     while (!remainingPoints.isEmpty() && (selectedPoints.size() < n)) {
       T selected = remainingPoints.iterator().next();;
       if (!selectedPoints.isEmpty()) {
-        //add point with max distance from selected points
-        double maxSumOfDs = Double.NEGATIVE_INFINITY;
+        //add point with max distance from closest point
+        double maxMinD = Double.NEGATIVE_INFINITY;
         for (T t : remainingPoints) {
-          double sumOfDs = 0;
+          double minD = Double.POSITIVE_INFINITY;
           for (T otherT : selectedPoints) {
-            sumOfDs = sumOfDs + d.d(points.get(t), points.get(otherT));
+            minD = Math.min(minD, d.d(points.get(t), points.get(otherT)));
           }
-          if (sumOfDs > maxSumOfDs) {
-            maxSumOfDs = sumOfDs;
+          if (minD > maxMinD) {
+            maxMinD = minD;
             selected = t;
           }
         }

@@ -21,8 +21,8 @@ import it.units.malelab.ege.util.Utils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.ConcurrentModificationException;
 import java.util.Date;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -102,10 +102,14 @@ public class UIRunnable implements Runnable {
         g.putString(jix - 1, cy - 1, "Job summary");
         g.putString(ojx + 1, ojy - 1, "Ongoing jobs");
         g.putString(lx + 1, ly - 1, "Log");
-        printClients(g, cx, cy, Math.round(w / 2) - 1, Math.round(h / 2) - 1);
-        printJobs(g, jix, jiy, Math.round(w / 2) - 1, Math.round(h / 2) - 1);
-        printOngoingJobs(g, ojx, ojy, w, Math.round(h / 2) - 1 - LOG_QUEUE_SIZE - 1);
-        printLogs(g, lx, ly, w, LOG_QUEUE_SIZE);
+        try {
+          printClients(g, cx, cy, Math.round(w / 2) - 1, Math.round(h / 2) - 1);
+          printJobs(g, jix, jiy, Math.round(w / 2) - 1, Math.round(h / 2) - 1);
+          printOngoingJobs(g, ojx, ojy, w, Math.round(h / 2) - 1 - LOG_QUEUE_SIZE - 1);
+          printLogs(g, lx, ly, w, LOG_QUEUE_SIZE);
+        } catch (ConcurrentModificationException ex) {
+          L.log(Level.WARNING, String.format("ConcurrentModificationException, ignoring", ex), ex);
+        }
         //refresh
         try {
           screen.refresh();
