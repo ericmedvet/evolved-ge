@@ -289,7 +289,9 @@ public class DeepDistributedExperimenter {
                             new Diversity(),
                             new BestPrinter(problem.getPhenotypePrinter(), "%30.30s")),
                     keys,
-                    configuration.getOffspringSize());
+                    configuration.getOffspringSize(),
+                    false
+            );
             L.info(String.format("Submitting job: %s%n", job));
             results.add(master.submit(job));
           }

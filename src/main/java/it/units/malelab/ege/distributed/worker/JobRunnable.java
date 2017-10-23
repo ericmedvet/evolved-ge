@@ -94,6 +94,9 @@ public class JobRunnable implements Runnable {
     });
     try {
       List<Node> finalBestRank = evolver.solve(worker.getTaskExecutor(), random, listeners);
+      if (!job.isSendResults()) {
+        finalBestRank.clear();
+      }
       worker.notifyEndedJob(job, finalBestRank);
       L.fine(String.format("Ended job: %s %s", job.getId(), job.getKeys()));
     } catch (InterruptedException ex) {

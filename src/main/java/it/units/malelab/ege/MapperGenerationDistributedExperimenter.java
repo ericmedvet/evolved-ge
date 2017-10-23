@@ -20,6 +20,7 @@ import it.units.malelab.ege.cfggp.operator.StandardTreeMutation;
 import it.units.malelab.ege.core.Individual;
 import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.core.Problem;
+import it.units.malelab.ege.core.evolver.DeterministicCrowdingConfiguration;
 import it.units.malelab.ege.core.evolver.PartitionConfiguration;
 import it.units.malelab.ege.core.evolver.StandardConfiguration;
 import it.units.malelab.ege.core.fitness.FitnessComputer;
@@ -52,6 +53,9 @@ import it.units.malelab.ege.ge.operator.ProbabilisticMutation;
 import it.units.malelab.ege.util.Pair;
 import it.units.malelab.ege.util.Utils;
 import static it.units.malelab.ege.util.Utils.*;
+import it.units.malelab.ege.util.distance.CachedDistance;
+import it.units.malelab.ege.util.distance.Distance;
+import it.units.malelab.ege.util.distance.LeavesEdit;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -60,7 +64,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -68,7 +71,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -81,7 +83,7 @@ public class MapperGenerationDistributedExperimenter {
 
   private final int expressivenessDepth = 2;
   private final int nGenotypes = 100;
-  private final int nOfFirstRank = 10;
+  protected final int nOfFirstRank = 5;
   private final int learningMaxDepth = 14;
   private final int learningPopSize = 500;
   private final int learningRuns = 10;
@@ -89,19 +91,19 @@ public class MapperGenerationDistributedExperimenter {
   private final int learningGenerations = 50;
   private final int learningGenotypeSize = 256;
   private final int learningMaxMappingDepth = 9;
-  private final int validationGenotypeSize = 1024;
-  private final int validationMaxMappingDepth = 9;
-  private final int validationGenerations = 30;
-  private final int validationPopSize = 500;
-  private final int validationRuns = 10;
-  private final boolean validateMappers = false;
-  private final Map<String, Problem<String, NumericFitness>> validationProblems = new LinkedHashMap<>();
+  protected final int validationGenotypeSize = 1024;
+  protected final int validationMaxMappingDepth = 9;
+  protected final int validationGenerations = 30;
+  protected final int validationPopSize = 500;
+  protected final int validationRuns = 5;
+  protected final boolean validateMappers = false;
+  protected final Map<String, Problem<String, NumericFitness>> validationProblems = new LinkedHashMap<>();
   private final List<Problem<String, NumericFitness>> learningProblems = new ArrayList<>();
-  private final Map<String, Node<String>> baselines = new LinkedHashMap<>();
-  private final FitnessComputer<String, MultiObjectiveFitness<Double>> baseMOF;
-  private final Master master;
+  protected final Map<String, Node<String>> baselines = new LinkedHashMap<>();
+  protected final FitnessComputer<String, MultiObjectiveFitness<Double>> baseMOF;
+  protected final Master master;
 
-  private final String baseResultFileName;
+  protected final String baseResultFileName;
 
   private static final String FITNESS_NAME = "fitness";
 
@@ -174,7 +176,7 @@ public class MapperGenerationDistributedExperimenter {
               new Diversity<Node<String>, String, MultiObjectiveFitness<Double>>(),
               new BestPrinter<Node<String>, String, MultiObjectiveFitness<Double>>(problem.getPhenotypePrinter(), "%40.40s"));
       for (int r = 0; r < learningRuns; r++) {
-        Job job = buildLearningJob(problem, propertiesString, r, (List) collectors);
+        Job job = buildLearningJobPartition(problem, propertiesString, r, (List) collectors);
         resultsMap.put(job, master.submit(job));
       }
     }
@@ -205,7 +207,7 @@ public class MapperGenerationDistributedExperimenter {
     }
   }
 
-  private void submitValidationJobs(Node<String> mapper, String mapperName, int outerRun, int inRankIndex) {
+  protected void submitValidationJobs(Node<String> mapper, String mapperName, int outerRun, int inRankIndex) {
     L.info(String.format("Submitting validation jobs for mapper %s:%d:%d", mapperName, outerRun, inRankIndex));
     for (int r = 0; r < validationRuns; r++) {
       for (Map.Entry<String, Problem<String, NumericFitness>> problemEntry : validationProblems.entrySet()) {
@@ -501,10 +503,10 @@ public class MapperGenerationDistributedExperimenter {
     keys.put("outer.run", outerRun);
     keys.put("in.rank.index", inRankIndex);
     keys.put(Master.RANDOM_SEED_NAME, run);
-    return new Job(configuration, collectors, keys, validationPopSize);
+    return new Job(configuration, collectors, keys, validationPopSize, false);
   }
 
-  private Job buildLearningJob(Problem<String, MultiObjectiveFitness<Double>> problem, String fitnessName, int run, List<Collector> collectors) {
+  private Job buildLearningJobPartition(Problem<String, MultiObjectiveFitness<Double>> problem, String fitnessName, int run, List<Collector> collectors) {
     PartitionConfiguration<Node<String>, String, MultiObjectiveFitness<Double>> configuration = new PartitionConfiguration<>(
             new IndividualComparator<Node<String>, String, MultiObjectiveFitness<Double>>(IndividualComparator.Attribute.PHENO),
             learningMaxPartitionSize,
@@ -534,7 +536,36 @@ public class MapperGenerationDistributedExperimenter {
     Map<String, Object> keys = new LinkedHashMap<>();
     keys.put(FITNESS_NAME, fitnessName);
     keys.put(Master.RANDOM_SEED_NAME, run);
-    return new Job(configuration, collectors, keys, learningPopSize);
+    return new Job(configuration, collectors, keys, learningPopSize, true);
+  }
+
+  private Job buildLearningJobDC(Problem<String, MultiObjectiveFitness<Double>> problem, String fitnessName, int run, List<Collector> collectors) {
+    DeterministicCrowdingConfiguration<Node<String>, String, MultiObjectiveFitness<Double>> configuration = new DeterministicCrowdingConfiguration<>(
+            new Distance<Individual<Node<String>, String, MultiObjectiveFitness<Double>>>() {
+              private Distance<Node<String>> phenotypeDistance = new CachedDistance<>(new LeavesEdit<String>());
+                  @Override
+                  public double d(Individual<Node<String>, String, MultiObjectiveFitness<Double>> i1, Individual<Node<String>, String, MultiObjectiveFitness<Double>> i2) {
+                    return phenotypeDistance.d(i1.getPhenotype(), i2.getPhenotype());
+                  }
+                },
+            learningPopSize,
+            learningGenerations,
+            new MultiInitializer<>(new Utils.MapBuilder<PopulationInitializer<Node<String>>, Double>()
+                    .put(new RandomInitializer<>(new GrowTreeFactory<>(learningMaxDepth, problem.getGrammar())), 0.5)
+                    .put(new RandomInitializer<>(new FullTreeFactory<>(learningMaxDepth, problem.getGrammar())), 0.5)
+                    .build()
+            ),
+            new Any<Node<String>>(), new CfgGpMapper<String>(), new Utils.MapBuilder<GeneticOperator<Node<String>>, Double>()
+                    .put(new StandardTreeCrossover<String>(learningMaxDepth), 0.8d)
+                    .put(new StandardTreeMutation<>(learningMaxDepth, problem.getGrammar()), 0.2d)
+                    .build(),
+            new ParetoRanker<Node<String>, String, MultiObjectiveFitness<Double>>(),
+            new Tournament<Individual<Node<String>, String, MultiObjectiveFitness<Double>>>(3),
+            problem);
+    Map<String, Object> keys = new LinkedHashMap<>();
+    keys.put(FITNESS_NAME, fitnessName);
+    keys.put(Master.RANDOM_SEED_NAME, run);
+    return new Job(configuration, collectors, keys, 1, true);
   }
 
 }

@@ -446,7 +446,7 @@ public class Utils {
       }
       return size;
     }
-    return String.format(format, null).length();
+    return String.format(format, (Object[]) null).length();
   }
 
   public static String pad(String s, int length, boolean doFormat) {

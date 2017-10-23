@@ -28,12 +28,14 @@ public class Job<G, T, F extends Fitness> implements Serializable {
   private final List<Collector<G, T, F>> collectors;
   private final Map<String, Object> keys;
   private final int estimatedMaxThreads;
+  private final boolean sendResults;
 
-  public Job(Configuration<G, T, F> configuration, List<Collector<G, T, F>> collectors, Map<String, Object> keys, int estimatedMaxThreads) {
+  public Job(Configuration<G, T, F> configuration, List<Collector<G, T, F>> collectors, Map<String, Object> keys, int estimatedMaxThreads, boolean sendResults) {
     this.configuration = configuration;
     this.collectors = collectors;
     this.keys = keys;
     this.estimatedMaxThreads = estimatedMaxThreads;
+    this.sendResults = sendResults;
     id = UUID.randomUUID().toString()+"-"+atomicInteger.incrementAndGet();
   }
 
@@ -82,6 +84,10 @@ public class Job<G, T, F extends Fitness> implements Serializable {
 
   public String getId() {
     return id;
+  }
+
+  public boolean isSendResults() {
+    return sendResults;
   }
   
 }

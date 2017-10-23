@@ -80,7 +80,7 @@ public class Worker implements Runnable {
     InetAddress masterAddress = InetAddress.getByName(args[1]);
     int masterPort = Integer.parseInt(args[2]);
     int nThreads = Integer.parseInt(args[3]);
-    if (nThreads<=0) {
+    if (nThreads <= 0) {
       nThreads = Runtime.getRuntime().availableProcessors();
     }
     String logDir = null;
@@ -113,13 +113,13 @@ public class Worker implements Runnable {
   public int getMaxThreads() {
     return maxThreads;
   }
-  
+
   public int getFreeThreads() {
     int count = 0;
     for (Job job : currentJobs) {
-      count = count+job.getEstimatedMaxThreads();
+      count = count + job.getEstimatedMaxThreads();
     }
-    return Math.max(0, maxThreads-count);
+    return Math.max(0, maxThreads - count);
   }
 
   public String getKeyPhrase() {
@@ -149,11 +149,11 @@ public class Worker implements Runnable {
   public Map<Job, List<Node>> getCompletedJobsResults() {
     return completedJobsResults;
   }
-  
+
   public void submitJob(Job job) {
     L.info(String.format("Got new job: %s %s", job.getId(), job.getKeys()));
     currentJobs.add(job);
-    runExecutor.submit(new JobRunnable(job, this));    
+    runExecutor.submit(new JobRunnable(job, this));
   }
 
   public PrintStreamFactory getPrintStreamFactory() {

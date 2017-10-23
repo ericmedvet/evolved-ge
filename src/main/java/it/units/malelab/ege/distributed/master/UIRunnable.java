@@ -350,7 +350,7 @@ public class UIRunnable implements Runnable {
     //print client info
     g.setBackgroundColor(TextColor.ANSI.BLACK);
     g.setForegroundColor(TextColor.ANSI.BLUE);
-    putString(g, 0, 0, x0, y0, w, h, String.format("%-16.16s %3.3s %2.2s %5.5s %4.4s %s",
+    putString(g, 0, 0, x0, y0, w, h, String.format("%-16.16s %3.3s %2.2s %5.5s %5.5s %s",
             "Worker", "T", "Js", "Threads", "Load", "Memory"
     ));
     int y = 1;
@@ -378,9 +378,9 @@ public class UIRunnable implements Runnable {
         }
       }
       g.setForegroundColor(TextColor.ANSI.WHITE);
-      putString(g, 17 + 3 + 1, y, x0, y0, w, h, String.format("%2d %2d/%2d %4.2f %.1f/%.1fGB",
+      putString(g, 17 + 3 + 1, y, x0, y0, w, h, String.format("%2d %2d/%2d %5.2f %.1f/%.1fGB",
               master.getClientJobIds(clientName).size(),
-              clientInfo.getLastMessage().getFreeThreads(),
+              clientInfo.getLastMessage().getMaxThreads()-clientInfo.getLastMessage().getFreeThreads(),
               clientInfo.getLastMessage().getMaxThreads(),
               clientInfo.getLastMessage().getStats().get(StatsRunnable.STAT_CPU_SYSTEM_NAME),
               clientInfo.getLastMessage().getStats().containsKey(StatsRunnable.STAT_FREE_MEM_NAME) ? clientInfo.getLastMessage().getStats().get(StatsRunnable.STAT_FREE_MEM_NAME).doubleValue() / 1024d / 1024d / 1024d : null,
