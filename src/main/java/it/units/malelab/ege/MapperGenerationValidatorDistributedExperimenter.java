@@ -5,6 +5,8 @@
  */
 package it.units.malelab.ege;
 
+import it.units.malelab.ege.benchmark.mapper.MapperUtils;
+import it.units.malelab.ege.benchmark.mapper.element.Element;
 import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.core.fitness.MultiObjectiveFitness;
 import it.units.malelab.ege.util.Utils;
@@ -52,18 +54,46 @@ public class MapperGenerationValidatorDistributedExperimenter extends MapperGene
     this.mappersFileName = mappersFileName;
   }
 
+  private static String ps(Node<String> t, int d) {
+    String s = "";
+    for (int i = 0; i < d; i++) {
+      s = s + "\t";
+    }
+    s = s + "[. {\\gft{";
+    if (t.getContent().startsWith("<")) {
+      s = s + "\\bnfPiece{" + t.getContent().replaceAll("_", ".").substring(1, t.getContent().length() - 1) + "}";
+    } else {
+      s = s + t.getContent().replaceAll("_", ".");
+    }
+    s = s + "}}";
+    for (Node<String> child : t.getChildren()) {
+      s = s + "\n" + ps(child, d + 1);
+    }
+    s = s + " ]";
+    return s;
+  }
+
+  private static String pe(Node<Element> t, int d) {
+    String s = "";
+    for (int i = 0; i < d; i++) {
+      s = s + "\t";
+    }
+    s = s + "[. {\\gft{"+t.getContent().toString().toLowerCase().replaceAll("_", ".")+"}}";
+    for (Node<Element> child : t.getChildren()) {
+      s = s + "\n" + pe(child, d + 1);
+    }
+    s = s + " ]";
+    return s;
+  }
+
   @Override
   public void start() throws IOException {
-    
-    for (String baselineName : baselines.keySet()) {
-      MultiObjectiveFitness<Double> mof = baseMOF.compute(baselines.get(baselineName));
-      System.out.printf("%s: redundancy=%5.3f non-locality=%5.3f non-uniformity=%5.3f%n",
-              baselineName, mof.getValue()[0], mof.getValue()[1], mof.getValue()[2]
-      );
-    }
-    
+
+    //System.out.println(ps(getGERawTree(), 0));
+    System.out.println(pe(MapperUtils.transform(getWHGERawTree().getChildren().get(0)), 0));
+    System.out.println(pe(MapperUtils.transform(getWHGERawTree().getChildren().get(1)), 0));
     System.exit(0);
-    
+
     //baseline jobs
     for (Map.Entry<String, Node<String>> baselineEntry : baselines.entrySet()) {
       String mapperName = baselineEntry.getKey();
@@ -100,13 +130,22 @@ public class MapperGenerationValidatorDistributedExperimenter extends MapperGene
           Node<String> mapper = deserializeBase64(selectedSerializedMapper);
           submitValidationJobs(mapper, previousMapperName, Integer.parseInt(previousOuterRun), innerCount);
           //print summary
-          mappersPropsPs.print(data.get("mapper.name")+";");
-          mappersPropsPs.print(data.get("outer.run")+";");
-          mappersPropsPs.print(innerCount+";");
-          mappersPropsPs.print(currentMap.get(selectedSerializedMapper).getValue()[0]+";");
-          mappersPropsPs.print(currentMap.get(selectedSerializedMapper).getValue()[1]+";");
+          mappersPropsPs.print(data.get("mapper.name") + ";");
+          mappersPropsPs.print(data.get("outer.run") + ";");
+          mappersPropsPs.print(innerCount + ";");
+          mappersPropsPs.print(currentMap.get(selectedSerializedMapper).getValue()[0] + ";");
+          mappersPropsPs.print(currentMap.get(selectedSerializedMapper).getValue()[1] + ";");
           mappersPropsPs.print(currentMap.get(selectedSerializedMapper).getValue()[2]);
           mappersPropsPs.println();
+          if (data.get("mapper.name").equals("generated-r") && data.get("outer.run").equals("4") && innerCount == 2) {
+            Node<String> t = deserializeBase64(selectedSerializedMapper);
+            System.out.println(currentMap.get(selectedSerializedMapper));
+            System.out.println(t);
+            System.out.println(t.depth());
+            System.out.println(t.size());
+            System.out.println(t.nodeSize());
+            System.exit(0);
+          }
           innerCount++;
         }
         //reset

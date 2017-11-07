@@ -29,7 +29,6 @@ import it.units.malelab.ege.core.evolver.PartitionConfiguration;
 import it.units.malelab.ege.core.evolver.PartitionEvolver;
 import it.units.malelab.ege.core.evolver.StandardConfiguration;
 import it.units.malelab.ege.core.evolver.StandardEvolver;
-import it.units.malelab.ege.core.fitness.Fitness;
 import it.units.malelab.ege.core.fitness.NumericFitness;
 import it.units.malelab.ege.core.initializer.MultiInitializer;
 import it.units.malelab.ege.core.initializer.PopulationInitializer;

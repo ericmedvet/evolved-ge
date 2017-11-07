@@ -12,8 +12,10 @@ import it.units.malelab.ege.core.Individual;
 import it.units.malelab.ege.core.fitness.Fitness;
 import it.units.malelab.ege.core.listener.event.EvolutionEndEvent;
 import it.units.malelab.ege.core.listener.event.EvolutionEvent;
+import it.units.malelab.ege.core.listener.event.EvolutionStartEvent;
 import it.units.malelab.ege.core.listener.event.GenerationEvent;
 import it.units.malelab.ege.ge.mapper.StandardGEMapper;
+import it.units.malelab.ege.util.Utils;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -29,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.imageio.ImageIO;
-import org.apache.commons.math3.stat.StatUtils;
 
 /**
  *
@@ -55,7 +56,7 @@ public class EvolutionImageSaverListener<G extends ConstrainedSequence, T, F ext
   public EvolutionImageSaverListener(
           Map<String, Object> constants,
           String basePath, ImageType... types) {
-    super(GenerationEvent.class, EvolutionEndEvent.class);
+    super(EvolutionStartEvent.class, GenerationEvent.class, EvolutionEndEvent.class);
     this.constants = new LinkedHashMap<>(constants);
     this.basePath = basePath;
     evolutionDiversities = new ArrayList<>();
@@ -106,7 +107,7 @@ public class EvolutionImageSaverListener<G extends ConstrainedSequence, T, F ext
       }
       double[] diversities = new double[best.getGenotype().size()];
       for (int i = 0; i < symbols.length; i++) {
-        diversities[i] = multisetDiversity(symbols[i], domains[i]);
+        diversities[i] = Utils.multisetDiversity(symbols[i], domains[i]);
       }
       evolutionDiversities.add(diversities);
     }
@@ -137,31 +138,40 @@ public class EvolutionImageSaverListener<G extends ConstrainedSequence, T, F ext
       evolutionUsages.add(usages);
     }
     if (event instanceof EvolutionEndEvent) {
-      //save
-      String baseFileName = "";
-      for (Object value : constants.values()) {
-        baseFileName = baseFileName + value.toString() + "-";
+      if (basePath != null) {
+        //save
+        String baseFileName = "";
+        for (Object value : constants.values()) {
+          baseFileName = baseFileName + value.toString() + "-";
+        }
+        if (types.contains(ImageType.DIVERSITY)) {
+          saveCSV(basePath + File.separator + baseFileName + "diversitiy.csv", toArray(evolutionDiversities));
+          saveImage(basePath + File.separator + baseFileName + "diversity.png", toArray(evolutionDiversities));
+        }
+        if (types.contains(ImageType.USAGE)) {
+          saveImage(basePath + File.separator + baseFileName + "usage.png", toArray(evolutionUsages));
+          saveCSV(basePath + File.separator + baseFileName + "usage.csv", toArray(evolutionUsages));
+        }
+        if (types.contains(ImageType.DU)) {
+          saveImage(basePath + File.separator + baseFileName + "diversity_usage.png", toArray(evolutionDiversities), toArray(evolutionUsages));
+        }
+        if (types.contains(ImageType.BEST_USAGE)) {
+          saveImage(basePath + File.separator + baseFileName + "bestUsage.png", toArray(evolutionBestUsages));
+          saveCSV(basePath + File.separator + baseFileName + "bestUsage.csv", toArray(evolutionBestUsages));
+        }
       }
-      if (types.contains(ImageType.DIVERSITY)) {
-        saveCSV(basePath + File.separator + baseFileName + "diversitiy.csv", toArray(evolutionDiversities));
-        saveImage(basePath + File.separator + baseFileName + "diversity.png", toArray(evolutionDiversities));
-      }
-      if (types.contains(ImageType.USAGE)) {
-        saveImage(basePath + File.separator + baseFileName + "usage.png", toArray(evolutionUsages));
-        saveCSV(basePath + File.separator + baseFileName + "usage.csv", toArray(evolutionUsages));
-      }
-      if (types.contains(ImageType.DU)) {
-        saveImage(basePath + File.separator + baseFileName + "diversity_usage.png", toArray(evolutionDiversities), toArray(evolutionUsages));
-      }
-      if (types.contains(ImageType.BEST_USAGE)) {
-        saveImage(basePath + File.separator + baseFileName + "bestUsage.png", toArray(evolutionBestUsages));
-        saveCSV(basePath + File.separator + baseFileName + "bestUsage.csv", toArray(evolutionBestUsages));
-      }
+    }
+    if (event instanceof EvolutionStartEvent) {
       //clear
       evolutionBestUsages.clear();
       evolutionUsages.clear();
       evolutionDiversities.clear();
+
     }
+  }
+
+  public double[][][] getLastEvolutionData() {
+    return new double[][][]{toArray(evolutionDiversities), toArray(evolutionUsages)};
   }
 
   @Override
@@ -234,23 +244,6 @@ public class EvolutionImageSaverListener<G extends ConstrainedSequence, T, F ext
       }
     }
     ImageIO.write(bi, "PNG", new File(fileName));
-  }
-
-  private double multisetDiversity(Multiset m, Set d) {
-    double[] counts = new double[d.size()];
-    int i = 0;
-    for (Object possibleValue : d) {
-      counts[i] = m.count(possibleValue);
-      i = i + 1;
-    }
-    double sumOfSquares = 0;
-    double sum = m.size();
-    double mean = m.size() / counts.length;
-    for (double count : counts) {
-      sumOfSquares = sumOfSquares + Math.pow(count - mean, 2);
-    }
-    double normalizedVar = sumOfSquares / (sum * sum * (1 - 1 / (double) counts.length));
-    return Math.max(Math.min(1 - normalizedVar, 1d), 0d);
   }
 
 }

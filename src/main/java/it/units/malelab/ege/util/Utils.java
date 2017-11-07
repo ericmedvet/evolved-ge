@@ -5,6 +5,7 @@
  */
 package it.units.malelab.ege.util;
 
+import com.google.common.collect.Multiset;
 import com.google.common.collect.Range;
 import it.units.malelab.ege.core.Individual;
 import it.units.malelab.ege.core.Node;
@@ -512,4 +513,27 @@ public class Utils {
     }    
   }
 
+  public static double multisetDiversity(Multiset m, Set d) {
+    double[] counts = new double[d.size()];
+    int i = 0;
+    for (Object possibleValue : d) {
+      counts[i] = m.count(possibleValue);
+      i = i + 1;
+    }
+    return 1d-normalizedVariance(counts);
+  }
+  
+  public static double normalizedVariance(double[] values) {
+    double sumOfSquares = 0;
+    double sum = 0;
+    for (double count : values) {
+      sumOfSquares = sumOfSquares + count*count;
+      sum = sum + count;
+    }
+    double minOfSumOfSquares = sum*sum/(double)values.length;
+    double maxOfSumOfSquares = sum*sum;
+    double v = (sumOfSquares-minOfSumOfSquares)/(maxOfSumOfSquares-minOfSumOfSquares);
+    return v;
+  }
+  
 }

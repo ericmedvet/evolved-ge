@@ -21,11 +21,6 @@ import java.util.Set;
  */
 public class GrammarUtils {
 
-  public static void main(String[] args) throws IOException {
-    Grammar<String> g = Utils.parseFromFile(new File("grammars/symbolic-regression.bnf"));
-    System.out.println(computeSymbolsMinMaxDepths(g));
-  }
-
   public static <T> Map<T, Pair<Double, Double>> computeSymbolsMinMaxDepths(Grammar<T> g) {
     Map<T, Pair<Integer, Boolean>> minDepths = computeNonTerminalMinDepths(g);
     Map<T, Triplet<Double, Boolean, Set<T>>> maxDepths = computeNonTerminalMaxDepths(g);
