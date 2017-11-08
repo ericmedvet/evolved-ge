@@ -24,7 +24,7 @@ public class GrowTreeFactory<T> implements Factory<Node<T>> {
   protected final int maxDepth;
   protected final Grammar<T> grammar;
   
-  private final Map<T, Pair<Double, Double>> nonTerminalDepths; //null for second means infinite
+  private final Map<T, Pair<Double, Double>> nonTerminalDepths;
 
   public GrowTreeFactory(int maxDepth, Grammar<T> grammar) {
     this.maxDepth = maxDepth;

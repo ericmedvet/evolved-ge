@@ -6,8 +6,6 @@
 package it.units.malelab.ege.util;
 
 import it.units.malelab.ege.core.Grammar;
-import java.io.File;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,8 +20,8 @@ import java.util.Set;
 public class GrammarUtils {
 
   public static <T> Map<T, Pair<Double, Double>> computeSymbolsMinMaxDepths(Grammar<T> g) {
-    Map<T, Pair<Integer, Boolean>> minDepths = computeNonTerminalMinDepths(g);
-    Map<T, Triplet<Double, Boolean, Set<T>>> maxDepths = computeNonTerminalMaxDepths(g);
+    Map<T, Pair<Integer, Boolean>> minDepths = computeSymbolsMinDepths(g);
+    Map<T, Triplet<Double, Boolean, Set<T>>> maxDepths = computeSymbolsMaxDepths(g);
     Map<T, Pair<Double, Double>> map = new HashMap<>();
     for (T t : minDepths.keySet()) {
       map.put(t, new Pair<>((double) minDepths.get(t).getFirst(), maxDepths.get(t).getFirst()));
@@ -31,7 +29,7 @@ public class GrammarUtils {
     return map;
   }
 
-  private static <T> Map<T, Pair<Integer, Boolean>> computeNonTerminalMinDepths(Grammar<T> g) {
+  private static <T> Map<T, Pair<Integer, Boolean>> computeSymbolsMinDepths(Grammar<T> g) {
     Map<T, Pair<Integer, Boolean>> map = new HashMap<>();
     map.put(g.getStartingSymbol(), new Pair<>(Integer.MAX_VALUE, false));
     for (List<List<T>> options : g.getRules().values()) {
@@ -50,11 +48,6 @@ public class GrammarUtils {
       boolean changed = false;
       for (T nonTerminal : g.getRules().keySet()) {
         Pair<Integer, Boolean> pair = map.get(nonTerminal);
-        
-        if (pair==null) {
-          System.out.println(nonTerminal);
-        }
-        
         if (pair.getSecond()) {
           //this non-terminal is definitely resolved
           continue;
@@ -85,7 +78,7 @@ public class GrammarUtils {
     return map;
   }
 
-  private static <T> Map<T, Triplet<Double, Boolean, Set<T>>> computeNonTerminalMaxDepths(Grammar<T> g) {
+  private static <T> Map<T, Triplet<Double, Boolean, Set<T>>> computeSymbolsMaxDepths(Grammar<T> g) {
     Map<T, Triplet<Double, Boolean, Set<T>>> map = new HashMap<>();
     map.put(g.getStartingSymbol(), new Triplet<>(0d, false, (Set<T>) new HashSet<T>()));
     for (List<List<T>> options : g.getRules().values()) {
@@ -99,7 +92,7 @@ public class GrammarUtils {
         }
       }
     }
-    //compute mins
+    //compute maxs
     while (true) {
       boolean changed = false;
       for (T nonTerminal : g.getRules().keySet()) {
