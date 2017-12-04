@@ -164,7 +164,7 @@ public class DUMapper {
      saveImages("/home/eric/experiments/dumapper/gsgp-concrete-1_%s.png", false, 2, getGsgpData("/home/eric/experiments/dumapper/gsgp/concrete/1/", "blocks.txt", 51, 100, 100));
      saveImages("/home/eric/experiments/dumapper/gsgp-slump-1_%s.png", false, 2, getGsgpData("/home/eric/experiments/dumapper/gsgp/slump/1/", "blocks.txt", 51, 100, 100));
      saveImages("/home/eric/experiments/dumapper/gsgp-yacht-1_%s.png", false, 2, getGsgpData("/home/eric/experiments/dumapper/gsgp/yacht/1/", "blocks.txt", 51, 100, 100));*/
-    saveImages("/home/eric/experiments/dumapper/neat-1_%s.png", false, 4, getNeatData("/home/eric/experiments/dumapper/neat/1-150T_151-400T+C", "pop-%s.eg", 300));
+    saveImages("/home/eric/experiments/dumapper/neat-1_%s.png", false, 4, getNeatData2("/home/eric/experiments/dumapper/neat/1-150T_151-400T+C", "pop-%s.eg", 300));
 
   }
 
