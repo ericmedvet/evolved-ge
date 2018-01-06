@@ -16,6 +16,7 @@ import it.units.malelab.ege.core.evolver.Evolver;
 import it.units.malelab.ege.core.Problem;
 import it.units.malelab.ege.core.fitness.NumericFitness;
 import it.units.malelab.ege.core.Node;
+import it.units.malelab.ege.core.evolver.Configuration;
 import it.units.malelab.ege.core.listener.CollectorGenerationLogger;
 import it.units.malelab.ege.core.listener.EvolverListener;
 import it.units.malelab.ege.core.listener.collector.NumericFirstBest;
@@ -26,6 +27,11 @@ import it.units.malelab.ege.core.selector.Tournament;
 import it.units.malelab.ege.core.selector.IndividualComparator;
 import it.units.malelab.ege.core.evolver.StandardConfiguration;
 import it.units.malelab.ege.core.evolver.StandardEvolver;
+import it.units.malelab.ege.core.evolver.geneoptimalmixing.GOMConfiguration;
+import it.units.malelab.ege.core.evolver.geneoptimalmixing.GOMEvolver;
+import it.units.malelab.ege.core.evolver.geneoptimalmixing.fos.RandomTree;
+import it.units.malelab.ege.core.evolver.geneoptimalmixing.fos.UPGMAMutualInformationTree;
+import it.units.malelab.ege.core.evolver.geneoptimalmixing.fos.Univariate;
 import it.units.malelab.ege.core.initializer.MultiInitializer;
 import it.units.malelab.ege.core.initializer.PopulationInitializer;
 import it.units.malelab.ege.ge.genotype.BitsGenotype;
@@ -34,6 +40,10 @@ import it.units.malelab.ege.core.listener.collector.BestPrinter;
 import it.units.malelab.ege.core.validator.Any;
 import it.units.malelab.ege.core.operator.GeneticOperator;
 import it.units.malelab.ege.core.ranker.ComparableRanker;
+import it.units.malelab.ege.ge.genotype.BitsGenotypeFactory;
+import it.units.malelab.ege.ge.mapper.WeightedHierarchicalMapper;
+import it.units.malelab.ege.ge.operator.LengthPreservingTwoPointsCrossover;
+import it.units.malelab.ege.ge.operator.ProbabilisticMutation;
 import it.units.malelab.ege.util.Utils;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -51,12 +61,55 @@ import java.util.concurrent.Executors;
 public class ExampleMain {
 
   public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
-    solveKLandscapesCfgGp();
+    //solveKLandscapesCfgGp();
+    Random random = new Random(1l);
+    //ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 1);
+    ExecutorService executor = Executors.newFixedThreadPool(1);
+    Problem<String, NumericFitness> problem = new KLandscapes(4);
+    List<EvolverListener> listeners = new ArrayList<>();
+    listeners.add(new CollectorGenerationLogger<>(
+            Collections.EMPTY_MAP, System.out, true, 10, " ", " | ",
+            new Population(),
+            new NumericFirstBest(false, problem.getTestingFitnessComputer(), "%6.2f"),
+            new Diversity(),
+            new BestPrinter(problem.getPhenotypePrinter(), "%30.30s")
+    ));
+    
+    Configuration configuration = new StandardConfiguration(
+            500, 50,
+            new RandomInitializer<>(new BitsGenotypeFactory(32)),
+            new Any(),
+            new WeightedHierarchicalMapper(3, problem.getGrammar()),
+            new Utils.MapBuilder<>()
+            .put(new LengthPreservingTwoPointsCrossover(), 0.8d)
+            .put(new ProbabilisticMutation(0.01), 0.2d).build(),
+            new ComparableRanker(new IndividualComparator(IndividualComparator.Attribute.FITNESS)),
+            new Tournament(3),
+            new LastWorst(),
+            1,
+            true,
+            problem);
+    Evolver evolver = new StandardEvolver((StandardConfiguration)configuration, true, false);
+    //evolver.solve(executor, random, listeners);
+    
+    configuration = new GOMConfiguration(
+            new UPGMAMutualInformationTree(8),
+            null,//new ProbabilisticMutation(0.01),
+            500,
+            50,
+            new RandomInitializer<>(new BitsGenotypeFactory(256)),
+            new Any(),
+            new WeightedHierarchicalMapper(3, problem.getGrammar()),
+            new ComparableRanker(new IndividualComparator(IndividualComparator.Attribute.FITNESS)),
+            problem);
+    evolver = new GOMEvolver((GOMConfiguration)configuration, true, false);
+    evolver.solve(executor, random, listeners);
+    executor.shutdown();
   }
 
   private static void solveKLandscapesCfgGp() throws IOException, InterruptedException, ExecutionException {
     Random random = new Random(1l);
-    ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()-1);
+    ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 1);
     Problem<String, NumericFitness> problem = new KLandscapes(8);
     int maxDepth = 16;
     StandardConfiguration<Node<String>, String, NumericFitness> configuration = new StandardConfiguration<>(
@@ -70,9 +123,9 @@ public class ExampleMain {
             new Any<Node<String>>(),
             new CfgGpMapper<String>(),
             new Utils.MapBuilder<GeneticOperator<Node<String>>, Double>()
-                    .put(new StandardTreeCrossover<String>(maxDepth), 0.8d)
-                    .put(new StandardTreeMutation<>(maxDepth, problem.getGrammar()), 0.2d)
-                    .build(),
+            .put(new StandardTreeCrossover<String>(maxDepth), 0.8d)
+            .put(new StandardTreeMutation<>(maxDepth, problem.getGrammar()), 0.2d)
+            .build(),
             new ComparableRanker<>(new IndividualComparator<Node<String>, String, NumericFitness>(IndividualComparator.Attribute.FITNESS)),
             new Tournament<Individual<Node<String>, String, NumericFitness>>(3),
             new LastWorst<Individual<Node<String>, String, NumericFitness>>(),
@@ -87,7 +140,7 @@ public class ExampleMain {
             new Diversity<BitsGenotype, String, NumericFitness>(),
             new BestPrinter<BitsGenotype, String, NumericFitness>(problem.getPhenotypePrinter(), "%30.30s")
     ));
-    Evolver<Node<String>, String, NumericFitness> evolver = new StandardEvolver<>(configuration, false);
+    Evolver<Node<String>, String, NumericFitness> evolver = new StandardEvolver<>(configuration, true, false);
     List<Node<String>> bests = evolver.solve(executor, random, listeners);
     System.out.printf("Found %d solutions.%n", bests.size());
   }

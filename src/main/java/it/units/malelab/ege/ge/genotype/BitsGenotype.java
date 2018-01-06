@@ -7,6 +7,7 @@ package it.units.malelab.ege.ge.genotype;
 
 import com.google.common.collect.Range;
 import it.units.malelab.ege.core.ConstrainedSequence;
+import it.units.malelab.ege.core.Sequence;
 import it.units.malelab.ege.util.Utils;
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -196,6 +197,17 @@ public class BitsGenotype implements ConstrainedSequence<Boolean> {
   @Override
   public Set<Boolean> domain(int index) {
     return DOMAIN;
+  }
+
+  @Override
+  public Sequence<Boolean> clone() {
+    return new BitsGenotype(length, bitSet);
+  }
+
+  @Override
+  public void set(int index, Boolean t) {
+    checkIndexes(index, index + 1);
+    bitSet.set(index, t);
   }
 
 }

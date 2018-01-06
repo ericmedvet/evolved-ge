@@ -211,7 +211,7 @@ public class MapperGenerationExperimenter {
         ));
       }
       mainHeader = false;
-      Evolver<Node<String>, String, MultiObjectiveFitness<Double>> evolver = new PartitionEvolver<>(configuration, false);
+      Evolver<Node<String>, String, MultiObjectiveFitness<Double>> evolver = new PartitionEvolver<>(configuration, true, false);
       List<Node<String>> bests = evolver.solve(executor, random, listeners);
       System.out.printf("Found %d solutions.%n", bests.size());
       String mapperName = "best";
@@ -483,7 +483,7 @@ public class MapperGenerationExperimenter {
               new Diversity<BitsGenotype, String, NumericFitness>())
       );
     }
-    Evolver<BitsGenotype, String, NumericFitness> evolver = new StandardEvolver<>(configuration, false);
+    Evolver<BitsGenotype, String, NumericFitness> evolver = new StandardEvolver<>(configuration, true, false);
     List<Node<String>> bests = evolver.solve(executor, random, listeners);
     return new Pair<>(bests.get(0), problem.getLearningFitnessComputer().compute(bests.get(0)));
   }

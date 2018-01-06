@@ -55,11 +55,11 @@ public class JobRunnable implements Runnable {
     //prepare evolver
     Evolver evolver = null;
     if (job.getConfiguration().getClass().equals(StandardConfiguration.class)) {
-      evolver = new StandardEvolver((StandardConfiguration) job.getConfiguration(), false);
+      evolver = new StandardEvolver((StandardConfiguration) job.getConfiguration(), true, false);
     } else if (job.getConfiguration().getClass().equals(PartitionConfiguration.class)) {
-      evolver = new PartitionEvolver((PartitionConfiguration) job.getConfiguration(), false);
+      evolver = new PartitionEvolver((PartitionConfiguration) job.getConfiguration(), true, false);
     } else if (job.getConfiguration().getClass().equals(DeterministicCrowdingConfiguration.class)) {
-      evolver = new DeterministicCrowdingEvolver((DeterministicCrowdingConfiguration) job.getConfiguration(), false);
+      evolver = new DeterministicCrowdingEvolver((DeterministicCrowdingConfiguration) job.getConfiguration(), true, false);
     } else {
       throw new IllegalArgumentException(String.format("Configuration of type %s is unknown/unmanageable.", job.getConfiguration().getClass()));
     }

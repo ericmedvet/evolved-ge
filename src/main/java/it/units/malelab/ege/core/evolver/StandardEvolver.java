@@ -46,9 +46,11 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
 
   private final StandardConfiguration<G, T, F> configuration;
   protected final boolean saveAncestry;
+  protected final boolean actualEvaluations;
 
-  public StandardEvolver(StandardConfiguration<G, T, F> configuration, boolean saveAncestry) {
+  public StandardEvolver(StandardConfiguration<G, T, F> configuration, boolean actualEvaluations, boolean saveAncestry) {
     this.configuration = configuration;
+    this.actualEvaluations = actualEvaluations;
     this.saveAncestry = saveAncestry;
   }
 
@@ -69,11 +71,11 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
       births = births + 1;
     }
     List<Individual<G, T, F>> population = new ArrayList<>(Utils.getAll(executor.invokeAll(tasks)));
-    int lastBroadcastGeneration = (int) Math.floor(births / configuration.getPopulationSize());
+    int lastBroadcastGeneration = (int) Math.floor(actualBirths(births, fitnessCache) / configuration.getPopulationSize());
     Utils.broadcast(new EvolutionStartEvent<>(this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
     Utils.broadcast(new GenerationEvent<>(configuration.getRanker().rank(population, random), lastBroadcastGeneration, this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
     //iterate
-    while (Math.round(births / configuration.getPopulationSize()) < configuration.getNumberOfGenerations()) {
+    while (Math.round(actualBirths(births, fitnessCache) / configuration.getPopulationSize()) < configuration.getNumberOfGenerations()) {
       int currentGeneration = (int) Math.floor(births / configuration.getPopulationSize());
       tasks.clear();
       //re-rank
@@ -114,19 +116,23 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
         Individual<G, T, F> individual = configuration.getUnsurvivalSelector().select(rankedPopulation, random);
         population.remove(individual);
       }
-      if ((int) Math.floor(births / configuration.getPopulationSize()) > lastBroadcastGeneration) {
-        lastBroadcastGeneration = (int) Math.floor(births / configuration.getPopulationSize());
+      if ((int) Math.floor(actualBirths(births, fitnessCache) / configuration.getPopulationSize()) > lastBroadcastGeneration) {
+        lastBroadcastGeneration = (int) Math.floor(actualBirths(births, fitnessCache) / configuration.getPopulationSize());
         Utils.broadcast(new GenerationEvent<>((List) rankedPopulation, lastBroadcastGeneration, this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
       }
     }
     //end
     List<Node<T>> bestPhenotypes = new ArrayList<>();
     List<List<Individual<G, T, F>>> rankedPopulation = configuration.getRanker().rank(population, random);
-    Utils.broadcast(new EvolutionEndEvent<>((List) rankedPopulation, configuration.getNumberOfGenerations(), this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
+    Utils.broadcast(new EvolutionEndEvent<>((List) rankedPopulation, (int) Math.floor(actualBirths(births, fitnessCache) / configuration.getPopulationSize()), this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
     for (Individual<G, T, F> individual : rankedPopulation.get(0)) {
       bestPhenotypes.add(individual.getPhenotype());
     }
     return bestPhenotypes;
+  }
+  
+  protected int actualBirths(int births, LoadingCache<Node<T>, F> fitnessCache) {
+    return actualEvaluations?(int)fitnessCache.stats().missCount():births;
   }
 
   protected CacheLoader<G, Pair<Node<T>, Map<String, Object>>> getMappingCacheLoader() {

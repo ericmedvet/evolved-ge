@@ -34,8 +34,8 @@ public class DeterministicCrowdingEvolver<G, T, F extends Fitness> extends Stand
 
   private final DeterministicCrowdingConfiguration<G, T, F> configuration;
 
-  public DeterministicCrowdingEvolver(DeterministicCrowdingConfiguration<G, T, F> configuration, boolean saveAncestry) {
-    super(configuration, saveAncestry);
+  public DeterministicCrowdingEvolver(DeterministicCrowdingConfiguration<G, T, F> configuration, boolean actualEvaluations, boolean saveAncestry) {
+    super(configuration, actualEvaluations, saveAncestry);
     this.configuration = configuration;
   }    
 
@@ -51,12 +51,12 @@ public class DeterministicCrowdingEvolver<G, T, F extends Fitness> extends Stand
       births = births + 1;
     }
     List<Individual<G, T, F>> population = new ArrayList<>(Utils.getAll(executor.invokeAll(tasks)));
-    int lastBroadcastGeneration = (int) Math.floor(births / configuration.getPopulationSize());
+    int lastBroadcastGeneration = (int) Math.floor(actualBirths(births, fitnessCache) / configuration.getPopulationSize());
     Utils.broadcast(new EvolutionStartEvent<>(this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
     Utils.broadcast(new GenerationEvent<>(configuration.getRanker().rank(population, random), lastBroadcastGeneration, this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
     //iterate
-    while (Math.round(births / configuration.getPopulationSize()) < configuration.getNumberOfGenerations()) {
-      int currentGeneration = (int) Math.floor(births / configuration.getPopulationSize());
+    while (Math.round(actualBirths(births, fitnessCache) / configuration.getPopulationSize()) < configuration.getNumberOfGenerations()) {
+      int currentGeneration = (int) Math.floor(actualBirths(births, fitnessCache) / configuration.getPopulationSize());
       tasks.clear();
       //re-rank
       List<List<Individual<G, T, F>>> rankedPopulation = configuration.getRanker().rank(population, random);
@@ -95,8 +95,8 @@ public class DeterministicCrowdingEvolver<G, T, F extends Fitness> extends Stand
           }
         }
       }
-      if ((int) Math.floor(births / configuration.getPopulationSize()) > lastBroadcastGeneration) {
-        lastBroadcastGeneration = (int) Math.floor(births / configuration.getPopulationSize());
+      if ((int) Math.floor(actualBirths(births, fitnessCache) / configuration.getPopulationSize()) > lastBroadcastGeneration) {
+        lastBroadcastGeneration = (int) Math.floor(actualBirths(births, fitnessCache) / configuration.getPopulationSize());
         Utils.broadcast(new GenerationEvent<>((List) rankedPopulation, lastBroadcastGeneration, this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
       }
     }

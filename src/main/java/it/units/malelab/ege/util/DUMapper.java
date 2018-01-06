@@ -10,10 +10,7 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
 import it.units.malelab.ege.benchmark.KLandscapes;
-import it.units.malelab.ege.benchmark.Text;
-import it.units.malelab.ege.benchmark.booleanfunction.MultipleOutputParallelMultiplier;
 import it.units.malelab.ege.benchmark.symbolicregression.Nguyen7;
-import it.units.malelab.ege.benchmark.symbolicregression.Pagie1;
 import it.units.malelab.ege.core.Individual;
 import it.units.malelab.ege.core.Problem;
 import it.units.malelab.ege.core.evolver.StandardConfiguration;
@@ -57,7 +54,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -79,17 +75,12 @@ public class DUMapper {
    */
   public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
 
-    /*double[][][] sgeData = buildSGEData(100, 6, new Nguyen7(0));
-     saveImages("/home/eric/experiments/dumapper/sge6-nguyen7-1_%s.png", false, 4, sgeData);
-     double[][][] whgeData = buildGEData("whge", 100, 512, new Nguyen7(0));
-     saveImages("/home/eric/experiments/dumapper/whge-nguyen7-1_%s.png", false, 4, whgeData);
-     double[][][] geData = buildGEData("ge", 100, 512, new Nguyen7(0));
-     saveImages("/home/eric/experiments/dumapper/ge-nguyen7-1_%s.png", false, 4, geData);
-     System.exit(0);
-    
-     double[][][] neatData = getNeatData("/home/eric/experiments/dumapper/neat/NEATPopulations", "targetANDcollision_100.0w1_0.1w2_(phase1_from1to300)_NEATPopulationEvolved(%sof300)_100pop_300gen_10cars_3x30.0sec_Run1.eg", 300);
-     saveImages("/home/eric/experiments/dumapper/neat-1_%s.png", false, 4, neatData);
-     System.exit(0);*/
+    //saveImages("/home/eric/experiments/dumapper/sge6-nguyen7-1_%s.png", false, 4, buildSGEData(100, 6, new Nguyen7(0)));
+    //saveImages("/home/eric/experiments/dumapper/whge-nguyen7-1_%s.png", false, 1, buildGEData("whge", 100, 256, new Nguyen7(0), 0, 5));
+    //saveImages("/home/eric/experiments/dumapper/ge-nguyen7-1_%s.png", false, 1, buildGEData("ge", 100, 256, new Nguyen7(0), 0, 5));
+
+    /*double[][][] neatData = getNeatData("/home/eric/experiments/dumapper/neat/NEATPopulations", "targetANDcollision_100.0w1_0.1w2_(phase1_from1to300)_NEATPopulationEvolved(%sof300)_100pop_300gen_10cars_3x30.0sec_Run1.eg", 300);
+     saveImages("/home/eric/experiments/dumapper/neat-1_%s.png", false, 4, neatData);*/
     /*double[][][] gomeaData = getGomeaData("/home/eric/experiments/dumapper/gomea-1/LT_nguyen7/30393", "population_%d.dat", 100, 127);
      saveImages("/home/eric/experiments/dumapper/gomea-lt-nguyen7-30393_%s.png", false, 4, gomeaData);
      System.exit(0);*/
@@ -133,13 +124,13 @@ public class DUMapper {
      }
      }
      saveImages("/home/eric/experiments/dumapper/gsgp-diff-t4-nguyen7-10runs_%s.png", false, 4, merge(datas));*/
-    /*//many runs whge
-     double[][][][] datas = new double[10][][][];
-     for (int i = 0; i<10; i++) {
-     datas[i] = buildGEData("whge", 100, 512, new Nguyen7(0), i);
-     saveImages(String.format("/home/eric/experiments/dumapper/whge-nguyen7-%d_%%s.png", i), false, 1, datas[i]);
-     }
-     saveImages("/home/eric/experiments/dumapper/whge-nguyen7-10runs_%s.png", false, 1, merge(datas));*/
+    //many runs whge
+    double[][][][] datas = new double[10][][][];
+    for (int i = 0; i < 10; i++) {
+      datas[i] = buildGEData("whge", 100, 256, new Nguyen7(0), i, 5);
+      saveImages(String.format("/home/eric/experiments/dumapper/whge-nguyen7-%d_%%s.png", i), false, 1, datas[i]);
+    }
+    saveImages("/home/eric/experiments/dumapper/whge-nguyen7-10runs_%s.png", false, 1, merge(datas));
     /*//gsgp diff tournament size
      saveImages("/home/eric/experiments/dumapper/gsgp-same-random-nguyen7-1_%s.png", false, 2, getGsgpData("/home/eric/experiments/dumapper/gsgp/nguyen7/Same_Init_Pop/random_selection/1/", "blocks.txt", 51, 100, 100));
      saveImages("/home/eric/experiments/dumapper/gsgp-same-t2-nguyen7-1_%s.png", false, 2, getGsgpData("/home/eric/experiments/dumapper/gsgp/nguyen7/Same_Init_Pop/Tournament_size_2/1/", "blocks.txt", 51, 100, 100));
@@ -148,23 +139,23 @@ public class DUMapper {
      saveImages("/home/eric/experiments/dumapper/gsgp-same-t8-nguyen7-1_%s.png", false, 2, getGsgpData("/home/eric/experiments/dumapper/gsgp/nguyen7/Same_Init_Pop/Tournament_size_8/1/", "blocks.txt", 51, 100, 100));
      saveImages("/home/eric/experiments/dumapper/gsgp-same-t10-nguyen7-1_%s.png", false, 2, getGsgpData("/home/eric/experiments/dumapper/gsgp/nguyen7/Same_Init_Pop/Tournament_size_10/1/", "blocks.txt", 51, 100, 100));*/
     /*//different whge problems
-     saveImages("/home/eric/experiments/dumapper/whge200-nguyen7-1_%s.png", false, 2, buildGEData("whge", 50, 200, new Nguyen7(0), 1));
-     saveImages("/home/eric/experiments/dumapper/whge200-pagie1-1_%s.png", false, 2, buildGEData("whge", 50, 200, new Pagie1(), 1));
-     saveImages("/home/eric/experiments/dumapper/whge200-text-1_%s.png", false, 2, buildGEData("whge", 50, 200, new Text(), 1));
-     saveImages("/home/eric/experiments/dumapper/whge200-kland4-1_%s.png", false, 2, buildGEData("whge", 50, 200, new KLandscapes(4), 1));
-     saveImages("/home/eric/experiments/dumapper/whge200-kland8-1_%s.png", false, 2, buildGEData("whge", 50, 200, new KLandscapes(8), 1));
-     saveImages("/home/eric/experiments/dumapper/whge200-mopm2-1_%s.png", false, 2, buildGEData("whge", 50, 200, new MultipleOutputParallelMultiplier(2), 1));
-     saveImages("/home/eric/experiments/dumapper/whge200-mopm4-1_%s.png", false, 2, buildGEData("whge", 50, 200, new MultipleOutputParallelMultiplier(4), 1));*/
-    /*//diff selective pressure whge
-     for (int i = 2; i<=10; i = i+2) {
-     saveImages(String.format("/home/eric/experiments/dumapper/whge-kland5-t%d-_%%s.png", i), false, 1, buildGEData("whge", 50, 200, new KLandscapes(5), 1, i));
-     }*/
+     saveImages("/home/eric/experiments/dumapper/whge-nguyen7-1_%s.png", false, 2, buildGEData("whge", 100, 256, new Nguyen7(0), 1, 5));
+     saveImages("/home/eric/experiments/dumapper/whge-pagie1-1_%s.png", false, 2, buildGEData("whge", 100, 256, new Pagie1(), 1, 5));
+     saveImages("/home/eric/experiments/dumapper/whge-text-1_%s.png", false, 2, buildGEData("whge", 100, 256, new Text(), 1, 5));
+     saveImages("/home/eric/experiments/dumapper/whge-kland4-1_%s.png", false, 2, buildGEData("whge", 100, 256, new KLandscapes(4), 1, 5));
+     //saveImages("/home/eric/experiments/dumapper/whge200-kland8-1_%s.png", false, 2, buildGEData("whge", 50, 200, new KLandscapes(8), 1, 5));
+     saveImages("/home/eric/experiments/dumapper/whge-mopm2-1_%s.png", false, 2, buildGEData("whge", 100, 256, new MultipleOutputParallelMultiplier(2), 1, 5));
+     //saveImages("/home/eric/experiments/dumapper/whge200-mopm4-1_%s.png", false, 2, buildGEData("whge", 50, 200, new MultipleOutputParallelMultiplier(4), 1, 5));*/
+    //diff selective pressure whge
+    for (int i = 2; i <= 10; i = i + 2) {
+      saveImages(String.format("/home/eric/experiments/dumapper/whge-kland5-t%d-_%%s.png", i), false, 1, buildGEData("whge", 100, 256, new KLandscapes(5), 1, i));
+    }
     /*saveImages("/home/eric/experiments/dumapper/gsgp-nguyen7-1_%s.png", false, 2, getGsgpData("/home/eric/experiments/dumapper/gsgp/nguyen7/Same_Init_Pop/Tournament_size_4/1/", "blocks.txt", 51, 100, 100));
      saveImages("/home/eric/experiments/dumapper/gsgp-airfoil-1_%s.png", false, 2, getGsgpData("/home/eric/experiments/dumapper/gsgp/airfoil/1/", "blocks.txt", 51, 100, 100));
      saveImages("/home/eric/experiments/dumapper/gsgp-concrete-1_%s.png", false, 2, getGsgpData("/home/eric/experiments/dumapper/gsgp/concrete/1/", "blocks.txt", 51, 100, 100));
      saveImages("/home/eric/experiments/dumapper/gsgp-slump-1_%s.png", false, 2, getGsgpData("/home/eric/experiments/dumapper/gsgp/slump/1/", "blocks.txt", 51, 100, 100));
      saveImages("/home/eric/experiments/dumapper/gsgp-yacht-1_%s.png", false, 2, getGsgpData("/home/eric/experiments/dumapper/gsgp/yacht/1/", "blocks.txt", 51, 100, 100));*/
-    saveImages("/home/eric/experiments/dumapper/neat-1_%s.png", false, 4, getNeatData2("/home/eric/experiments/dumapper/neat/1-150T_151-400T+C", "pop-%s.eg", 300));
+    //saveImages("/home/eric/experiments/dumapper/neat-1_%s.png", false, 4, getNeatData2("/home/eric/experiments/dumapper/neat/1-150T_151-400T+C", "pop-%s.eg", 300));
 
   }
 
@@ -215,7 +206,7 @@ public class DUMapper {
             500,
             true,
             problem);
-    StandardEvolver evolver = new StandardEvolver(configuration, false);
+    StandardEvolver evolver = new StandardEvolver(configuration, true, false);
     List<EvolverListener> listeners = new ArrayList<>();
     final EvolutionImageSaverListener evolutionImageSaverListener = new EvolutionImageSaverListener(Collections.EMPTY_MAP, null, EvolutionImageSaverListener.ImageType.DU);
     listeners.add(evolutionImageSaverListener);
@@ -248,7 +239,7 @@ public class DUMapper {
             500,
             true,
             problem);
-    StandardEvolver evolver = new StandardEvolver(configuration, false);
+    StandardEvolver evolver = new StandardEvolver(configuration, true, false);
     List<EvolverListener> listeners = new ArrayList<>();
     final EvolutionImageSaverListener evolutionImageSaverListener = new EvolutionImageSaverListener(Collections.EMPTY_MAP, null, EvolutionImageSaverListener.ImageType.DU);
     listeners.add(evolutionImageSaverListener);

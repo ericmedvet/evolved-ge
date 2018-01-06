@@ -28,8 +28,8 @@ public class SACEvolver<I, G, T, F extends MultiObjectiveFitness> extends Partit
 
   private final SACConfiguration<I, G, T, F> configuration;
 
-  public SACEvolver(SACConfiguration<I, G, T, F> configuration, boolean saveAncestry) {
-    super(configuration, saveAncestry);
+  public SACEvolver(SACConfiguration<I, G, T, F> configuration, boolean actualEvaluations, boolean saveAncestry) {
+    super(configuration, actualEvaluations, saveAncestry);
     this.configuration = configuration;
   }
 
@@ -74,7 +74,7 @@ public class SACEvolver<I, G, T, F extends MultiObjectiveFitness> extends Partit
               )
       );
       //obtain bests
-      PartitionEvolver<G, T, F> partitionEvolver = new PartitionEvolver<>(innerConfiguration, saveAncestry);
+      PartitionEvolver<G, T, F> partitionEvolver = new PartitionEvolver<>(innerConfiguration, actualEvaluations, saveAncestry);
       List<Node<T>> bests = partitionEvolver.solve(executor, random, listeners);
       Node<T> best = bests.get(0);      
       //remove positives

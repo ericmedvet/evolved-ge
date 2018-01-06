@@ -36,8 +36,8 @@ public class PartitionEvolver<G, T, F extends Fitness> extends StandardEvolver<G
 
   private final PartitionConfiguration<G, T, F> configuration;
 
-  public PartitionEvolver(PartitionConfiguration<G, T, F> configuration, boolean saveAncestry) {
-    super(configuration, saveAncestry);
+  public PartitionEvolver(PartitionConfiguration<G, T, F> configuration, boolean actualEvaluations, boolean saveAncestry) {
+    super(configuration, actualEvaluations, saveAncestry);
     this.configuration = configuration;
   }
 
@@ -58,12 +58,12 @@ public class PartitionEvolver<G, T, F extends Fitness> extends StandardEvolver<G
     }
     //trim partitions
     trimPartitions(partitionedPopulation, random);
-    int lastBroadcastGeneration = (int) Math.floor(births / configuration.getPopulationSize());
+    int lastBroadcastGeneration = (int) Math.floor(actualBirths(births, fitnessCache) / configuration.getPopulationSize());
     Utils.broadcast(new EvolutionStartEvent<>(this, cacheStats(mappingCache, fitnessCache)), (List) listeners, executor);
     Utils.broadcast(new GenerationEvent<>(configuration.getRanker().rank(all(partitionedPopulation), random), lastBroadcastGeneration, this, cacheStats(mappingCache, fitnessCache)), (List) listeners, executor);
     //iterate
-    while (Math.round(births / configuration.getPopulationSize()) < configuration.getNumberOfGenerations()) {
-      int currentGeneration = (int) Math.floor(births / configuration.getPopulationSize());
+    while (Math.round(actualBirths(births, fitnessCache) / configuration.getPopulationSize()) < configuration.getNumberOfGenerations()) {
+      int currentGeneration = (int) Math.floor(actualBirths(births, fitnessCache) / configuration.getPopulationSize());
       tasks.clear();
       //re-rank
       Map<Individual<G, T, F>, List<Individual<G, T, F>>> parentRepresentedPartitions = representedPartitions(
@@ -133,8 +133,8 @@ public class PartitionEvolver<G, T, F extends Fitness> extends StandardEvolver<G
       }
       //trim partitions
       trimPartitions(partitionedPopulation, random);
-      if ((int) Math.floor(births / configuration.getPopulationSize()) > lastBroadcastGeneration) {
-        lastBroadcastGeneration = (int) Math.floor(births / configuration.getPopulationSize());
+      if ((int) Math.floor(actualBirths(births, fitnessCache) / configuration.getPopulationSize()) > lastBroadcastGeneration) {
+        lastBroadcastGeneration = (int) Math.floor(actualBirths(births, fitnessCache) / configuration.getPopulationSize());
         Utils.broadcast(new GenerationEvent<>(configuration.getRanker().rank(all(partitionedPopulation), random), lastBroadcastGeneration, this, cacheStats(mappingCache, fitnessCache)), (List) listeners, executor);
       }
     }

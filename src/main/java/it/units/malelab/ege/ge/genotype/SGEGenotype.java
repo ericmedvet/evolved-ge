@@ -5,7 +5,9 @@
  */
 package it.units.malelab.ege.ge.genotype;
 
+import com.google.common.base.Strings;
 import it.units.malelab.ege.core.ConstrainedSequence;
+import it.units.malelab.ege.core.Sequence;
 import it.units.malelab.ege.util.Pair;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -104,6 +106,24 @@ public class SGEGenotype<T> implements ConstrainedSequence<Integer> {
   @Override
   public Set<Integer> domain(int index) {
     return domains.get(index);
+  }
+
+  @Override
+  public Sequence<Integer> clone() {
+    return new SGEGenotype<>(this);
+  }
+
+  @Override
+  public void set(int index, Integer t) {
+    if (domain(index).contains(t)) {
+      Pair<Pair<T, Integer>, Integer> geneIndex = geneIndexes.get(index);
+      if (geneIndex==null) {
+        throw new IndexOutOfBoundsException();
+      }
+      genes.get(geneIndex.getFirst()).set(geneIndex.getSecond(), t);
+    } else {
+      throw new IllegalArgumentException(String.format("%d is not included in the domain of gene %d.", t, index));
+    }
   }
 
 }

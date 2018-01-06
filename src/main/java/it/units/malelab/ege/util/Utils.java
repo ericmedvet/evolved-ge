@@ -413,6 +413,16 @@ public class Utils {
       public int size() {
         return list.size();
       }
+
+      @Override
+      public Sequence<T> clone() {
+        return fromList(new ArrayList<T>(list));
+      }
+
+      @Override
+      public void set(int index, T t) {
+        throw new UnsupportedOperationException("Cannot set in read-only view of a list");
+      }
     };
   }
 

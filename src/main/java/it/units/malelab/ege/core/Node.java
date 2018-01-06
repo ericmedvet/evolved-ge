@@ -151,4 +151,14 @@ public class Node<T> implements Sequence<T>, Serializable {
     return leafContents().size();
   }  
 
+  @Override
+  public Sequence<T> clone() {
+    return new Node<>(this);
+  }
+
+  @Override
+  public void set(int index, T t) {
+    throw new UnsupportedOperationException("Set not supported on trees.");
+  }
+
 }
