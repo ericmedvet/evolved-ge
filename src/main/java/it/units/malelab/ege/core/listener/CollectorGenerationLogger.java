@@ -116,7 +116,7 @@ public class CollectorGenerationLogger<G, T, F extends Fitness> extends Abstract
     //print values: collectors
     for (int i = 0; i < formattedNames.size(); i++) {
       int j = 0;
-      Map<String, Object> values = collectors.get(i).collect((GenerationEvent)event);
+      Map<String, Object> values = collectors.get(i).collect((GenerationEvent) event);
       for (String name : formattedNames.get(i).keySet()) {
         if (format) {
           String value = String.format(collectors.get(i).getFormattedNames().get(name), values.get(name));

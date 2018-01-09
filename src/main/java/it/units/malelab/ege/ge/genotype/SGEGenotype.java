@@ -5,7 +5,6 @@
  */
 package it.units.malelab.ege.ge.genotype;
 
-import com.google.common.base.Strings;
 import it.units.malelab.ege.core.ConstrainedSequence;
 import it.units.malelab.ege.core.Sequence;
 import it.units.malelab.ege.util.Pair;

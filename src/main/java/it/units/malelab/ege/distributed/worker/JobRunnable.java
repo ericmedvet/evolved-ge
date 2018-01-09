@@ -14,13 +14,22 @@ import it.units.malelab.ege.core.evolver.PartitionConfiguration;
 import it.units.malelab.ege.core.evolver.PartitionEvolver;
 import it.units.malelab.ege.core.evolver.StandardConfiguration;
 import it.units.malelab.ege.core.evolver.StandardEvolver;
+import it.units.malelab.ege.core.evolver.geneoptimalmixing.GOMConfiguration;
+import it.units.malelab.ege.core.evolver.geneoptimalmixing.GOMEvolver;
+import it.units.malelab.ege.core.fitness.NumericFitness;
 import it.units.malelab.ege.core.listener.AbstractListener;
+import it.units.malelab.ege.core.listener.CollectorGenerationLogger;
 import it.units.malelab.ege.core.listener.EvolverListener;
+import it.units.malelab.ege.core.listener.collector.BestPrinter;
 import it.units.malelab.ege.core.listener.collector.Collector;
+import it.units.malelab.ege.core.listener.collector.Diversity;
+import it.units.malelab.ege.core.listener.collector.NumericFirstBest;
+import it.units.malelab.ege.core.listener.collector.Population;
 import it.units.malelab.ege.core.listener.event.EvolutionEvent;
 import it.units.malelab.ege.core.listener.event.GenerationEvent;
 import it.units.malelab.ege.distributed.DistributedUtils;
 import it.units.malelab.ege.distributed.Job;
+import it.units.malelab.ege.ge.genotype.BitsGenotype;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -60,6 +69,8 @@ public class JobRunnable implements Runnable {
       evolver = new PartitionEvolver((PartitionConfiguration) job.getConfiguration(), true, false);
     } else if (job.getConfiguration().getClass().equals(DeterministicCrowdingConfiguration.class)) {
       evolver = new DeterministicCrowdingEvolver((DeterministicCrowdingConfiguration) job.getConfiguration(), true, false);
+    } else if (job.getConfiguration().getClass().equals(GOMConfiguration.class)) {
+      evolver = new GOMEvolver((GOMConfiguration) job.getConfiguration(), true, false);
     } else {
       throw new IllegalArgumentException(String.format("Configuration of type %s is unknown/unmanageable.", job.getConfiguration().getClass()));
     }
@@ -71,7 +82,7 @@ public class JobRunnable implements Runnable {
     }
     //prepare listeners
     List<EvolverListener> listeners = new ArrayList<>();
-    final PrintStream logPrintStream = worker.getPrintStreamFactory().get(DistributedUtils.jobKeys(job), "client"+worker.getName());
+    final PrintStream logPrintStream = worker.getPrintStreamFactory().get(DistributedUtils.jobKeys(job), "client" + worker.getName());
     listeners.add(new AbstractListener(GenerationEvent.class) {
       @Override
       public void listen(EvolutionEvent event) {
@@ -87,11 +98,14 @@ public class JobRunnable implements Runnable {
         }
         worker.getCurrentJobsData().put(job, data);
         //write to strem
-        if (logPrintStream!=null) {
+        if (logPrintStream != null) {
           DistributedUtils.writeData(logPrintStream, job, Collections.singletonList(data));
         }
       }
     });
+    listeners.add(new CollectorGenerationLogger(
+            Collections.EMPTY_MAP, System.out, true, 10, " ", " | ", (Collector[]) job.getCollectors().toArray()
+    ));
     try {
       List<Node> finalBestRank = evolver.solve(worker.getTaskExecutor(), random, listeners);
       if (!job.isSendResults()) {

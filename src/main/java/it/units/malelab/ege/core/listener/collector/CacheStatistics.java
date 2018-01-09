@@ -22,6 +22,7 @@ public class CacheStatistics implements Collector {
     Map<String, Object> map = new LinkedHashMap<>();
     map.put("cache.mapping.hit.rate", "%4.2f");
     map.put("cache.mapping.avg.load.penalty", "%4.0f");
+    map.put("cache.fitness.miss.count", "%8d");
     map.put("cache.fitness.hit.rate", "%4.2f");
     map.put("cache.fitness.avg.load.penalty", "%8.0f");
     return map;
@@ -34,6 +35,7 @@ public class CacheStatistics implements Collector {
     Map<String, Object> map = new LinkedHashMap<>();
     map.put("cache.mapping.hit.rate", mappingStats.hitRate());
     map.put("cache.mapping.avg.load.penalty", mappingStats.averageLoadPenalty()/1000);
+    map.put("cache.fitness.miss.count", fitnessStats.missCount());
     map.put("cache.fitness.hit.rate", fitnessStats.hitRate());
     map.put("cache.fitness.avg.load.penalty", fitnessStats.averageLoadPenalty()/1000);
     return map;

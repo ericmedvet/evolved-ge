@@ -9,7 +9,6 @@ import it.units.malelab.ege.core.ConstrainedSequence;
 import it.units.malelab.ege.core.evolver.geneoptimalmixing.fos.FOSBuilder;
 import it.units.malelab.ege.core.Individual;
 import it.units.malelab.ege.core.Problem;
-import it.units.malelab.ege.core.Sequence;
 import it.units.malelab.ege.core.evolver.StandardConfiguration;
 import it.units.malelab.ege.core.fitness.Fitness;
 import it.units.malelab.ege.core.validator.Validator;
@@ -37,7 +36,19 @@ public class GOMConfiguration<G extends ConstrainedSequence, T, F extends Fitnes
           Mapper<G, T> mapper,
           Ranker<Individual<G, T, F>> ranker,
           Problem<T, F> problem) {
-    super(populationSize, numberOfGenerations, populationInitializer, initGenotypeValidator, mapper, null, ranker, null, null, 0, false, problem);
+    super(
+            populationSize,
+            numberOfGenerations,
+            populationInitializer,
+            initGenotypeValidator,
+            mapper,
+            null,
+            ranker,
+            null,
+            null,
+            populationSize,
+            false,
+            problem);
     this.fosBuilder = fosBuilder;
     this.mutationOperator = mutationOperator;
   }

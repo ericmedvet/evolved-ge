@@ -11,7 +11,6 @@ import com.google.common.cache.LoadingCache;
 import it.units.malelab.ege.core.ConstrainedSequence;
 import it.units.malelab.ege.core.Individual;
 import it.units.malelab.ege.core.Node;
-import it.units.malelab.ege.core.Sequence;
 import it.units.malelab.ege.core.evolver.Evolver;
 import it.units.malelab.ege.core.evolver.StandardEvolver;
 import it.units.malelab.ege.core.fitness.Fitness;
@@ -35,6 +34,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -69,6 +69,7 @@ public class GOMEvolver<G extends ConstrainedSequence, T, F extends Fitness> ext
     Utils.broadcast(new EvolutionStartEvent<>(this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
     Utils.broadcast(new GenerationEvent<>(configuration.getRanker().rank(population, random), (int) Math.floor(actualBirths(births, fitnessCache) / configuration.getPopulationSize()), this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
     List<Individual<G, T, F>> bests = new ArrayList<>();
+    
     //iterate
     while (Math.round(actualBirths(births, fitnessCache) / configuration.getPopulationSize()) < configuration.getNumberOfGenerations()) {
       //learn fos
@@ -77,9 +78,6 @@ public class GOMEvolver<G extends ConstrainedSequence, T, F extends Fitness> ext
         genotypes.add(individual.getGenotype());
       }
       Set<Set<Integer>> fos = configuration.getFosBuilder().build(genotypes, random);
-      
-      System.out.printf("FOS: %d%n", fos.size());
-      
       //apply gom
       int lastIterationActualBirths = actualBirths(births, fitnessCache);
       tasks.clear();
@@ -94,12 +92,22 @@ public class GOMEvolver<G extends ConstrainedSequence, T, F extends Fitness> ext
                 configuration.getMutationOperator(),
                 mappingCache,
                 fitnessCache,
+                population.size()*configuration.getNumberOfGenerations(),
                 listeners,
                 executor));
       }
-      List<Individual<G, T, F>> newPopulation = new ArrayList<>(Utils.getAll(executor.invokeAll(tasks)));
-      births = births + newPopulation.size() * fos.size();
-      population = newPopulation;
+      List<Individual<G, T, F>> newPopulation = new ArrayList<>();
+      for (Future<List<Individual<G, T, F>>> result : executor.invokeAll(tasks)) {
+        List<Individual<G, T, F>> newIndividuals = result.get();
+        newPopulation.add(newIndividuals.get(0));
+        births = births + fos.size();
+        if (Math.round(actualBirths(births, fitnessCache) / configuration.getPopulationSize()) >= configuration.getNumberOfGenerations()) {
+          break;
+        }
+      }
+      for (int i = 0; i < newPopulation.size(); i++) {
+        population.set(i, newPopulation.get(i));
+      }
       //update best rank
       List<Individual<G, T, F>> populationWithBests = new ArrayList<>(population);
       populationWithBests.addAll(bests);
@@ -133,6 +141,7 @@ public class GOMEvolver<G extends ConstrainedSequence, T, F extends Fitness> ext
           final AbstractMutation<G> mutationOperator,
           final LoadingCache<G, Pair<Node<T>, Map<String, Object>>> mappingCache,
           final LoadingCache<Node<T>, F> fitnessCache,
+          final int maxEvaluations,
           final List<EvolverListener<G, T, F>> listeners,
           final ExecutorService executor
   ) {
@@ -140,12 +149,17 @@ public class GOMEvolver<G extends ConstrainedSequence, T, F extends Fitness> ext
     return new Callable<List<Individual<G, T, F>>>() {
       @Override
       public List<Individual<G, T, F>> call() throws Exception {
+        try{
         //randomize fos
         List<Set<Integer>> randomizedFos = new ArrayList<>(fos);
         Collections.shuffle(randomizedFos, random);
         //iterate
         Individual<G, T, F> child = parent;
         for (Set<Integer> subset : fos) {
+          //check evaluations
+          if (actualBirths(0, fitnessCache) > maxEvaluations) {
+            break;
+          }
           //mix genes
           Individual<G, T, F> donor = population.get(random.nextInt(population.size()));
           G donorGenotype = donor.getGenotype();
@@ -171,6 +185,10 @@ public class GOMEvolver<G extends ConstrainedSequence, T, F extends Fitness> ext
         }
         if (mutationOperator != null) {
           while (child.getPhenotype().equals(parent.getPhenotype())) {
+            //check evaluations
+            if (actualBirths(0, fitnessCache) > maxEvaluations) {
+              break;
+            }
             //mutate
             G childGenotype = mutationOperator.apply(Collections.singletonList(child.getGenotype()), random).get(0);
             //map
@@ -189,6 +207,11 @@ public class GOMEvolver<G extends ConstrainedSequence, T, F extends Fitness> ext
           }
         }
         return Collections.singletonList(child);
+        } catch (Throwable t) {
+          t.printStackTrace();
+          System.exit(-1);
+          return null;
+        }        
       }
     };
   }

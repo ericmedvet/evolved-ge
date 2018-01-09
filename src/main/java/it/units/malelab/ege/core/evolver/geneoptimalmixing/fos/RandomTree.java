@@ -19,19 +19,19 @@ import java.util.Set;
  */
 public class RandomTree extends UPGMAMutualInformationTree {
 
-  public RandomTree(int minSubsetSize) {
-    super(minSubsetSize);
+  public RandomTree(int minSubsetSize, int limit) {
+    super(minSubsetSize, limit);
   }
 
   @Override
-  protected Pair<Set<Integer>, Set<Integer>> choosePair(Set<Set<Integer>> subsets, Map<Pair<Set<Integer>, Set<Integer>>, Double> dMap, Random random) {
+  protected Pair<Pair<Set<Integer>, Set<Integer>>, Double> choosePair(Set<Set<Integer>> subsets, Map<Pair<Set<Integer>, Set<Integer>>, Double> dMap, Random random) {
     List<Set<Integer>> list = new ArrayList<>(subsets);
     int i1 = random.nextInt(list.size());
     int i2 = i1;
     while (i2 == i1) {
       i2 = random.nextInt(list.size());
     }
-    return new Pair<>(list.get(i1), list.get(i2));
+    return new Pair<>(new Pair<>(list.get(i1), list.get(i2)), random.nextDouble());
   }
 
   @Override
