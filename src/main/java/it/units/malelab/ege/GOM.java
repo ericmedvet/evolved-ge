@@ -5,7 +5,6 @@
  */
 package it.units.malelab.ege;
 
-import com.google.common.collect.Lists;
 import it.units.malelab.ege.benchmark.KLandscapes;
 import it.units.malelab.ege.benchmark.Text;
 import it.units.malelab.ege.benchmark.booleanfunction.MultipleOutputParallelMultiplier;
@@ -13,17 +12,8 @@ import it.units.malelab.ege.benchmark.booleanfunction.Parity;
 import it.units.malelab.ege.benchmark.symbolicregression.HarmonicCurve;
 import it.units.malelab.ege.benchmark.symbolicregression.Nguyen7;
 import it.units.malelab.ege.benchmark.symbolicregression.Pagie1;
-import it.units.malelab.ege.cfggp.initializer.FullTreeFactory;
-import it.units.malelab.ege.cfggp.initializer.GrowTreeFactory;
-import it.units.malelab.ege.cfggp.mapper.CfgGpMapper;
-import it.units.malelab.ege.cfggp.operator.StandardTreeCrossover;
-import it.units.malelab.ege.cfggp.operator.StandardTreeMutation;
-import it.units.malelab.ege.core.Individual;
 import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.core.Problem;
-import it.units.malelab.ege.core.Sequence;
-import it.units.malelab.ege.core.evolver.DeterministicCrowdingConfiguration;
-import it.units.malelab.ege.core.evolver.PartitionConfiguration;
 import it.units.malelab.ege.core.evolver.StandardConfiguration;
 import it.units.malelab.ege.core.evolver.geneoptimalmixing.GOMConfiguration;
 import it.units.malelab.ege.core.evolver.geneoptimalmixing.fos.FOSBuilder;
@@ -33,7 +23,6 @@ import it.units.malelab.ege.core.evolver.geneoptimalmixing.fos.SGEGeneBounds;
 import it.units.malelab.ege.core.evolver.geneoptimalmixing.fos.UPGMAMutualInformationTree;
 import it.units.malelab.ege.core.evolver.geneoptimalmixing.fos.Univariate;
 import it.units.malelab.ege.core.fitness.NumericFitness;
-import it.units.malelab.ege.core.initializer.MultiInitializer;
 import it.units.malelab.ege.core.initializer.PopulationInitializer;
 import it.units.malelab.ege.core.initializer.RandomInitializer;
 import it.units.malelab.ege.core.listener.collector.BestPrinter;
@@ -43,9 +32,6 @@ import it.units.malelab.ege.core.listener.collector.NumericFirstBest;
 import it.units.malelab.ege.core.listener.collector.Population;
 import it.units.malelab.ege.core.mapper.Mapper;
 import it.units.malelab.ege.core.ranker.ComparableRanker;
-import it.units.malelab.ege.core.ranker.RandomizerRanker;
-import it.units.malelab.ege.core.ranker.Ranker;
-import it.units.malelab.ege.core.selector.FirstBest;
 import it.units.malelab.ege.core.selector.IndividualComparator;
 import it.units.malelab.ege.core.selector.LastWorst;
 import it.units.malelab.ege.core.selector.Tournament;
@@ -53,6 +39,8 @@ import it.units.malelab.ege.ge.genotype.BitsGenotypeFactory;
 import it.units.malelab.ege.ge.genotype.SGEGenotypeFactory;
 import it.units.malelab.ege.core.validator.Any;
 import it.units.malelab.ege.distributed.Job;
+import it.units.malelab.ege.distributed.JobExecutor;
+import it.units.malelab.ege.distributed.SynchronousJobExecutor;
 import it.units.malelab.ege.distributed.master.Master;
 import it.units.malelab.ege.ge.mapper.BitsSGEMapper;
 import it.units.malelab.ege.ge.mapper.HierarchicalMapper;
@@ -65,15 +53,9 @@ import it.units.malelab.ege.ge.operator.ProbabilisticMutation;
 import it.units.malelab.ege.ge.operator.SGECrossover;
 import it.units.malelab.ege.ge.operator.SGEMutation;
 import it.units.malelab.ege.util.Utils;
-import it.units.malelab.ege.util.distance.CachedDistance;
-import it.units.malelab.ege.util.distance.Distance;
-import it.units.malelab.ege.util.distance.Hamming;
-import it.units.malelab.ege.util.distance.LeavesEdit;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,43 +63,45 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
+import static it.units.malelab.ege.util.LineArgsUtils.*;
+import java.util.concurrent.Executors;
+
 /**
  *
  * @author eric
  */
-public class GOMDeepDistributedExperimenter {
+public class GOM {
 
-  private final static Logger L = Logger.getLogger(GOMDeepDistributedExperimenter.class.getName());
+  private final static Logger L = Logger.getLogger(GOM.class.getName());
 
   //java -cp EvolvedGrammaticalEvolution-1.0-SNAPSHOT.jar:. it.units.malelab.ege.DeepDistributedExperimenter hi 9000 diversities
   public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
-    //prepare master
-    String keyPhrase = args[0];
-    int port = Integer.parseInt(args[1]);
-    String baseResultDirName = args[2];
-    String baseResultFileName = args[3];
-    Master master = new Master(keyPhrase, port, baseResultDirName, baseResultFileName);
-    master.start();
-    List<Future<List<Node>>> results = new ArrayList<>();
+    JobExecutor jobExecutor;
+    //read args from command line
+    String baseResultDirName = a(args, "dir", ".");
+    String baseResultFileName = a(args, "file", "results");
+    if (a(args, "type", "").equals("dist")) {
+      String keyPhrase = a(args, "kp", "");
+      int port = i(a(args, "port", ""));
+      jobExecutor = new Master(keyPhrase, port, baseResultDirName, baseResultFileName);
+      ((Master) jobExecutor).start();
+    } else {
+      jobExecutor = new SynchronousJobExecutor(
+              Executors.newFixedThreadPool(i(a(args, "threads", Integer.toString(Runtime.getRuntime().availableProcessors())))),
+              baseResultDirName, baseResultFileName
+      );
+    }
+    List<String> problems = l(a(args, "problems", "syn-klandscapes-5")); // "syn-klandscapes-5", "syn-text-12", "bool-parity-5" 
+    List<String> methods = l(a(args, "methods", "standard")); // "standard", "gom-u", "gom-nat", "gom-rt", "gom-lt"
+    List<String> mappers = l(a(args, "mappers", "ge-8-5-256")); // "ge-8-5-256", "whge-3-256", "sge-6"
+    List<Integer> runs = i(l(a(args, "runs", "0")));
     //prepare things
+    List<Future<List<Node>>> results = new ArrayList<>();
     int populationSize = 500;
     int generations = 50;
     int tournamentSize = 3;
     //define problems, methods, mappers
     String textProblemTargetString = "Hello World! Many things to you! Dear friend, ciao!";
-    int[] runs = new int[]{0, 1}; //, 2, 3, 4, 5, 6, 7, 8, 9};
-    List<String> problems = Lists.newArrayList(
-            "syn-klandscapes-5"//, "syn-text-12", "bool-parity-5" 
-    );
-    List<String> methods = Lists.newArrayList(
-            //"standard",
-            "gom-u", "gom-nat", "gom-rt", "gom-lt"
-    );
-    List<String> mappers = Lists.newArrayList(
-            "ge-8-5-256",
-            "whge-3-256",
-            "sge-6"
-    );
     //iterate
     for (int run : runs) {
       for (String pr : problems) {
@@ -194,10 +178,10 @@ public class GOMDeepDistributedExperimenter {
               if (p(me, 1).equals("u")) {
                 fosBuilder = new Univariate();
               } else if (p(me, 1).equals("nat")) {
-                if (p(ma, 0).equals("ge")||p(ma, 0).equals("pige")) {
+                if (p(ma, 0).equals("ge") || p(ma, 0).equals("pige")) {
                   fosBuilder = new Grouped(i(p(ma, 1)));
                 } else if (p(ma, 0).equals("sge")) {
-                  fosBuilder = new SGEGeneBounds((SGEMapper)mapper);
+                  fosBuilder = new SGEGeneBounds((SGEMapper) mapper);
                 } else {
                   continue;
                 }
@@ -229,7 +213,7 @@ public class GOMDeepDistributedExperimenter {
                     true
             );
             L.info(String.format("Submitting job: %s%n", job));
-            results.add(master.submit(job));
+            results.add(jobExecutor.submit(job));
           }
         }
       }
@@ -238,18 +222,9 @@ public class GOMDeepDistributedExperimenter {
     for (Future<List<Node>> result : results) {
       L.info(String.format("Got %d solutions%n", result.get().size()));
     }
-  }
-
-  private static String p(String s, int n) {
-    String[] pieces = s.split("-");
-    if (n < pieces.length) {
-      return pieces[n];
+    if (jobExecutor instanceof SynchronousJobExecutor) {
+      ((SynchronousJobExecutor)jobExecutor).getExecutor().shutdown();
     }
-    return null;
-  }
-
-  private static int i(String s) {
-    return Integer.parseInt(s);
   }
 
 }

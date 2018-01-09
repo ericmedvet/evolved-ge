@@ -33,6 +33,8 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -544,6 +546,36 @@ public class Utils {
     double maxOfSumOfSquares = sum*sum;
     double v = (sumOfSquares-minOfSumOfSquares)/(maxOfSumOfSquares-minOfSumOfSquares);
     return v;
+  }
+  
+  public static <V> Future<V> future(final V v) {
+    return new Future<V>() {
+
+      @Override
+      public boolean cancel(boolean mayInterruptIfRunning) {
+        throw new UnsupportedOperationException("Not supported.");
+      }
+
+      @Override
+      public boolean isCancelled() {
+        return false;
+      }
+
+      @Override
+      public boolean isDone() {
+        return true;
+      }
+
+      @Override
+      public V get() throws InterruptedException, ExecutionException {
+        return v;
+      }
+
+      @Override
+      public V get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+        return v;
+      }
+    };
   }
   
 }

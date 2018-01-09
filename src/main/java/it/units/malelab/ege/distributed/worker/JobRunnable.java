@@ -16,20 +16,14 @@ import it.units.malelab.ege.core.evolver.StandardConfiguration;
 import it.units.malelab.ege.core.evolver.StandardEvolver;
 import it.units.malelab.ege.core.evolver.geneoptimalmixing.GOMConfiguration;
 import it.units.malelab.ege.core.evolver.geneoptimalmixing.GOMEvolver;
-import it.units.malelab.ege.core.fitness.NumericFitness;
 import it.units.malelab.ege.core.listener.AbstractListener;
 import it.units.malelab.ege.core.listener.CollectorGenerationLogger;
 import it.units.malelab.ege.core.listener.EvolverListener;
-import it.units.malelab.ege.core.listener.collector.BestPrinter;
 import it.units.malelab.ege.core.listener.collector.Collector;
-import it.units.malelab.ege.core.listener.collector.Diversity;
-import it.units.malelab.ege.core.listener.collector.NumericFirstBest;
-import it.units.malelab.ege.core.listener.collector.Population;
 import it.units.malelab.ege.core.listener.event.EvolutionEvent;
 import it.units.malelab.ege.core.listener.event.GenerationEvent;
 import it.units.malelab.ege.distributed.DistributedUtils;
 import it.units.malelab.ege.distributed.Job;
-import it.units.malelab.ege.ge.genotype.BitsGenotype;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -61,19 +55,7 @@ public class JobRunnable implements Runnable {
   @Override
   public void run() {
     L.fine(String.format("Starting job: %s %s", job.getId(), job.getKeys()));
-    //prepare evolver
-    Evolver evolver = null;
-    if (job.getConfiguration().getClass().equals(StandardConfiguration.class)) {
-      evolver = new StandardEvolver((StandardConfiguration) job.getConfiguration(), true, false);
-    } else if (job.getConfiguration().getClass().equals(PartitionConfiguration.class)) {
-      evolver = new PartitionEvolver((PartitionConfiguration) job.getConfiguration(), true, false);
-    } else if (job.getConfiguration().getClass().equals(DeterministicCrowdingConfiguration.class)) {
-      evolver = new DeterministicCrowdingEvolver((DeterministicCrowdingConfiguration) job.getConfiguration(), true, false);
-    } else if (job.getConfiguration().getClass().equals(GOMConfiguration.class)) {
-      evolver = new GOMEvolver((GOMConfiguration) job.getConfiguration(), true, false);
-    } else {
-      throw new IllegalArgumentException(String.format("Configuration of type %s is unknown/unmanageable.", job.getConfiguration().getClass()));
-    }
+    Evolver evolver = buildEvolver(job);
     //prepare random
     Integer randomSeed = (Integer) job.getKeys().get(Master.RANDOM_SEED_NAME);
     Random random = new Random();
@@ -118,6 +100,23 @@ public class JobRunnable implements Runnable {
     } catch (ExecutionException ex) {
       L.log(Level.SEVERE, String.format("Exception in job: %s %s", job.getId(), job.getKeys()), ex);
     }
+  }
+
+  public static Evolver buildEvolver(Job job) {
+    //prepare evolver
+    Evolver evolver = null;
+    if (job.getConfiguration().getClass().equals(StandardConfiguration.class)) {
+      evolver = new StandardEvolver((StandardConfiguration) job.getConfiguration(), true, false);
+    } else if (job.getConfiguration().getClass().equals(PartitionConfiguration.class)) {
+      evolver = new PartitionEvolver((PartitionConfiguration) job.getConfiguration(), true, false);
+    } else if (job.getConfiguration().getClass().equals(DeterministicCrowdingConfiguration.class)) {
+      evolver = new DeterministicCrowdingEvolver((DeterministicCrowdingConfiguration) job.getConfiguration(), true, false);
+    } else if (job.getConfiguration().getClass().equals(GOMConfiguration.class)) {
+      evolver = new GOMEvolver((GOMConfiguration) job.getConfiguration(), true, false);
+    } else {
+      throw new IllegalArgumentException(String.format("Configuration of type %s is unknown/unmanageable.", job.getConfiguration().getClass()));
+    }
+    return evolver;
   }
 
 }

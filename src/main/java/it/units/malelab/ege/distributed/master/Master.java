@@ -11,6 +11,7 @@ import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.distributed.DistributedUtils;
 import it.units.malelab.ege.distributed.Job;
+import it.units.malelab.ege.distributed.JobExecutor;
 import it.units.malelab.ege.distributed.PrintStreamFactory;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -41,7 +42,7 @@ import java.util.logging.Logger;
  *
  * @author eric
  */
-public class Master {
+public class Master implements JobExecutor {
 
   private final static int JOB_POLLING_INTERVAL = 1;
 
@@ -123,6 +124,7 @@ public class Master {
     }
   }
 
+  @Override
   public Future<List<Node>> submit(final Job job) {
     jobs.put(job.getId(), new JobInfo(job));
     return new Future<List<Node>>() {
