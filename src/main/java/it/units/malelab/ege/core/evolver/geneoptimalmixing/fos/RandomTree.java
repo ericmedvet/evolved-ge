@@ -8,6 +8,8 @@ package it.units.malelab.ege.core.evolver.geneoptimalmixing.fos;
 import it.units.malelab.ege.core.ConstrainedSequence;
 import it.units.malelab.ege.util.Pair;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -24,19 +26,16 @@ public class RandomTree extends UPGMAMutualInformationTree {
   }
 
   @Override
-  protected Pair<Pair<Set<Integer>, Set<Integer>>, Double> choosePair(Set<Set<Integer>> subsets, Map<Pair<Set<Integer>, Set<Integer>>, Double> dMap, Random random) {
-    List<Set<Integer>> list = new ArrayList<>(subsets);
-    int i1 = random.nextInt(list.size());
-    int i2 = i1;
-    while (i2 == i1) {
-      i2 = random.nextInt(list.size());
+  protected Map<Pair<Set<Integer>, Set<Integer>>, Double> computeInitialDistanceMap(int minMaxIndex, List<ConstrainedSequence> sequences, Random random) {
+    //fill a map with random numbers for singleton
+    Map<Pair<Set<Integer>, Set<Integer>>, Double> map = new LinkedHashMap<>();
+    for (int i = 0; i < minMaxIndex; i++) {
+      for (int j = i + 1; j < minMaxIndex; j++) {
+        map.put(new Pair<>(Collections.singleton(i), Collections.singleton(j)), random.nextDouble());
+        map.put(new Pair<>(Collections.singleton(j), Collections.singleton(i)), random.nextDouble());
+      }
     }
-    return new Pair<>(new Pair<>(list.get(i1), list.get(i2)), random.nextDouble());
-  }
-
-  @Override
-  protected Map<Pair<Set<Integer>, Set<Integer>>, Double> computeInitialDistanceMap(int minMaxIndex, List<ConstrainedSequence> sequences) {
-    return null;
+    return map;
   }
 
 

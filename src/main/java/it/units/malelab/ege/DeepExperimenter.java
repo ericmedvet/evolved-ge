@@ -210,8 +210,11 @@ public class DeepExperimenter {
                       new LastWorst(),
                       1,
                       true,
-                      problem);
-              evolver = new StandardEvolver(configuration, true, false);
+                      problem,
+                      false,
+                      -1
+              );
+              evolver = new StandardEvolver(configuration, false);
             } else if (p(me, 0).equals("dc")) {
               final Distance localGenotypeDistance = genotypeDistance;
               Distance distance = null;
@@ -247,8 +250,11 @@ public class DeepExperimenter {
                       operators,
                       new ComparableRanker(new IndividualComparator(IndividualComparator.Attribute.FITNESS)),
                       new Tournament(tournamentSize),
-                      problem);
-              evolver = new DeterministicCrowdingEvolver(configuration, true, false);
+                      problem,
+                      false,
+                      -1
+              );
+              evolver = new DeterministicCrowdingEvolver(configuration, false);
             } else if (p(me, 0).equals("p")) {
               Ranker<Individual> parentInPartitionRanker = null;
               Comparator<Individual> partitionerComparator = null;
@@ -288,8 +294,11 @@ public class DeepExperimenter {
                       new LastWorst(),
                       1,
                       true,
-                      problem);
-              evolver = new PartitionEvolver(configuration, true, false);
+                      problem,
+                      false,
+                      -1
+              );
+              evolver = new PartitionEvolver(configuration, false);
             }
             //prepare listeners and go
             List<EvolverListener> listeners = new ArrayList<>();

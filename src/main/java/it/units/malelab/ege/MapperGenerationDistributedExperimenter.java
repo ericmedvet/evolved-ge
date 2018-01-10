@@ -496,7 +496,10 @@ public class MapperGenerationDistributedExperimenter {
             new LastWorst<Individual<BitsGenotype, String, NumericFitness>>(),
             validationPopSize,
             true,
-            problem);
+            problem,
+            false,
+            -1
+    );
     Map<String, Object> keys = new LinkedHashMap<>();
     keys.put("problem", problemName);
     keys.put("mapper", mapperName);
@@ -532,7 +535,10 @@ public class MapperGenerationDistributedExperimenter {
             new LastWorst<Individual<Node<String>, String, MultiObjectiveFitness<Double>>>(),
             learningPopSize,
             true,
-            problem);
+            problem,
+            false,
+            -1
+    );
     Map<String, Object> keys = new LinkedHashMap<>();
     keys.put(FITNESS_NAME, fitnessName);
     keys.put(Master.RANDOM_SEED_NAME, run);
@@ -542,12 +548,13 @@ public class MapperGenerationDistributedExperimenter {
   private Job buildLearningJobDC(Problem<String, MultiObjectiveFitness<Double>> problem, String fitnessName, int run, List<Collector> collectors) {
     DeterministicCrowdingConfiguration<Node<String>, String, MultiObjectiveFitness<Double>> configuration = new DeterministicCrowdingConfiguration<>(
             new Distance<Individual<Node<String>, String, MultiObjectiveFitness<Double>>>() {
-              private Distance<Node<String>> phenotypeDistance = new CachedDistance<>(new LeavesEdit<String>());
-                  @Override
-                  public double d(Individual<Node<String>, String, MultiObjectiveFitness<Double>> i1, Individual<Node<String>, String, MultiObjectiveFitness<Double>> i2) {
-                    return phenotypeDistance.d(i1.getPhenotype(), i2.getPhenotype());
-                  }
-                },
+      private Distance<Node<String>> phenotypeDistance = new CachedDistance<>(new LeavesEdit<String>());
+
+      @Override
+      public double d(Individual<Node<String>, String, MultiObjectiveFitness<Double>> i1, Individual<Node<String>, String, MultiObjectiveFitness<Double>> i2) {
+        return phenotypeDistance.d(i1.getPhenotype(), i2.getPhenotype());
+      }
+    },
             learningPopSize,
             learningGenerations,
             new MultiInitializer<>(new Utils.MapBuilder<PopulationInitializer<Node<String>>, Double>()
@@ -561,7 +568,10 @@ public class MapperGenerationDistributedExperimenter {
                     .build(),
             new ParetoRanker<Node<String>, String, MultiObjectiveFitness<Double>>(),
             new Tournament<Individual<Node<String>, String, MultiObjectiveFitness<Double>>>(3),
-            problem);
+            problem,
+            false,
+            -1
+    );
     Map<String, Object> keys = new LinkedHashMap<>();
     keys.put(FITNESS_NAME, fitnessName);
     keys.put(Master.RANDOM_SEED_NAME, run);

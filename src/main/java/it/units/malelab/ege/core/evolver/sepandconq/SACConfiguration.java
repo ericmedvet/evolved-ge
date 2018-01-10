@@ -26,34 +26,12 @@ import java.util.Map;
 public class SACConfiguration<I, G, T, F extends MultiObjectiveFitness> extends PartitionConfiguration<G, T, F> {
 
   private final Joiner<T> joiner;
-  
-  public SACConfiguration(
-          Joiner<T> joiner,
-          Comparator<Individual<G, T, F>> partitionerComparator,
-          int partitionSize,
-          Ranker<Individual<G, T, F>> parentInPartitionRanker,
-          Selector<Individual<G, T, F>> parentInPartitionSelector,
-          Ranker<Individual<G, T, F>> unsurvivalInPartitionRanker,
-          Selector<Individual<G, T, F>> unsurvivalInPartitionSelector,
-          int populationSize,
-          int numberOfGenerations,
-          PopulationInitializer<G> populationInitializer,
-          Validator<G> initGenotypeValidator,
-          Mapper<G, T> mapper,
-          Map<GeneticOperator<G>, Double> operators,
-          Ranker<Individual<G, T, F>> ranker,
-          Selector<Individual<G, T, F>> parentSelector,
-          Selector<Individual<G, T, F>> unsurvivalSelector,
-          int offspringSize,
-          boolean overlapping,
-          Problem<T, F> problem) {
-    super(partitionerComparator, partitionSize, parentInPartitionRanker, parentInPartitionSelector, unsurvivalInPartitionRanker, unsurvivalInPartitionSelector, populationSize, numberOfGenerations, populationInitializer, initGenotypeValidator, mapper, operators, ranker, parentSelector, unsurvivalSelector, offspringSize, overlapping, problem);
-    this.joiner = joiner;
-    if (!(problem.getLearningFitnessComputer() instanceof BinaryClassification)) {
-      throw new IllegalArgumentException("Separate and conquer is suitable only for binary classification problems");
-    }
-  }
 
+  public SACConfiguration(Joiner<T> joiner, Comparator<Individual<G, T, F>> partitionerComparator, int partitionSize, Ranker<Individual<G, T, F>> parentInPartitionRanker, Selector<Individual<G, T, F>> parentInPartitionSelector, Ranker<Individual<G, T, F>> unsurvivalInPartitionRanker, Selector<Individual<G, T, F>> unsurvivalInPartitionSelector, int populationSize, int numberOfGenerations, PopulationInitializer<G> populationInitializer, Validator<G> initGenotypeValidator, Mapper<G, T> mapper, Map<GeneticOperator<G>, Double> operators, Ranker<Individual<G, T, F>> ranker, Selector<Individual<G, T, F>> parentSelector, Selector<Individual<G, T, F>> unsurvivalSelector, int offspringSize, boolean overlapping, Problem<T, F> problem, boolean actualEvaluations, int numberOfGenerationWithoutImprovements) {
+    super(partitionerComparator, partitionSize, parentInPartitionRanker, parentInPartitionSelector, unsurvivalInPartitionRanker, unsurvivalInPartitionSelector, populationSize, numberOfGenerations, populationInitializer, initGenotypeValidator, mapper, operators, ranker, parentSelector, unsurvivalSelector, offspringSize, overlapping, problem, actualEvaluations, numberOfGenerationWithoutImprovements);
+    this.joiner = joiner;
+  }
+  
   public Joiner<T> getJoiner() {
     return joiner;
   }

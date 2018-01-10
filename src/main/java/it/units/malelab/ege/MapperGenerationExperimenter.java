@@ -71,7 +71,7 @@ import java.util.concurrent.Executors;
  * @author eric
  */
 public class MapperGenerationExperimenter {
-  
+
   private final static int N_THREADS = Runtime.getRuntime().availableProcessors() - 1;
 
   public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
@@ -192,7 +192,10 @@ public class MapperGenerationExperimenter {
               new LastWorst<Individual<Node<String>, String, MultiObjectiveFitness<Double>>>(),
               popSize,
               true,
-              problem);
+              problem,
+              false,
+              -1
+      );
       List<EvolverListener<Node<String>, String, MultiObjectiveFitness<Double>>> listeners = new ArrayList<>();
       listeners.add(new CollectorGenerationLogger<>(
               (Map) Collections.singletonMap("run", s), System.out, true, 10, " ", " | ",
@@ -211,7 +214,7 @@ public class MapperGenerationExperimenter {
         ));
       }
       mainHeader = false;
-      Evolver<Node<String>, String, MultiObjectiveFitness<Double>> evolver = new PartitionEvolver<>(configuration, true, false);
+      Evolver<Node<String>, String, MultiObjectiveFitness<Double>> evolver = new PartitionEvolver<>(configuration, false);
       List<Node<String>> bests = evolver.solve(executor, random, listeners);
       System.out.printf("Found %d solutions.%n", bests.size());
       String mapperName = "best";
@@ -469,7 +472,10 @@ public class MapperGenerationExperimenter {
             new LastWorst<Individual<BitsGenotype, String, NumericFitness>>(),
             popSize,
             true,
-            problem);
+            problem,
+            false,
+            -1
+    );
     List<EvolverListener<BitsGenotype, String, NumericFitness>> listeners = new ArrayList<>();
     if (ps != null) {
       listeners.add(new CollectorGenerationLogger<>(
@@ -483,7 +489,7 @@ public class MapperGenerationExperimenter {
               new Diversity<BitsGenotype, String, NumericFitness>())
       );
     }
-    Evolver<BitsGenotype, String, NumericFitness> evolver = new StandardEvolver<>(configuration, true, false);
+    Evolver<BitsGenotype, String, NumericFitness> evolver = new StandardEvolver<>(configuration, false);
     List<Node<String>> bests = evolver.solve(executor, random, listeners);
     return new Pair<>(bests.get(0), problem.getLearningFitnessComputer().compute(bests.get(0)));
   }

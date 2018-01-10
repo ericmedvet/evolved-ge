@@ -16,6 +16,10 @@ import it.units.malelab.ege.core.mapper.Mapper;
 import it.units.malelab.ege.core.ranker.Ranker;
 import it.units.malelab.ege.core.initializer.PopulationInitializer;
 import it.units.malelab.ege.core.operator.AbstractMutation;
+import it.units.malelab.ege.core.operator.GeneticOperator;
+import it.units.malelab.ege.core.selector.Selector;
+import java.util.Collections;
+import java.util.Map;
 
 /**
  *
@@ -26,29 +30,8 @@ public class GOMConfiguration<G extends ConstrainedSequence, T, F extends Fitnes
   private final FOSBuilder fosBuilder;
   private final AbstractMutation<G> mutationOperator;
 
-  public GOMConfiguration(
-          FOSBuilder fosBuilder,
-          AbstractMutation<G> mutationOperator,
-          int populationSize,
-          int numberOfGenerations,
-          PopulationInitializer<G> populationInitializer,
-          Validator<G> initGenotypeValidator,
-          Mapper<G, T> mapper,
-          Ranker<Individual<G, T, F>> ranker,
-          Problem<T, F> problem) {
-    super(
-            populationSize,
-            numberOfGenerations,
-            populationInitializer,
-            initGenotypeValidator,
-            mapper,
-            null,
-            ranker,
-            null,
-            null,
-            populationSize,
-            false,
-            problem);
+  public GOMConfiguration(FOSBuilder fosBuilder, AbstractMutation<G> mutationOperator, int populationSize, int numberOfGenerations, PopulationInitializer<G> populationInitializer, Validator<G> initGenotypeValidator, Mapper<G, T> mapper, Ranker<Individual<G, T, F>> ranker, Problem<T, F> problem, boolean actualEvaluations, int numberOfGenerationWithoutImprovements) {
+    super(populationSize, numberOfGenerations, populationInitializer, initGenotypeValidator, mapper, Collections.EMPTY_MAP, ranker, null, null, populationSize, false, problem, actualEvaluations, numberOfGenerationWithoutImprovements);
     this.fosBuilder = fosBuilder;
     this.mutationOperator = mutationOperator;
   }

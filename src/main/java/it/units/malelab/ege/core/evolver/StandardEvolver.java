@@ -25,10 +25,12 @@ import it.units.malelab.ege.core.mapper.MappingException;
 import it.units.malelab.ege.util.Pair;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -40,17 +42,15 @@ import java.util.concurrent.TimeUnit;
  */
 public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F> {
 
-  protected static final int CACHE_SIZE = 10000;
+  protected static final int CACHE_SIZE = 50000;
   public final static String MAPPING_CACHE_NAME = "mapping";
   public final static String FITNESS_CACHE_NAME = "fitness";
 
   private final StandardConfiguration<G, T, F> configuration;
   protected final boolean saveAncestry;
-  protected final boolean actualEvaluations;
 
-  public StandardEvolver(StandardConfiguration<G, T, F> configuration, boolean actualEvaluations, boolean saveAncestry) {
+  public StandardEvolver(StandardConfiguration<G, T, F> configuration, boolean saveAncestry) {
     this.configuration = configuration;
-    this.actualEvaluations = actualEvaluations;
     this.saveAncestry = saveAncestry;
   }
 
@@ -75,6 +75,7 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
     Utils.broadcast(new EvolutionStartEvent<>(this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
     Utils.broadcast(new GenerationEvent<>(configuration.getRanker().rank(population, random), lastBroadcastGeneration, this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
     //iterate
+    int generationsWithoutImprovement = 0;
     while (Math.round(actualBirths(births, fitnessCache) / configuration.getPopulationSize()) < configuration.getNumberOfGenerations()) {
       int currentGeneration = (int) Math.floor(births / configuration.getPopulationSize());
       tasks.clear();
@@ -94,6 +95,7 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
       List<Individual<G, T, F>> newPopulation = new ArrayList<>(Utils.getAll(executor.invokeAll(tasks)));
       births = births + newPopulation.size();
       //build new population
+      List<Individual<G, T, F>> oldPopulation = new ArrayList<>(population);
       if (configuration.isOverlapping()) {
         population.addAll(newPopulation);
       } else {
@@ -120,6 +122,23 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
         lastBroadcastGeneration = (int) Math.floor(actualBirths(births, fitnessCache) / configuration.getPopulationSize());
         Utils.broadcast(new GenerationEvent<>((List) rankedPopulation, lastBroadcastGeneration, this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
       }
+      if (configuration.getNumberOfGenerationWithoutImprovements()>=0) {
+        //check if population is unchanged
+        Set<G> oldGenotypes = new HashSet<>();
+        Set<G> newGenotypes = new HashSet<>();
+        for (Individual<G, T, F> individual : oldPopulation) {
+          oldGenotypes.add(individual.getGenotype());
+        }
+        for (Individual<G, T, F> individual : population) {
+          newGenotypes.add(individual.getGenotype());
+        }
+        if (oldGenotypes.equals(newGenotypes)) {
+          generationsWithoutImprovement = generationsWithoutImprovement+1;
+        }
+        if (generationsWithoutImprovement>configuration.getNumberOfGenerationWithoutImprovements()) {
+          break;
+        }
+      }
     }
     //end
     List<Node<T>> bestPhenotypes = new ArrayList<>();
@@ -132,7 +151,7 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
   }
   
   protected int actualBirths(int births, LoadingCache<Node<T>, F> fitnessCache) {
-    return actualEvaluations?(int)fitnessCache.stats().missCount():births;
+    return configuration.isActualEvaluations()?(int)fitnessCache.stats().missCount():births;
   }
 
   protected CacheLoader<G, Pair<Node<T>, Map<String, Object>>> getMappingCacheLoader() {

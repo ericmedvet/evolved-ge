@@ -31,6 +31,7 @@ import it.units.malelab.ege.core.listener.collector.Diversity;
 import it.units.malelab.ege.core.listener.collector.NumericFirstBest;
 import it.units.malelab.ege.core.listener.collector.Population;
 import it.units.malelab.ege.core.mapper.Mapper;
+import it.units.malelab.ege.core.operator.AbstractMutation;
 import it.units.malelab.ege.core.ranker.ComparableRanker;
 import it.units.malelab.ege.core.selector.IndividualComparator;
 import it.units.malelab.ege.core.selector.LastWorst;
@@ -95,13 +96,12 @@ public class GOM {
     List<String> methods = l(a(args, "methods", "standard")); // "standard", "gom-u", "gom-nat", "gom-rt", "gom-lt"
     List<String> mappers = l(a(args, "mappers", "ge-8-5-256")); // "ge-8-5-256", "whge-3-256", "sge-6"
     List<Integer> runs = i(l(a(args, "runs", "0")));
+    int populationSize = i(a(args, "pop", "500"));
+    int generations = i(a(args, "gen", "50"));
+    int tournamentSize = i(a(args, "tour", "3"));
     //prepare things
-    List<Future<List<Node>>> results = new ArrayList<>();
-    int populationSize = 500;
-    int generations = 50;
-    int tournamentSize = 3;
-    //define problems, methods, mappers
     String textProblemTargetString = "Hello World! Many things to you! Dear friend, ciao!";
+    List<Future<List<Node>>> results = new ArrayList<>();
     //iterate
     for (int run : runs) {
       for (String pr : problems) {
@@ -131,9 +131,10 @@ public class GOM {
             }
             //build mapper, operators, initializer, genotype distance
             Mapper mapper = null;
+            AbstractMutation mutation = new ProbabilisticMutation(0.01);
             Map operators = new Utils.MapBuilder<>()
                     .put(new LengthPreservingTwoPointsCrossover(), 0.8d)
-                    .put(new ProbabilisticMutation(0.01), 0.2d).build();
+                    .put(mutation, 0.2d).build();
             PopulationInitializer populationInitializer = null;
             if (p(ma, 0).equals("ge")) {
               mapper = new StandardGEMapper(i(p(ma, 1)), i(p(ma, 2)), problem.getGrammar());
@@ -152,9 +153,10 @@ public class GOM {
               populationInitializer = new RandomInitializer<>(new BitsGenotypeFactory(i(p(ma, 2))));
             } else if (p(ma, 0).equals("sge")) {
               mapper = new SGEMapper(i(p(ma, 1)), problem.getGrammar());
+              mutation = new SGEMutation<>(0.01, (SGEMapper<String>) mapper);
               operators = new Utils.MapBuilder<>()
                       .put(new SGECrossover<>(), 0.8d)
-                      .put(new SGEMutation<>(0.01, (SGEMapper<String>) mapper), 0.2d).build();
+                      .put(mutation, 0.2d).build();
               populationInitializer = new RandomInitializer<>(new SGEGenotypeFactory<>((SGEMapper<String>) mapper));
             }
             //build configuration
@@ -172,7 +174,10 @@ public class GOM {
                       new LastWorst(),
                       populationSize,
                       true,
-                      problem);
+                      problem,
+                      true,
+                      generations/10
+              );
             } else if (p(me, 0).equals("gom")) {
               FOSBuilder fosBuilder = null;
               if (p(me, 1).equals("u")) {
@@ -199,7 +204,10 @@ public class GOM {
                       new Any(),
                       mapper,
                       new ComparableRanker(new IndividualComparator(IndividualComparator.Attribute.FITNESS)),
-                      problem);
+                      problem,
+                      true,
+                      -1
+              );
             }
             Job job = new Job(
                     configuration,
@@ -223,7 +231,7 @@ public class GOM {
       L.info(String.format("Got %d solutions%n", result.get().size()));
     }
     if (jobExecutor instanceof SynchronousJobExecutor) {
-      ((SynchronousJobExecutor)jobExecutor).getExecutor().shutdown();
+      ((SynchronousJobExecutor) jobExecutor).getExecutor().shutdown();
     }
   }
 

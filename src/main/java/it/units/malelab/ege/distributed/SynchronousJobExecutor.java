@@ -11,11 +11,11 @@ import it.units.malelab.ege.core.listener.AbstractListener;
 import it.units.malelab.ege.core.listener.CollectorGenerationLogger;
 import it.units.malelab.ege.core.listener.EvolverListener;
 import it.units.malelab.ege.core.listener.collector.Collector;
+import it.units.malelab.ege.core.listener.event.EvolutionEndEvent;
 import it.units.malelab.ege.core.listener.event.EvolutionEvent;
 import it.units.malelab.ege.core.listener.event.GenerationEvent;
 import it.units.malelab.ege.distributed.master.Master;
 import it.units.malelab.ege.distributed.worker.JobRunnable;
-import static it.units.malelab.ege.distributed.worker.JobRunnable.buildEvolver;
 import it.units.malelab.ege.util.Utils;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -53,22 +53,19 @@ public class SynchronousJobExecutor implements JobExecutor {
   public Future<List<Node>> submit(final Job job) {
     Evolver evolver = JobRunnable.buildEvolver(job);
     List<EvolverListener> listeners = new ArrayList<>();
-    final List<Map<String, Object>> jobData = new ArrayList<>();
     listeners.add(new AbstractListener(GenerationEvent.class) {
       @Override
       public void listen(EvolutionEvent event) {
         //compute data
         Map<String, Object> data = new LinkedHashMap<>();
         int generation = ((GenerationEvent) event).getGeneration();
-        data.put(Master.JOB_ID_NAME, job.getId());
         data.put(Master.GENERATION_NAME, generation);
         data.put(Master.LOCAL_TIME_NAME, Calendar.getInstance().getTime().getTime());
         for (Collector collector : (List<Collector>) job.getCollectors()) {
           data.putAll(collector.collect((GenerationEvent) event));
         }
-        synchronized(jobData) {
-          jobData.add(data);
-        }
+        PrintStream ps = printStreamFactory.get(DistributedUtils.jobKeys(job), baseResultFileName);
+        DistributedUtils.writeData(ps, job, Collections.singletonList(data));
       }
     });
     listeners.add(new CollectorGenerationLogger(
@@ -82,10 +79,6 @@ public class SynchronousJobExecutor implements JobExecutor {
     }
     try {
       List<Node> finalBestRank = evolver.solve(executor, random, listeners);
-      PrintStream ps = printStreamFactory.get(DistributedUtils.jobKeys(job), baseResultFileName);
-      synchronized(jobData) {
-        DistributedUtils.writeData(ps, job, jobData);
-      }
       return Utils.future(finalBestRank);
     } catch (InterruptedException ex) {
       L.log(Level.SEVERE, String.format("Interrupted job: %s %s", job.getId(), job.getKeys()), ex);

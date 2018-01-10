@@ -80,7 +80,7 @@ import java.util.logging.Logger;
 public class DeepDistributedExperimenter {
 
   private final static Logger L = Logger.getLogger(DeepDistributedExperimenter.class.getName());
-  
+
   //java -cp EvolvedGrammaticalEvolution-1.0-SNAPSHOT.jar:. it.units.malelab.ege.DeepDistributedExperimenter hi 9000 diversities
   public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
     //prepare master
@@ -96,7 +96,7 @@ public class DeepDistributedExperimenter {
     int generations = 50;
     int tournamentSize = 5;
     //define problems, methods, mappers
-    int[] runs = new int[] {1,2};
+    int[] runs = new int[]{1, 2};
     List<String> problems = Lists.newArrayList(
             "bool-parity-5", "bool-parity-8", "bool-mopm-3",
             "sr-keijzer6", "sr-nguyen7", "sr-pagie1",
@@ -204,7 +204,10 @@ public class DeepDistributedExperimenter {
                       new LastWorst(),
                       1,
                       true,
-                      problem);
+                      problem,
+                      false,
+                      -1
+              );
             } else if (p(me, 0).equals("dc")) {
               final Distance localGenotypeDistance = genotypeDistance;
               Distance distance = null;
@@ -240,7 +243,10 @@ public class DeepDistributedExperimenter {
                       operators,
                       new ComparableRanker(new IndividualComparator(IndividualComparator.Attribute.FITNESS)),
                       new Tournament(tournamentSize),
-                      problem);
+                      problem,
+                      false,
+                      -1
+              );
             } else if (p(me, 0).equals("p")) {
               Ranker<Individual> parentInPartitionRanker = null;
               Comparator<Individual> partitionerComparator = null;
@@ -280,7 +286,10 @@ public class DeepDistributedExperimenter {
                       new LastWorst(),
                       1,
                       true,
-                      problem);
+                      problem,
+                      false,
+                      -1
+              );
             }
             Job job = new Job(
                     configuration,

@@ -34,8 +34,10 @@ public class StandardConfiguration<G, T, F extends Fitness> implements Configura
   private final int offspringSize;
   private final boolean overlapping;
   private final Problem<T, F> problem;
+  private final boolean actualEvaluations;
+  private final int numberOfGenerationWithoutImprovements;
 
-  public StandardConfiguration(int populationSize, int numberOfGenerations, PopulationInitializer<G> populationInitializer, Validator<G> initGenotypeValidator, Mapper<G, T> mapper, Map<GeneticOperator<G>, Double> operators, Ranker<Individual<G, T, F>> ranker, Selector<Individual<G, T, F>> parentSelector, Selector<Individual<G, T, F>> unsurvivalSelector, int offspringSize, boolean overlapping, Problem<T, F> problem) {
+  public StandardConfiguration(int populationSize, int numberOfGenerations, PopulationInitializer<G> populationInitializer, Validator<G> initGenotypeValidator, Mapper<G, T> mapper, Map<GeneticOperator<G>, Double> operators, Ranker<Individual<G, T, F>> ranker, Selector<Individual<G, T, F>> parentSelector, Selector<Individual<G, T, F>> unsurvivalSelector, int offspringSize, boolean overlapping, Problem<T, F> problem, boolean actualEvaluations, int numberOfGenerationWithoutImprovements) {
     this.populationSize = populationSize;
     this.numberOfGenerations = numberOfGenerations;
     this.populationInitializer = populationInitializer;
@@ -48,6 +50,8 @@ public class StandardConfiguration<G, T, F extends Fitness> implements Configura
     this.offspringSize = offspringSize;
     this.overlapping = overlapping;
     this.problem = problem;
+    this.actualEvaluations = actualEvaluations;
+    this.numberOfGenerationWithoutImprovements = numberOfGenerationWithoutImprovements;
   }
 
   public int getPopulationSize() {
@@ -98,9 +102,12 @@ public class StandardConfiguration<G, T, F extends Fitness> implements Configura
     return problem;
   }
 
-  @Override
-  public String toString() {
-    return "StandardConfiguration{" + "populationSize=" + populationSize + ", numberOfGenerations=" + numberOfGenerations + ", populationInitializer=" + populationInitializer + ", initGenotypeValidator=" + initGenotypeValidator + ", mapper=" + mapper + ", operators=" + operators + ", ranker=" + ranker + ", parentSelector=" + parentSelector + ", unsurvivalSelector=" + unsurvivalSelector + ", offspringSize=" + offspringSize + ", overlapping=" + overlapping + ", problem=" + problem + '}';
+  public boolean isActualEvaluations() {
+    return actualEvaluations;
+  }
+
+  public int getNumberOfGenerationWithoutImprovements() {
+    return numberOfGenerationWithoutImprovements;
   }
 
 }

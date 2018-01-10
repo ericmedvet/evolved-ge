@@ -28,8 +28,8 @@ public class SACEvolver<I, G, T, F extends MultiObjectiveFitness> extends Partit
 
   private final SACConfiguration<I, G, T, F> configuration;
 
-  public SACEvolver(SACConfiguration<I, G, T, F> configuration, boolean actualEvaluations, boolean saveAncestry) {
-    super(configuration, actualEvaluations, saveAncestry);
+  public SACEvolver(SACConfiguration<I, G, T, F> configuration, boolean saveAncestry) {
+    super(configuration, saveAncestry);
     this.configuration = configuration;
   }
 
@@ -71,27 +71,29 @@ public class SACEvolver<I, G, T, F extends MultiObjectiveFitness> extends Partit
                       (FitnessComputer<T, F>) localFitnessComputer,
                       configuration.getProblem().getTestingFitnessComputer(),
                       configuration.getProblem().getPhenotypePrinter()
-              )
+              ),
+              false,
+              -1
       );
       //obtain bests
-      PartitionEvolver<G, T, F> partitionEvolver = new PartitionEvolver<>(innerConfiguration, actualEvaluations, saveAncestry);
+      PartitionEvolver<G, T, F> partitionEvolver = new PartitionEvolver<>(innerConfiguration, saveAncestry);
       List<Node<T>> bests = partitionEvolver.solve(executor, random, listeners);
-      Node<T> best = bests.get(0);      
+      Node<T> best = bests.get(0);
       //remove positives
       int truePositives = 0;
       for (I positive : localPositives) {
         if (allLearningFitness.getClassifier().classify(positive, best)) {
           removedPositives.add(positive);
-          truePositives = truePositives+1;
+          truePositives = truePositives + 1;
         }
       }
       int falsePositives = 0;
       for (I negative : allLearningFitness.getNegatives()) {
         if (allLearningFitness.getClassifier().classify(negative, best)) {
-          falsePositives = falsePositives+1;
+          falsePositives = falsePositives + 1;
         }
       }
-      if ((truePositives == 0)||(falsePositives>0)) {
+      if ((truePositives == 0) || (falsePositives > 0)) {
         break;
       }
       //join solutions
@@ -100,7 +102,7 @@ public class SACEvolver<I, G, T, F extends MultiObjectiveFitness> extends Partit
       } else {
         joined = configuration.getJoiner().join(joined, best);
       }
-      rounds = rounds+1;
+      rounds = rounds + 1;
       MultiObjectiveFitness joinedLearningFitness = allLearningFitness.compute(joined);
       MultiObjectiveFitness joinedTestingFitness = allTestingFitness.compute(joined);
       System.out.printf("Round: %2d, (P=%3d N=%3d) -> LEARN: fpr=%5.3f fnr=%5.3f, TEST: fpr=%5.3f fnr=%5.3f\t%s%n",
@@ -113,9 +115,9 @@ public class SACEvolver<I, G, T, F extends MultiObjectiveFitness> extends Partit
               joinedTestingFitness.getValue()[1],
               configuration.getProblem().getPhenotypePrinter().toString(joined)
       );
-      if (removedPositives.size()==allLearningFitness.getPositives().size()) {
+      if (removedPositives.size() == allLearningFitness.getPositives().size()) {
         break;
-      }      
+      }
     }
     return Collections.singletonList(joined);
   }

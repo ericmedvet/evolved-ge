@@ -45,8 +45,8 @@ public class GOMEvolver<G extends ConstrainedSequence, T, F extends Fitness> ext
 
   private final GOMConfiguration<G, T, F> configuration;
 
-  public GOMEvolver(GOMConfiguration<G, T, F> configuration, boolean actualEvaluations, boolean saveAncestry) {
-    super(configuration, actualEvaluations, saveAncestry);
+  public GOMEvolver(GOMConfiguration<G, T, F> configuration, boolean saveAncestry) {
+    super(configuration, saveAncestry);
     this.configuration = configuration;
   }
 
@@ -68,8 +68,7 @@ public class GOMEvolver<G extends ConstrainedSequence, T, F extends Fitness> ext
     List<Individual<G, T, F>> population = new ArrayList<>(Utils.getAll(executor.invokeAll(tasks)));
     Utils.broadcast(new EvolutionStartEvent<>(this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
     Utils.broadcast(new GenerationEvent<>(configuration.getRanker().rank(population, random), (int) Math.floor(actualBirths(births, fitnessCache) / configuration.getPopulationSize()), this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
-    List<Individual<G, T, F>> bests = new ArrayList<>();
-    
+    List<Individual<G, T, F>> bests = new ArrayList<>();    
     //iterate
     while (Math.round(actualBirths(births, fitnessCache) / configuration.getPopulationSize()) < configuration.getNumberOfGenerations()) {
       //learn fos

@@ -22,19 +22,10 @@ import java.util.Map;
  * @author eric
  */
 public class DeterministicCrowdingConfiguration<G, T, F extends Fitness> extends StandardConfiguration<G, T, F> {
-  
+
   private final Distance<Individual<G, T, F>> individualDistance;
 
-  public DeterministicCrowdingConfiguration(Distance<Individual<G, T, F>> individualDistance,
-          int populationSize,
-          int numberOfGenerations,
-          PopulationInitializer<G> populationInitializer,
-          Validator<G> initGenotypeValidator,
-          Mapper<G, T> mapper,
-          Map<GeneticOperator<G>, Double> operators,
-          Ranker<Individual<G, T, F>> ranker,
-          Selector<Individual<G, T, F>> parentSelector,
-          Problem<T, F> problem) {
+  public DeterministicCrowdingConfiguration(Distance<Individual<G, T, F>> individualDistance, int populationSize, int numberOfGenerations, PopulationInitializer<G> populationInitializer, Validator<G> initGenotypeValidator, Mapper<G, T> mapper, Map<GeneticOperator<G>, Double> operators, Ranker<Individual<G, T, F>> ranker, Selector<Individual<G, T, F>> parentSelector, Problem<T, F> problem, boolean actualEvaluations, int numberOfGenerationWithoutImprovements) {
     super(
             populationSize,
             numberOfGenerations,
@@ -47,7 +38,10 @@ public class DeterministicCrowdingConfiguration<G, T, F extends Fitness> extends
             null,
             1,
             true,
-            problem);
+            problem,
+            actualEvaluations,
+            numberOfGenerationWithoutImprovements
+    );
     this.individualDistance = individualDistance;
   }
 
@@ -59,5 +53,5 @@ public class DeterministicCrowdingConfiguration<G, T, F extends Fitness> extends
   public String toString() {
     return "DeterministicCrowdingEvolver{" + "individualDistance=" + individualDistance + '}';
   }
-  
+
 }

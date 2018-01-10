@@ -36,8 +36,8 @@ public class PartitionEvolver<G, T, F extends Fitness> extends StandardEvolver<G
 
   private final PartitionConfiguration<G, T, F> configuration;
 
-  public PartitionEvolver(PartitionConfiguration<G, T, F> configuration, boolean actualEvaluations, boolean saveAncestry) {
-    super(configuration, actualEvaluations, saveAncestry);
+  public PartitionEvolver(PartitionConfiguration<G, T, F> configuration, boolean saveAncestry) {
+    super(configuration, saveAncestry);
     this.configuration = configuration;
   }
 

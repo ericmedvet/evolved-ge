@@ -34,8 +34,8 @@ public class DeterministicCrowdingEvolver<G, T, F extends Fitness> extends Stand
 
   private final DeterministicCrowdingConfiguration<G, T, F> configuration;
 
-  public DeterministicCrowdingEvolver(DeterministicCrowdingConfiguration<G, T, F> configuration, boolean actualEvaluations, boolean saveAncestry) {
-    super(configuration, actualEvaluations, saveAncestry);
+  public DeterministicCrowdingEvolver(DeterministicCrowdingConfiguration<G, T, F> configuration, boolean saveAncestry) {
+    super(configuration, saveAncestry);
     this.configuration = configuration;
   }    
 

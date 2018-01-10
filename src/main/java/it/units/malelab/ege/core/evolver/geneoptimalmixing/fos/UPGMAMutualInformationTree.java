@@ -39,7 +39,7 @@ public class UPGMAMutualInformationTree implements FOSBuilder {
       minMaxIndex = Math.min(minMaxIndex, sequence.size());
     }
     //compute mutual information table
-    Map<Pair<Set<Integer>, Set<Integer>>, Double> dMap = computeInitialDistanceMap(minMaxIndex, sequences);
+    Map<Pair<Set<Integer>, Set<Integer>>, Double> dMap = computeInitialDistanceMap(minMaxIndex, sequences, random);
     //prepare
     final Map<Set<Integer>, Double> scoredFos = new LinkedHashMap<>();
     Set<Set<Integer>> currentSubsets = new LinkedHashSet<>();
@@ -54,7 +54,7 @@ public class UPGMAMutualInformationTree implements FOSBuilder {
     //iterate (see pag 2 of http://nwwwn.cs.technion.ac.il/users/wwwb/cgi-bin/tr-get.cgi/2007/CS/CS-2007-06.pdf)
     while (currentSubsets.size() > 1) {
       Set<Integer> newSubset = new LinkedHashSet<>();
-      Pair<Pair<Set<Integer>, Set<Integer>>, Double> chosenScoredSubsets = choosePair(currentSubsets, dMap, random);
+      Pair<Pair<Set<Integer>, Set<Integer>>, Double> chosenScoredSubsets = choosePair(currentSubsets, dMap);
       final Set<Integer> firstSubset = chosenScoredSubsets.getFirst().getFirst();
       final Set<Integer> secondSubset = chosenScoredSubsets.getFirst().getSecond();
       newSubset.addAll(firstSubset);
@@ -68,8 +68,8 @@ public class UPGMAMutualInformationTree implements FOSBuilder {
       //new distance in map
       for (Set<Integer> subset : currentSubsets) {
         if (!subset.equals(newSubset)) {
-          double d = (double) firstSubset.size() / (double) newSubset.size() * dMap.get(new Pair<>(subset, firstSubset));
-          d = d + (double) secondSubset.size() / (double) newSubset.size() * dMap.get(new Pair<>(subset, secondSubset));
+          double d = (double) firstSubset.size() / (double) newSubset.size() * dMap.getOrDefault(new Pair<>(subset, firstSubset), 1d);
+          d = d + (double) secondSubset.size() / (double) newSubset.size() * dMap.getOrDefault(new Pair<>(subset, secondSubset), 1d);
           dMap.put(new Pair<>(subset, newSubset), d);
           dMap.put(new Pair<>(newSubset, subset), d);
         }
@@ -91,7 +91,7 @@ public class UPGMAMutualInformationTree implements FOSBuilder {
     return fos;
   }
 
-  protected Map<Pair<Set<Integer>, Set<Integer>>, Double> computeInitialDistanceMap(int minMaxIndex, List<ConstrainedSequence> sequences) {
+  protected Map<Pair<Set<Integer>, Set<Integer>>, Double> computeInitialDistanceMap(int minMaxIndex, List<ConstrainedSequence> sequences, Random random) {
     Map<Pair<Set<Integer>, Set<Integer>>, Double> map = new LinkedHashMap<>();
     List<List<Object>> domains = new ArrayList<>();
     for (int i = 0; i < minMaxIndex; i++) {
@@ -113,10 +113,9 @@ public class UPGMAMutualInformationTree implements FOSBuilder {
     return map;
   }
 
-  protected Pair<Pair<Set<Integer>, Set<Integer>>, Double> choosePair(
+  private Pair<Pair<Set<Integer>, Set<Integer>>, Double> choosePair(
           Set<Set<Integer>> subsets,
-          Map<Pair<Set<Integer>, Set<Integer>>, Double> miMap,
-          Random random) {
+          Map<Pair<Set<Integer>, Set<Integer>>, Double> miMap) {
     List<Set<Integer>> list = new ArrayList<>(subsets);
     int bestI = 0;
     int bestJ = 1;

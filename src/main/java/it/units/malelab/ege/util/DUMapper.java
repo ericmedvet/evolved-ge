@@ -205,8 +205,11 @@ public class DUMapper {
             new LastWorst<Individual<BitsGenotype, String, NumericFitness>>(),
             500,
             true,
-            problem);
-    StandardEvolver evolver = new StandardEvolver(configuration, true, false);
+            problem,
+            false,
+            -1
+    );
+    StandardEvolver evolver = new StandardEvolver(configuration, false);
     List<EvolverListener> listeners = new ArrayList<>();
     final EvolutionImageSaverListener evolutionImageSaverListener = new EvolutionImageSaverListener(Collections.EMPTY_MAP, null, EvolutionImageSaverListener.ImageType.DU);
     listeners.add(evolutionImageSaverListener);
@@ -238,8 +241,11 @@ public class DUMapper {
             new LastWorst<Individual<SGEGenotype<String>, String, NumericFitness>>(),
             500,
             true,
-            problem);
-    StandardEvolver evolver = new StandardEvolver(configuration, true, false);
+            problem,
+            false,
+            -1
+    );
+    StandardEvolver evolver = new StandardEvolver(configuration, false);
     List<EvolverListener> listeners = new ArrayList<>();
     final EvolutionImageSaverListener evolutionImageSaverListener = new EvolutionImageSaverListener(Collections.EMPTY_MAP, null, EvolutionImageSaverListener.ImageType.DU);
     listeners.add(evolutionImageSaverListener);
