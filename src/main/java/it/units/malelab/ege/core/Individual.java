@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  *
@@ -67,5 +68,30 @@ public class Individual<G, T, F extends Fitness> {
   public String toString() {
     return "Individual{" + "genotype=" + genotype + ", phenotype=" + phenotype + ", fitness=" + fitness + '}';
   }
+
+  @Override
+  public int hashCode() {
+    int hash = 5;
+    hash = 59 * hash + Objects.hashCode(this.genotype);
+    return hash;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    final Individual<?, ?, ?> other = (Individual<?, ?, ?>) obj;
+    if (!Objects.equals(this.genotype, other.genotype)) {
+      return false;
+    }
+    return true;
+  }   
 
 }

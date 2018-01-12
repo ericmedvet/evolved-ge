@@ -27,6 +27,7 @@ import it.units.malelab.ege.util.Utils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -68,7 +69,7 @@ public class GOMEvolver<G extends ConstrainedSequence, T, F extends Fitness> ext
     List<Individual<G, T, F>> population = new ArrayList<>(Utils.getAll(executor.invokeAll(tasks)));
     Utils.broadcast(new EvolutionStartEvent<>(this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
     Utils.broadcast(new GenerationEvent<>(configuration.getRanker().rank(population, random), (int) Math.floor(actualBirths(births, fitnessCache) / configuration.getPopulationSize()), this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
-    List<Individual<G, T, F>> bests = new ArrayList<>();    
+    Set<Individual<G, T, F>> bests = new LinkedHashSet<>();    
     //iterate
     while (Math.round(actualBirths(births, fitnessCache) / configuration.getPopulationSize()) < configuration.getNumberOfGenerations()) {
       //learn fos
@@ -111,7 +112,13 @@ public class GOMEvolver<G extends ConstrainedSequence, T, F extends Fitness> ext
       List<Individual<G, T, F>> populationWithBests = new ArrayList<>(population);
       populationWithBests.addAll(bests);
       List<List<Individual<G, T, F>>> rankedPopulationWithBests = configuration.getRanker().rank(populationWithBests, random);
-      bests = rankedPopulationWithBests.get(0);
+      bests.clear();
+      for (Individual<G, T, F> individual : rankedPopulationWithBests.get(0)) {
+        bests.add(individual);
+        if (bests.size()>=configuration.getPopulationSize()) {
+          break;
+        }
+      }
       Utils.broadcast(new GenerationEvent<>(rankedPopulationWithBests, (int) Math.floor(actualBirths(births, fitnessCache) / configuration.getPopulationSize()), this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
       //check if no new actual births
       if (lastIterationActualBirths == actualBirths(births, fitnessCache)) {

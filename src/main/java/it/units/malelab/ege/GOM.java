@@ -111,6 +111,8 @@ public class GOM {
             keys.put("problem", pr);
             keys.put("mapping", ma);
             keys.put("method", me);
+            keys.put("population", populationSize);
+            keys.put("generations", generations);
             keys.put(Master.RANDOM_SEED_NAME, run);
             //build problem
             Problem<String, NumericFitness> problem = null;
