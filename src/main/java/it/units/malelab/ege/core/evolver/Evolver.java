@@ -8,7 +8,6 @@ package it.units.malelab.ege.core.evolver;
 import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.core.fitness.Fitness;
 import it.units.malelab.ege.core.listener.EvolverListener;
-import java.io.Serializable;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;

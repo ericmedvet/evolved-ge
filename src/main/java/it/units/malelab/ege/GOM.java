@@ -178,7 +178,7 @@ public class GOM {
                       true,
                       problem,
                       true,
-                      generations/10
+                      1
               );
             } else if (p(me, 0).equals("gom")) {
               FOSBuilder fosBuilder = null;

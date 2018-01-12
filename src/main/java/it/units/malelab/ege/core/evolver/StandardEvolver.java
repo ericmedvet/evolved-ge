@@ -75,7 +75,8 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
     Utils.broadcast(new EvolutionStartEvent<>(this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
     Utils.broadcast(new GenerationEvent<>(configuration.getRanker().rank(population, random), lastBroadcastGeneration, this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
     //iterate
-    int generationsWithoutImprovement = 0;
+    double generationsWithoutImprovement = 0;
+    int lastActualBirth = actualBirths(births, fitnessCache);
     while (Math.round(actualBirths(births, fitnessCache) / configuration.getPopulationSize()) < configuration.getNumberOfGenerations()) {
       int currentGeneration = (int) Math.floor(births / configuration.getPopulationSize());
       tasks.clear();
@@ -124,20 +125,23 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
       }
       if (configuration.getNumberOfGenerationWithoutImprovements()>=0) {
         //check if population is unchanged
-        Set<G> oldGenotypes = new HashSet<>();
-        Set<G> newGenotypes = new HashSet<>();
+        Set<Node<T>> oldPhenotypes = new HashSet<>();
+        Set<Node<T>> newPhenotypes = new HashSet<>();
         for (Individual<G, T, F> individual : oldPopulation) {
-          oldGenotypes.add(individual.getGenotype());
+          oldPhenotypes.add(individual.getPhenotype());
         }
         for (Individual<G, T, F> individual : population) {
-          newGenotypes.add(individual.getGenotype());
+          newPhenotypes.add(individual.getPhenotype());
         }
-        if (oldGenotypes.equals(newGenotypes)) {
-          generationsWithoutImprovement = generationsWithoutImprovement+1;
+        if (oldPhenotypes.equals(newPhenotypes)) {
+          generationsWithoutImprovement = generationsWithoutImprovement+(double)(actualBirths(births, fitnessCache)-lastActualBirth)/(double)configuration.getPopulationSize();
+        } else {
+          generationsWithoutImprovement = 0d;
         }
         if (generationsWithoutImprovement>configuration.getNumberOfGenerationWithoutImprovements()) {
           break;
         }
+        lastActualBirth = actualBirths(births, fitnessCache);
       }
     }
     //end

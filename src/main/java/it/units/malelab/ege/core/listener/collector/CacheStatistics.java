@@ -20,6 +20,7 @@ public class CacheStatistics implements Collector {
   @Override
   public Map<String, Object> getFormattedNames() {
     Map<String, Object> map = new LinkedHashMap<>();
+    map.put("cache.mapping.miss.count", "%8d");
     map.put("cache.mapping.hit.rate", "%4.2f");
     map.put("cache.mapping.avg.load.penalty", "%4.0f");
     map.put("cache.fitness.miss.count", "%8d");
@@ -33,6 +34,7 @@ public class CacheStatistics implements Collector {
     CacheStats mappingStats = (CacheStats)generationEvent.getData().get(StandardEvolver.MAPPING_CACHE_NAME);
     CacheStats fitnessStats = (CacheStats)generationEvent.getData().get(StandardEvolver.FITNESS_CACHE_NAME);
     Map<String, Object> map = new LinkedHashMap<>();
+    map.put("cache.mapping.miss.count", mappingStats.missCount());
     map.put("cache.mapping.hit.rate", mappingStats.hitRate());
     map.put("cache.mapping.avg.load.penalty", mappingStats.averageLoadPenalty()/1000);
     map.put("cache.fitness.miss.count", fitnessStats.missCount());
