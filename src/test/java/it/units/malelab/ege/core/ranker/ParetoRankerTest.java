@@ -6,6 +6,7 @@
 package it.units.malelab.ege.core.ranker;
 
 import it.units.malelab.ege.core.Individual;
+import it.units.malelab.ege.core.Node;
 import it.units.malelab.ege.core.fitness.MultiObjectiveFitness;
 import java.util.Arrays;
 import java.util.Collections;
@@ -49,15 +50,15 @@ public class ParetoRankerTest {
   @Test
   public void testRank() {
     ParetoRanker instance = new ParetoRanker();
-    Individual<?, ?, MultiObjectiveFitness> i0 = new Individual<>(null, null, new MultiObjectiveFitness(2, 1), 0, null, null);
-    Individual<?, ?, MultiObjectiveFitness> i1 = new Individual<>(null, null, new MultiObjectiveFitness(1, 2), 0, null, null);
-    Individual<?, ?, MultiObjectiveFitness> i2 = new Individual<>(null, null, new MultiObjectiveFitness(1, 3), 0, null, null);
-    Individual<?, ?, MultiObjectiveFitness> i3 = new Individual<>(null, null, new MultiObjectiveFitness(3, 1), 0, null, null);
-    Individual<?, ?, MultiObjectiveFitness> i4 = new Individual<>(null, null, new MultiObjectiveFitness(4, 4), 0, null, null);
-    Individual<?, ?, MultiObjectiveFitness> i5 = new Individual<>(null, null, new MultiObjectiveFitness(5, 5), 0, null, null);
-    List<Individual<?, ?, MultiObjectiveFitness>> pop = Arrays.asList(i0, i1, i2, i3, i4, i5);
+    Individual<String, String, MultiObjectiveFitness> i0 = new Individual<>("0", new Node<>("0"), new MultiObjectiveFitness(2, 1), 0, null, null);
+    Individual<String, String, MultiObjectiveFitness> i1 = new Individual<>("1", new Node<>("1"), new MultiObjectiveFitness(1, 2), 0, null, null);
+    Individual<String, String, MultiObjectiveFitness> i2 = new Individual<>("2", new Node<>("2"), new MultiObjectiveFitness(1, 3), 0, null, null);
+    Individual<String, String, MultiObjectiveFitness> i3 = new Individual<>("3", new Node<>("3"), new MultiObjectiveFitness(3, 1), 0, null, null);
+    Individual<String, String, MultiObjectiveFitness> i4 = new Individual<>("4", new Node<>("4"), new MultiObjectiveFitness(4, 4), 0, null, null);
+    Individual<String, String, MultiObjectiveFitness> i5 = new Individual<>("5", new Node<>("5"), new MultiObjectiveFitness(5, 5), 0, null, null);
+    List<Individual<String, String, MultiObjectiveFitness>> pop = Arrays.asList(i0, i1, i2, i3, i4, i5);
     for (int i = 0; i<5; i++) {
-      List<List<Individual<?, ?, MultiObjectiveFitness>>> ranked = instance.rank(pop, null);
+      List<List<Individual<String, String, MultiObjectiveFitness>>> ranked = instance.rank(pop, null);
       assertEquals("i0 rank should be in list 0", true, ranked.get(0).contains(i0));
       assertEquals("i1 rank should be in list 0", true, ranked.get(0).contains(i1));
       assertEquals("i2 rank should be in list 1", true, ranked.get(1).contains(i2));
