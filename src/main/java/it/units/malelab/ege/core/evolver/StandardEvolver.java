@@ -95,7 +95,6 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
       List<Individual<G, T, F>> newPopulation = new ArrayList<>(Utils.getAll(executor.invokeAll(tasks)));
       births = births + newPopulation.size();
       //build new population
-      List<Individual<G, T, F>> oldPopulation = new ArrayList<>(population);
       if (configuration.isOverlapping()) {
         population.addAll(newPopulation);
       } else {
