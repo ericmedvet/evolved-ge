@@ -84,8 +84,10 @@ public class SynchronousJobExecutor implements JobExecutor {
       L.log(Level.SEVERE, String.format("Interrupted job: %s %s", job.getId(), job.getKeys()), ex);
     } catch (ExecutionException ex) {
       L.log(Level.SEVERE, String.format("Exception in job: %s %s", job.getId(), job.getKeys()), ex);
+    } catch (RuntimeException ex) {
+      L.log(Level.SEVERE, String.format("RuntimeException in job: %s %s", job.getId(), job.getKeys()), ex);
     }
-    return Utils.future(null);
+    return Utils.future((List<Node>)Collections.EMPTY_LIST);
   }
 
   public ExecutorService getExecutor() {

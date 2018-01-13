@@ -63,6 +63,7 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
   public List<Node<T>> solve(ExecutorService executor, Random random, List<EvolverListener<G, T, F>> listeners) throws InterruptedException, ExecutionException {
     LoadingCache<G, Pair<Node<T>, Map<String, Object>>> mappingCache = CacheBuilder.newBuilder().maximumSize(CACHE_SIZE).recordStats().build(getMappingCacheLoader());
     LoadingCache<Node<T>, F> fitnessCache = CacheBuilder.newBuilder().maximumSize(CACHE_SIZE).recordStats().build(getFitnessCacheLoader());
+    Stopwatch stopwatch = Stopwatch.createStarted();
     //initialize population
     int births = 0;
     List<Callable<List<Individual<G, T, F>>>> tasks = new ArrayList<>();
@@ -75,8 +76,6 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
     Utils.broadcast(new EvolutionStartEvent<>(this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
     Utils.broadcast(new GenerationEvent<>(configuration.getRanker().rank(population, random), lastBroadcastGeneration, this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
     //iterate
-    double generationsWithoutImprovement = 0;
-    int lastActualBirth = actualBirths(births, fitnessCache);
     while (Math.round(actualBirths(births, fitnessCache) / configuration.getPopulationSize()) < configuration.getNumberOfGenerations()) {
       int currentGeneration = (int) Math.floor(births / configuration.getPopulationSize());
       tasks.clear();
@@ -123,25 +122,13 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
         lastBroadcastGeneration = (int) Math.floor(actualBirths(births, fitnessCache) / configuration.getPopulationSize());
         Utils.broadcast(new GenerationEvent<>((List) rankedPopulation, lastBroadcastGeneration, this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
       }
-      if (configuration.getNumberOfGenerationWithoutImprovements()>=0) {
-        //check if population is unchanged
-        Set<Node<T>> oldPhenotypes = new HashSet<>();
-        Set<Node<T>> newPhenotypes = new HashSet<>();
-        for (Individual<G, T, F> individual : oldPopulation) {
-          oldPhenotypes.add(individual.getPhenotype());
-        }
-        for (Individual<G, T, F> individual : population) {
-          newPhenotypes.add(individual.getPhenotype());
-        }
-        if (oldPhenotypes.equals(newPhenotypes)) {
-          generationsWithoutImprovement = generationsWithoutImprovement+(double)(actualBirths(births, fitnessCache)-lastActualBirth)/(double)configuration.getPopulationSize();
-        } else {
-          generationsWithoutImprovement = 0d;
-        }
-        if (generationsWithoutImprovement>configuration.getNumberOfGenerationWithoutImprovements()) {
+      if (configuration.getMaxRelativeTimeMult()>=0) {
+        //check if elapsed time exceeded
+        double avgFitnessComputationNanos = fitnessCache.stats().averageLoadPenalty();
+        double elapsedNanos = stopwatch.elapsed(TimeUnit.NANOSECONDS);
+        if (elapsedNanos/avgFitnessComputationNanos>(configuration.getMaxRelativeTimeMult()*(double)configuration.getPopulationSize()*(double)configuration.getNumberOfGenerations())) {
           break;
         }
-        lastActualBirth = actualBirths(births, fitnessCache);
       }
     }
     //end

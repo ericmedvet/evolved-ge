@@ -25,7 +25,7 @@ public class DeterministicCrowdingConfiguration<G, T, F extends Fitness> extends
 
   private final Distance<Individual<G, T, F>> individualDistance;
 
-  public DeterministicCrowdingConfiguration(Distance<Individual<G, T, F>> individualDistance, int populationSize, int numberOfGenerations, PopulationInitializer<G> populationInitializer, Validator<G> initGenotypeValidator, Mapper<G, T> mapper, Map<GeneticOperator<G>, Double> operators, Ranker<Individual<G, T, F>> ranker, Selector<Individual<G, T, F>> parentSelector, Problem<T, F> problem, boolean actualEvaluations, int numberOfGenerationWithoutImprovements) {
+  public DeterministicCrowdingConfiguration(Distance<Individual<G, T, F>> individualDistance, int populationSize, int numberOfGenerations, PopulationInitializer<G> populationInitializer, Validator<G> initGenotypeValidator, Mapper<G, T> mapper, Map<GeneticOperator<G>, Double> operators, Ranker<Individual<G, T, F>> ranker, Selector<Individual<G, T, F>> parentSelector, Problem<T, F> problem, boolean actualEvaluations, double maxRelativeTimeMult) {
     super(
             populationSize,
             numberOfGenerations,
@@ -40,7 +40,7 @@ public class DeterministicCrowdingConfiguration<G, T, F extends Fitness> extends
             true,
             problem,
             actualEvaluations,
-            numberOfGenerationWithoutImprovements
+            maxRelativeTimeMult
     );
     this.individualDistance = individualDistance;
   }

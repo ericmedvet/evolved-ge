@@ -59,6 +59,7 @@ public class GOMEvolver<G extends ConstrainedSequence, T, F extends Fitness> ext
   ) throws InterruptedException, ExecutionException {
     LoadingCache<G, Pair<Node<T>, Map<String, Object>>> mappingCache = CacheBuilder.newBuilder().maximumSize(CACHE_SIZE).recordStats().build(getMappingCacheLoader());
     LoadingCache<Node<T>, F> fitnessCache = CacheBuilder.newBuilder().maximumSize(CACHE_SIZE).recordStats().build(getFitnessCacheLoader());
+    Stopwatch stopwatch = Stopwatch.createStarted();
     //initialize population
     int births = 0;
     List<Callable<List<Individual<G, T, F>>>> tasks = new ArrayList<>();
@@ -123,6 +124,14 @@ public class GOMEvolver<G extends ConstrainedSequence, T, F extends Fitness> ext
       //check if no new actual births
       if (lastIterationActualBirths == actualBirths(births, fitnessCache)) {
         break;
+      }
+      if (configuration.getMaxRelativeTimeMult()>=0) {
+        //check if elapsed time exceeded
+        double avgFitnessComputationNanos = fitnessCache.stats().averageLoadPenalty();
+        double elapsedNanos = stopwatch.elapsed(TimeUnit.NANOSECONDS);
+        if (elapsedNanos/avgFitnessComputationNanos>(configuration.getMaxRelativeTimeMult()*(double)configuration.getPopulationSize()*(double)configuration.getNumberOfGenerations())) {
+          break;
+        }
       }
     }
     //end

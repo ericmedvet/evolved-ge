@@ -92,13 +92,14 @@ public class GOM {
               baseResultDirName, baseResultFileName
       );
     }
-    List<String> problems = l(a(args, "problems", "syn-klandscapes-5")); // "syn-klandscapes-5", "syn-text-12", "bool-parity-5" 
+    List<String> problems = l(a(args, "problems", "bool-parity-5")); // "syn-klandscapes-5", "syn-text-12", "bool-parity-5" 
     List<String> methods = l(a(args, "methods", "standard")); // "standard", "gom-u", "gom-nat", "gom-rt", "gom-lt"
-    List<String> mappers = l(a(args, "mappers", "ge-8-5-256")); // "ge-8-5-256", "whge-3-256", "sge-6"
+    List<String> mappers = l(a(args, "mappers", "sge-6")); // "ge-8-5-256", "whge-3-256", "sge-6"
     List<Integer> runs = i(l(a(args, "runs", "0")));
     int populationSize = i(a(args, "pop", "500"));
-    int generations = i(a(args, "gen", "50"));
+    int generations = i(a(args, "gen", "200"));
     int tournamentSize = i(a(args, "tour", "3"));
+    double mult = d(a(args, "mult", "10"));
     //prepare things
     String textProblemTargetString = "Hello World! Many things to you! Dear friend, ciao!";
     List<Future<List<Node>>> results = new ArrayList<>();
@@ -178,7 +179,7 @@ public class GOM {
                       true,
                       problem,
                       true,
-                      1
+                      mult
               );
             } else if (p(me, 0).equals("gom")) {
               FOSBuilder fosBuilder = null;
@@ -208,7 +209,7 @@ public class GOM {
                       new ComparableRanker(new IndividualComparator(IndividualComparator.Attribute.FITNESS)),
                       problem,
                       true,
-                      -1
+                      mult
               );
             }
             Job job = new Job(

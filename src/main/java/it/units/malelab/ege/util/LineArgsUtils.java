@@ -30,6 +30,10 @@ public class LineArgsUtils {
     return Integer.parseInt(s);
   }
 
+  public static double d(String s) {
+    return Double.parseDouble(s);
+  }
+
   public static String a(String[] args, String name, String defaultValue) {
     for (String arg : args) {
       String[] pieces = arg.split(KEYVAL_SEP);

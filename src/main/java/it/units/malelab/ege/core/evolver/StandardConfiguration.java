@@ -35,9 +35,9 @@ public class StandardConfiguration<G, T, F extends Fitness> implements Configura
   private final boolean overlapping;
   private final Problem<T, F> problem;
   private final boolean actualEvaluations;
-  private final int numberOfGenerationWithoutImprovements;
+  private final double maxRelativeTimeMult;
 
-  public StandardConfiguration(int populationSize, int numberOfGenerations, PopulationInitializer<G> populationInitializer, Validator<G> initGenotypeValidator, Mapper<G, T> mapper, Map<GeneticOperator<G>, Double> operators, Ranker<Individual<G, T, F>> ranker, Selector<Individual<G, T, F>> parentSelector, Selector<Individual<G, T, F>> unsurvivalSelector, int offspringSize, boolean overlapping, Problem<T, F> problem, boolean actualEvaluations, int numberOfGenerationWithoutImprovements) {
+  public StandardConfiguration(int populationSize, int numberOfGenerations, PopulationInitializer<G> populationInitializer, Validator<G> initGenotypeValidator, Mapper<G, T> mapper, Map<GeneticOperator<G>, Double> operators, Ranker<Individual<G, T, F>> ranker, Selector<Individual<G, T, F>> parentSelector, Selector<Individual<G, T, F>> unsurvivalSelector, int offspringSize, boolean overlapping, Problem<T, F> problem, boolean actualEvaluations, double maxRelativeTimeMult) {
     this.populationSize = populationSize;
     this.numberOfGenerations = numberOfGenerations;
     this.populationInitializer = populationInitializer;
@@ -51,7 +51,7 @@ public class StandardConfiguration<G, T, F extends Fitness> implements Configura
     this.overlapping = overlapping;
     this.problem = problem;
     this.actualEvaluations = actualEvaluations;
-    this.numberOfGenerationWithoutImprovements = numberOfGenerationWithoutImprovements;
+    this.maxRelativeTimeMult = maxRelativeTimeMult;
   }
 
   public int getPopulationSize() {
@@ -106,8 +106,8 @@ public class StandardConfiguration<G, T, F extends Fitness> implements Configura
     return actualEvaluations;
   }
 
-  public int getNumberOfGenerationWithoutImprovements() {
-    return numberOfGenerationWithoutImprovements;
+  public double getMaxRelativeTimeMult() {
+    return maxRelativeTimeMult;
   }
 
 }
