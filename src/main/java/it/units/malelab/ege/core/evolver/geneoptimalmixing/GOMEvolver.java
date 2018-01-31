@@ -121,15 +121,11 @@ public class GOMEvolver<G extends ConstrainedSequence, T, F extends Fitness> ext
         }
       }
       Utils.broadcast(new GenerationEvent<>(rankedPopulationWithBests, (int) Math.floor(actualBirths(births, fitnessCache) / configuration.getPopulationSize()), this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
-      //check if no new actual births
-      if (lastIterationActualBirths == actualBirths(births, fitnessCache)) {
-        break;
-      }
-      if (configuration.getMaxRelativeTimeMult()>=0) {
+      if (configuration.getMaxRelativeElapsed()>=0) {
         //check if elapsed time exceeded
         double avgFitnessComputationNanos = fitnessCache.stats().averageLoadPenalty();
         double elapsedNanos = stopwatch.elapsed(TimeUnit.NANOSECONDS);
-        if (elapsedNanos/avgFitnessComputationNanos>(configuration.getMaxRelativeTimeMult()*(double)configuration.getPopulationSize()*(double)configuration.getNumberOfGenerations())) {
+        if (elapsedNanos/avgFitnessComputationNanos>configuration.getMaxRelativeElapsed()) {
           break;
         }
       }

@@ -25,12 +25,10 @@ import it.units.malelab.ege.core.mapper.MappingException;
 import it.units.malelab.ege.util.Pair;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -121,11 +119,11 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
         lastBroadcastGeneration = (int) Math.floor(actualBirths(births, fitnessCache) / configuration.getPopulationSize());
         Utils.broadcast(new GenerationEvent<>((List) rankedPopulation, lastBroadcastGeneration, this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
       }
-      if (configuration.getMaxRelativeTimeMult()>=0) {
+      if (configuration.getMaxRelativeElapsed()>=0) {
         //check if elapsed time exceeded
         double avgFitnessComputationNanos = fitnessCache.stats().averageLoadPenalty();
         double elapsedNanos = stopwatch.elapsed(TimeUnit.NANOSECONDS);
-        if (elapsedNanos/avgFitnessComputationNanos>(configuration.getMaxRelativeTimeMult()*(double)configuration.getPopulationSize()*(double)configuration.getNumberOfGenerations())) {
+        if (elapsedNanos/avgFitnessComputationNanos>configuration.getMaxRelativeElapsed()) {
           break;
         }
       }
