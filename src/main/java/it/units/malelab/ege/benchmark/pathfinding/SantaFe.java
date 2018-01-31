@@ -44,6 +44,11 @@ public class SantaFe implements FitnessComputer<String, NumericFitness> {
     return new NumericFitness(Double.POSITIVE_INFINITY);
   }
 
+  @Override
+  public NumericFitness bestValue() {
+    return new NumericFitness(0);
+  }
+
   private void lookAheadElse(List<Node<String>> phenotype, int programCounter) {
     boolean found = false;
     int depth = 0;//Keep track of nested ifs

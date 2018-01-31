@@ -80,7 +80,7 @@ public class ExampleMain {
             true,
             problem,
             false,
-            -1);
+            -1, -1);
     List<EvolverListener<Node<String>, String, NumericFitness>> listeners = new ArrayList<>();
     listeners.add(new CollectorGenerationLogger<>(
             Collections.EMPTY_MAP, System.out, true, 10, " ", " | ",

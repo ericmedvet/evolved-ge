@@ -27,6 +27,7 @@ public class MOPMErrors implements FitnessComputer<String, NumericFitness> {
   @Override
   public NumericFitness compute(Node<String> phenotype) {
     int errors = 0;
+    int cases = 0;
     for (int m0 = 0; m0 < Math.pow(2, size); m0++) {
       Map<String, boolean[]> vars = new LinkedHashMap<>();
       //prepare 1st arg
@@ -52,14 +53,20 @@ public class MOPMErrors implements FitnessComputer<String, NumericFitness> {
         if (!Arrays.equals(bitsExpectedResult, bitsResult)) {
           errors = errors+1;
         }
+        cases = cases+1;
       }
     }
-    return new NumericFitness(errors);
+    return new NumericFitness((double)errors/(double)cases);
   }
 
   @Override
   public NumericFitness worstValue() {
-    return new NumericFitness(Math.pow(2, 2*size) + 1);
+    return new NumericFitness(1);
   }
 
+  @Override
+  public NumericFitness bestValue() {
+    return new NumericFitness(0);
+  }
+  
 }

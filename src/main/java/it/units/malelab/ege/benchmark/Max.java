@@ -33,6 +33,11 @@ public class Max extends Problem<String, NumericFitness> {
               public NumericFitness worstValue() {
                 return new NumericFitness(Double.POSITIVE_INFINITY);
               }
+
+              @Override
+              public NumericFitness bestValue() {
+                return null;
+              }
             },
             null,
             MathUtils.phenotypePrinter());

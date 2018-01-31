@@ -13,7 +13,7 @@ import java.util.List;
  * @author eric
  */
 public class BinaryClassification<I, T> implements FitnessComputer<T, MultiObjectiveFitness<Double>> {
-  
+
   public static interface Classifier<I, T> {
     public boolean classify(I instance, Node<T> classifier);
   }
@@ -52,9 +52,14 @@ public class BinaryClassification<I, T> implements FitnessComputer<T, MultiObjec
 
   @Override
   public MultiObjectiveFitness<Double> worstValue() {
-    return new MultiObjectiveFitness<Double>(1d, 1d);
+    return new MultiObjectiveFitness<>(1d, 1d);
   }
 
+  @Override
+  public MultiObjectiveFitness<Double> bestValue() {
+    return new MultiObjectiveFitness<>(0d, 0d);
+  }
+  
   public List<I> getPositives() {
     return positives;
   }

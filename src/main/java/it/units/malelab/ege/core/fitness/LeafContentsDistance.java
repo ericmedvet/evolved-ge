@@ -35,5 +35,10 @@ public class LeafContentsDistance<T> implements FitnessComputer<T, NumericFitnes
   public NumericFitness worstValue() {
     return new NumericFitness(Double.POSITIVE_INFINITY);
   }
+
+  @Override
+  public NumericFitness bestValue() {
+    return new NumericFitness(0);
+  }
   
 }

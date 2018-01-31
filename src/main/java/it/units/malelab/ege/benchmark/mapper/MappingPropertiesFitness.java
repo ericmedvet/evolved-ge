@@ -158,6 +158,11 @@ public class MappingPropertiesFitness implements FitnessComputer<String, MultiOb
     return mof;
   }
 
+  @Override
+  public MultiObjectiveFitness<Double> bestValue() {
+    return null;
+  }
+
   private <E> double[] computeDistances(List<E> elements, Distance<E> distance) {
     double[] dists = new double[elements.size() * (elements.size() - 1) / 2];
     int c = 0;

@@ -45,12 +45,17 @@ public class ParityErrors implements FitnessComputer<String, NumericFitness> {
     for (int i = 0; i<expectedResult.length; i++) {
       errors = errors+((expectedResult[i]!=result[i])?1:0);
     }
-    return new NumericFitness(errors);
+    return new NumericFitness((double)errors/(double)expectedResult.length);
   }
 
   @Override
   public NumericFitness worstValue() {
-    return new NumericFitness(Math.pow(2, size)+1);
+    return new NumericFitness(1);
+  }
+  
+  @Override
+  public NumericFitness bestValue() {
+    return new NumericFitness(0);
   }
   
 }

@@ -206,7 +206,7 @@ public class DeepDistributedExperimenter {
                       true,
                       problem,
                       false,
-                      -1
+                      -1, -1
               );
             } else if (p(me, 0).equals("dc")) {
               final Distance localGenotypeDistance = genotypeDistance;
@@ -245,7 +245,7 @@ public class DeepDistributedExperimenter {
                       new Tournament(tournamentSize),
                       problem,
                       false,
-                      -1
+                      -1, -1
               );
             } else if (p(me, 0).equals("p")) {
               Ranker<Individual> parentInPartitionRanker = null;
@@ -288,7 +288,7 @@ public class DeepDistributedExperimenter {
                       true,
                       problem,
                       false,
-                      -1
+                      -1, -1
               );
             }
             Job job = new Job(

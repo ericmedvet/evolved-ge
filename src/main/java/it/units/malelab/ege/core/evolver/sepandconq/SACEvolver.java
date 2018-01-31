@@ -73,6 +73,7 @@ public class SACEvolver<I, G, T, F extends MultiObjectiveFitness> extends Partit
                       configuration.getProblem().getPhenotypePrinter()
               ),
               false,
+              -1,
               -1
       );
       //obtain bests

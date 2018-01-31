@@ -212,7 +212,7 @@ public class DeepExperimenter {
                       true,
                       problem,
                       false,
-                      -1
+                      -1, -1
               );
               evolver = new StandardEvolver(configuration, false);
             } else if (p(me, 0).equals("dc")) {
@@ -252,7 +252,7 @@ public class DeepExperimenter {
                       new Tournament(tournamentSize),
                       problem,
                       false,
-                      -1
+                      -1, -1
               );
               evolver = new DeterministicCrowdingEvolver(configuration, false);
             } else if (p(me, 0).equals("p")) {
@@ -296,7 +296,7 @@ public class DeepExperimenter {
                       true,
                       problem,
                       false,
-                      -1
+                      -1, -1
               );
               evolver = new PartitionEvolver(configuration, false);
             }

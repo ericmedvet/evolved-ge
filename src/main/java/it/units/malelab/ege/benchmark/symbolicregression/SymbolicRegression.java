@@ -51,4 +51,9 @@ public class SymbolicRegression implements FitnessComputer<String, NumericFitnes
     return new NumericFitness(Double.POSITIVE_INFINITY);
   }
   
+  @Override
+  public NumericFitness bestValue() {
+    return new NumericFitness(0);
+  }
+  
 }

@@ -121,11 +121,23 @@ public class GOMEvolver<G extends ConstrainedSequence, T, F extends Fitness> ext
         }
       }
       Utils.broadcast(new GenerationEvent<>(rankedPopulationWithBests, (int) Math.floor(actualBirths(births, fitnessCache) / configuration.getPopulationSize()), this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
-      if (configuration.getMaxRelativeElapsed()>=0) {
-        //check if elapsed time exceeded
+      if (configuration.getMaxRelativeElapsed()>0) {
+        //check if relative elapsed time exceeded
         double avgFitnessComputationNanos = fitnessCache.stats().averageLoadPenalty();
         double elapsedNanos = stopwatch.elapsed(TimeUnit.NANOSECONDS);
         if (elapsedNanos/avgFitnessComputationNanos>configuration.getMaxRelativeElapsed()) {
+          break;
+        }
+      }
+      if (configuration.getMaxElapsed()>0) {
+        //check if elapsed time exceeded
+        if (stopwatch.elapsed(TimeUnit.SECONDS)>configuration.getMaxElapsed()) {
+          break;
+        }
+      }
+      if (configuration.getProblem().getLearningFitnessComputer().bestValue()!=null) {
+        //check if optimal solution found
+        if (rankedPopulationWithBests.get(0).get(0).getFitness().equals(configuration.getProblem().getLearningFitnessComputer().bestValue())) {
           break;
         }
       }

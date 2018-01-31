@@ -99,7 +99,7 @@ public class GOM {
     int populationSize = i(a(args, "pop", "500"));
     int generations = i(a(args, "gen", "200"));
     int tournamentSize = i(a(args, "tour", "3"));
-    double mult = d(a(args, "mult", "10"));
+    double elapsed = d(a(args, "elapsed", "60"));
     //prepare things
     String textProblemTargetString = "Hello World! Many things to you! Dear friend, ciao!";
     List<Future<List<Node>>> results = new ArrayList<>();
@@ -178,8 +178,9 @@ public class GOM {
                       populationSize,
                       true,
                       problem,
-                      true,
-                      mult
+                      false,
+                      -1,
+                      elapsed
               );
             } else if (p(me, 0).equals("gom")) {
               FOSBuilder fosBuilder = null;
@@ -200,7 +201,7 @@ public class GOM {
               }
               configuration = new GOMConfiguration(
                       fosBuilder,
-                      null,
+                      mutation,
                       populationSize,
                       generations,
                       populationInitializer,
@@ -208,8 +209,9 @@ public class GOM {
                       mapper,
                       new ComparableRanker(new IndividualComparator(IndividualComparator.Attribute.FITNESS)),
                       problem,
-                      true,
-                      mult
+                      false,
+                      -1,
+                      elapsed
               );
             }
             Job job = new Job(

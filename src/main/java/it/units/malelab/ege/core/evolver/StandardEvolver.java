@@ -40,7 +40,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F> {
 
-  protected static final int CACHE_SIZE = 50000;
+  protected static final int CACHE_SIZE = 100000;
   public final static String MAPPING_CACHE_NAME = "mapping";
   public final static String FITNESS_CACHE_NAME = "fitness";
 
@@ -119,11 +119,23 @@ public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F
         lastBroadcastGeneration = (int) Math.floor(actualBirths(births, fitnessCache) / configuration.getPopulationSize());
         Utils.broadcast(new GenerationEvent<>((List) rankedPopulation, lastBroadcastGeneration, this, cacheStats(mappingCache, fitnessCache)), listeners, executor);
       }
-      if (configuration.getMaxRelativeElapsed()>=0) {
-        //check if elapsed time exceeded
+      if (configuration.getMaxRelativeElapsed()>0) {
+        //check if relative elapsed time exceeded
         double avgFitnessComputationNanos = fitnessCache.stats().averageLoadPenalty();
         double elapsedNanos = stopwatch.elapsed(TimeUnit.NANOSECONDS);
         if (elapsedNanos/avgFitnessComputationNanos>configuration.getMaxRelativeElapsed()) {
+          break;
+        }
+      }
+      if (configuration.getMaxElapsed()>0) {
+        //check if elapsed time exceeded
+        if (stopwatch.elapsed(TimeUnit.SECONDS)>configuration.getMaxElapsed()) {
+          break;
+        }
+      }
+      if (configuration.getProblem().getLearningFitnessComputer().bestValue()!=null) {
+        //check if optimal solution found
+        if (rankedPopulation.get(0).get(0).getFitness().equals(configuration.getProblem().getLearningFitnessComputer().bestValue())) {
           break;
         }
       }

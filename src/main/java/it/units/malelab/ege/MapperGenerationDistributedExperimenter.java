@@ -498,7 +498,7 @@ public class MapperGenerationDistributedExperimenter {
             true,
             problem,
             false,
-            -1
+            -1, -1
     );
     Map<String, Object> keys = new LinkedHashMap<>();
     keys.put("problem", problemName);
@@ -537,7 +537,7 @@ public class MapperGenerationDistributedExperimenter {
             true,
             problem,
             false,
-            -1
+            -1, -1
     );
     Map<String, Object> keys = new LinkedHashMap<>();
     keys.put(FITNESS_NAME, fitnessName);
@@ -570,7 +570,7 @@ public class MapperGenerationDistributedExperimenter {
             new Tournament<Individual<Node<String>, String, MultiObjectiveFitness<Double>>>(3),
             problem,
             false,
-            -1
+            -1, -1
     );
     Map<String, Object> keys = new LinkedHashMap<>();
     keys.put(FITNESS_NAME, fitnessName);

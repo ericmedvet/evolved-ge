@@ -194,7 +194,7 @@ public class MapperGenerationExperimenter {
               true,
               problem,
               false,
-              -1
+              -1, -1
       );
       List<EvolverListener<Node<String>, String, MultiObjectiveFitness<Double>>> listeners = new ArrayList<>();
       listeners.add(new CollectorGenerationLogger<>(
@@ -474,7 +474,7 @@ public class MapperGenerationExperimenter {
             true,
             problem,
             false,
-            -1
+            -1, -1
     );
     List<EvolverListener<BitsGenotype, String, NumericFitness>> listeners = new ArrayList<>();
     if (ps != null) {

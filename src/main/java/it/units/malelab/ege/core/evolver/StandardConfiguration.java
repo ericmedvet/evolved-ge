@@ -36,8 +36,9 @@ public class StandardConfiguration<G, T, F extends Fitness> implements Configura
   private final Problem<T, F> problem;
   private final boolean actualEvaluations;
   private final double maxRelativeElapsed;
+  private final double maxElapsed;
 
-  public StandardConfiguration(int populationSize, int numberOfGenerations, PopulationInitializer<G> populationInitializer, Validator<G> initGenotypeValidator, Mapper<G, T> mapper, Map<GeneticOperator<G>, Double> operators, Ranker<Individual<G, T, F>> ranker, Selector<Individual<G, T, F>> parentSelector, Selector<Individual<G, T, F>> unsurvivalSelector, int offspringSize, boolean overlapping, Problem<T, F> problem, boolean actualEvaluations, double maxRelativeElapsed) {
+  public StandardConfiguration(int populationSize, int numberOfGenerations, PopulationInitializer<G> populationInitializer, Validator<G> initGenotypeValidator, Mapper<G, T> mapper, Map<GeneticOperator<G>, Double> operators, Ranker<Individual<G, T, F>> ranker, Selector<Individual<G, T, F>> parentSelector, Selector<Individual<G, T, F>> unsurvivalSelector, int offspringSize, boolean overlapping, Problem<T, F> problem, boolean actualEvaluations, double maxRelativeElapsed, double maxElapsed) {
     this.populationSize = populationSize;
     this.numberOfGenerations = numberOfGenerations;
     this.populationInitializer = populationInitializer;
@@ -52,6 +53,7 @@ public class StandardConfiguration<G, T, F extends Fitness> implements Configura
     this.problem = problem;
     this.actualEvaluations = actualEvaluations;
     this.maxRelativeElapsed = maxRelativeElapsed;
+    this.maxElapsed = maxElapsed;
   }
 
   public int getPopulationSize() {
@@ -108,6 +110,10 @@ public class StandardConfiguration<G, T, F extends Fitness> implements Configura
 
   public double getMaxRelativeElapsed() {
     return maxRelativeElapsed;
+  }
+
+  public double getMaxElapsed() {
+    return maxElapsed;
   }
 
 }

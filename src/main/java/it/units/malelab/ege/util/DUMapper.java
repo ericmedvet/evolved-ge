@@ -207,7 +207,7 @@ public class DUMapper {
             true,
             problem,
             false,
-            -1
+            -1, -1
     );
     StandardEvolver evolver = new StandardEvolver(configuration, false);
     List<EvolverListener> listeners = new ArrayList<>();
@@ -243,7 +243,7 @@ public class DUMapper {
             true,
             problem,
             false,
-            -1
+            -1, -1
     );
     StandardEvolver evolver = new StandardEvolver(configuration, false);
     List<EvolverListener> listeners = new ArrayList<>();
