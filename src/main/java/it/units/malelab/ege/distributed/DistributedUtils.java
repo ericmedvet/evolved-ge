@@ -98,7 +98,7 @@ public class DistributedUtils {
     ps.println(keys.get(keys.size() - 1));
   }
 
-  public static void writeData(PrintStream ps, Job job, List<Map<String, Object>> data) {
+  public synchronized static void writeData(PrintStream ps, Job job, List<Map<String, Object>> data) {
     List<String> keys = jobKeys(job);
     for (Map<String, Object> dataItem : data) {
       Map<String, Object> allData = new HashMap<>(dataItem);

@@ -40,7 +40,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class StandardEvolver<G, T, F extends Fitness> implements Evolver<G, T, F> {
 
-  protected static final int CACHE_SIZE = 100000;
+  protected static final int CACHE_SIZE = 200000;
   public final static String MAPPING_CACHE_NAME = "mapping";
   public final static String FITNESS_CACHE_NAME = "fitness";
 
