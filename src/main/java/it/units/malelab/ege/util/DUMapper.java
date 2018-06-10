@@ -75,6 +75,14 @@ public class DUMapper {
    */
   public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
 
+    modifyMap("/home/eric/experiments/dumapper/modified/whge-nguyen7-3_du.png", 3);
+    modifyMap("/home/eric/experiments/dumapper/modified/whge-nguyen7-3_du.png", 5);
+    modifyMap("/home/eric/experiments/dumapper/modified/LT_E6-14_du.png", 3);
+    modifyMap("/home/eric/experiments/dumapper/modified/LT_E6-14_du.png", 5);
+    modifyMap("/home/eric/experiments/dumapper/modified/legend-colors.png", 3);
+    modifyMap("/home/eric/experiments/dumapper/modified/legend-colors.png", 5);
+    System.exit(0);
+
     //saveImages("/home/eric/experiments/dumapper/sge6-nguyen7-1_%s.png", false, 4, buildSGEData(100, 6, new Nguyen7(0)));
     //saveImages("/home/eric/experiments/dumapper/whge-nguyen7-1_%s.png", false, 1, buildGEData("whge", 100, 256, new Nguyen7(0), 0, 5));
     //saveImages("/home/eric/experiments/dumapper/ge-nguyen7-1_%s.png", false, 1, buildGEData("ge", 100, 256, new Nguyen7(0), 0, 5));
@@ -661,6 +669,47 @@ public class DUMapper {
     } catch (IOException ex) {
       System.err.printf("Cannot save file \"%s\": %s", fileName, ex.getMessage());
     }
+  }
+
+  private static void modifyMap(String fileName, float bins) throws IOException {
+    Color[][] colorMap = new Color[3][];
+    colorMap[0] = new Color[]{fromCode("000000"), fromCode("b36600"), fromCode("f3b300")};
+    colorMap[1] = new Color[]{fromCode("376387"), fromCode("b3b3b3"), fromCode("f3e6b3")};
+    colorMap[2] = new Color[]{fromCode("509dc2"), fromCode("b4d3e1"), fromCode("f3f3f3")};
+    BufferedImage inImage = ImageIO.read(new File(fileName));
+    BufferedImage outRGDImage = new BufferedImage(inImage.getWidth(), inImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
+    BufferedImage outCMImage = new BufferedImage(inImage.getWidth(), inImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
+    for (int x = 0; x < inImage.getWidth(); x++) {
+      for (int y = 0; y < inImage.getHeight(); y++) {
+        Color inColor = new Color(inImage.getRGB(x, y));
+        Color outColor = new Color(
+                Math.min((float) Math.floor((float) inColor.getRed() / 255f * bins) / (bins - 1), 1f),
+                Math.min((float) Math.floor((float) inColor.getGreen() / 255f * bins) / (bins - 1), 1f),
+                0
+        );
+        outRGDImage.setRGB(x, y, outColor.getRGB());
+        int cmRIndex = (int) Math.min((int) Math.floor((float) inColor.getRed() / 255f * 3), 2);
+        int cmGIndex = (int) Math.min((int) Math.floor((float) inColor.getGreen() / 255f * 3), 2);
+        outColor = colorMap[cmRIndex][cmGIndex];
+        outCMImage.setRGB(x, y, outColor.getRGB());
+      }
+    }
+    ImageIO.write(outRGDImage, "PNG", new File(fileName.replace(
+            ".png",
+            String.format(".rgbdisc%d.png", (int) bins)
+    )));
+    ImageIO.write(outCMImage, "PNG", new File(fileName.replace(
+            ".png",
+            ".cm.png"
+    )));
+  }
+
+  private static Color fromCode(String code) {
+    return new Color(
+            Integer.parseInt(code.substring(0, 2), 16),
+            Integer.parseInt(code.substring(2, 4), 16),
+            Integer.parseInt(code.substring(4, 6), 16)
+    );
   }
 
 }
